@@ -1,9 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingBag, User, Menu } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Navbar = () => {
