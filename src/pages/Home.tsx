@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import heroBg from '@/assets/hero-bg.jpg';
 import { motion } from 'framer-motion';
 import { useProductStore } from '@/stores/productStore';
 import { categories } from '@/data/products';
@@ -19,8 +20,12 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-secondary">
-        <div className="container py-20 md:py-32">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={heroBg} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+        </div>
+        <div className="container relative py-24 md:py-40">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
