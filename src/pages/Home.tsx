@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import heroBg from '@/assets/hero-bg.jpg';
 import { motion } from 'framer-motion';
 import { useProductStore } from '@/stores/productStore';
 import { categories } from '@/data/products';
