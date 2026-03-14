@@ -9,17 +9,17 @@ import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+const emptyForm = { name: '', description: '', brand: '', category: 'Sábanas' as Category, price: 0, stock: 0, image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop' };
+
 const Admin = () => {
   const user = useAuthStore((s) => s.user);
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const [tab, setTab] = useState<'products' | 'orders'>('products');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
 
   if (!user?.isAdmin) return <Navigate to="/login" />;
-
-  const emptyForm = { name: '', description: '', brand: '', category: 'Sábanas' as Category, price: 0, stock: 0, image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop' };
-  const [form, setForm] = useState(emptyForm);
 
   const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true); };
   const openEdit = (p: Product) => { setForm({ name: p.name, description: p.description, brand: p.brand, category: p.category, price: p.price, stock: p.stock, image: p.image }); setEditProduct(p); setShowForm(true); };

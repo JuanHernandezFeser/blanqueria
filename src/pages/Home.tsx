@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useProductStore } from '@/stores/productStore';
 import { categories } from '@/data/products';
-import { formatPrice } from '@/services/shippingService';
+
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
 import type { Product } from '@/data/products';

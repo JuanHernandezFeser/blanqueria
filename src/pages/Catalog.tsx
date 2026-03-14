@@ -5,7 +5,7 @@ import { categories, brands, type Category } from '@/data/products';
 import type { Product } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useDebounce } from '@/hooks/useDebounce';
 

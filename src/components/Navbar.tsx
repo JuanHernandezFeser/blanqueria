@@ -9,7 +9,6 @@ const Navbar = () => {
   const totalItems = useCartStore((s) => s.totalItems());
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
