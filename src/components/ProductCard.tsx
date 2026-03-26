@@ -13,8 +13,11 @@ interface ProductCardProps {
 const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
   const addItem = useCartStore((s) => s.addItem);
 
+  const outOfStock = product.stock <= 0;
+
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (outOfStock) return;
     addItem(product);
     toast.success(`${product.name} agregado al carrito`);
   };
@@ -31,10 +34,15 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
         <img
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:scale-[1.02] image-outline"
+          className={`h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:scale-[1.02] image-outline ${outOfStock ? 'opacity-50 grayscale' : ''}`}
           loading="lazy"
         />
-        {product.isNew && (
+        {outOfStock && (
+          <span className="absolute top-3 right-3 bg-destructive/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-destructive-foreground">
+            Sin stock
+          </span>
+        )}
+        {!outOfStock && product.isNew && (
           <span className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-foreground">
             Nuevo
           </span>
@@ -53,9 +61,14 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
       </div>
       <button
         onClick={handleAdd}
-        className="mt-3 w-full rounded-md border border-accent py-2.5 text-xs font-medium uppercase tracking-wider text-foreground transition-all duration-200 hover:bg-foreground hover:text-background hover:border-foreground font-body"
+        disabled={outOfStock}
+        className={`mt-3 w-full rounded-md border py-2.5 text-xs font-medium uppercase tracking-wider transition-all duration-200 font-body ${
+          outOfStock
+            ? 'border-accent text-muted-foreground cursor-not-allowed opacity-50'
+            : 'border-accent text-foreground hover:bg-foreground hover:text-background hover:border-foreground'
+        }`}
       >
-        Agregar al carrito
+        {outOfStock ? 'Sin stock' : 'Agregar al carrito'}
       </button>
     </motion.div>
   );

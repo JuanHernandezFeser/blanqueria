@@ -20,7 +20,10 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
   if (!product) return null;
 
+  const outOfStock = product.stock <= 0;
+
   const handleAdd = () => {
+    if (outOfStock) return;
     for (let i = 0; i < quantity; i++) {
       addItem(product, selectedVariant);
     }
