@@ -1,40 +1,46 @@
 import { useAuthStore } from '@/stores/authStore';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
+import type { CategoryItem } from '@/stores/categoryStore';
 import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
 import type { Product } from '@/data/products';
 import { mockOrders } from '@/data/orders';
 import { useState } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Admin = () => {
   const user = useAuthStore((s) => s.user);
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
-  const { categories, addCategory, deleteCategory } = useCategoryStore();
+  const { categories, addCategory, updateCategory, deleteCategory, addSubcategory, removeSubcategory } = useCategoryStore();
   const [tab, setTab] = useState<'products' | 'orders' | 'categories'>('products');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showCatForm, setShowCatForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const [newSubcategory, setNewSubcategory] = useState('');
 
-  const emptyForm = { name: '', description: '', brand: '', category: categories[0]?.name || '', price: 0, stock: 0, image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop' };
+  const emptyForm = { name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '', price: 0, stock: 0, image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop' };
   const [form, setForm] = useState(emptyForm);
   const [catForm, setCatForm] = useState({ name: '', image: '', description: '' });
 
   if (!user?.isAdmin) return <Navigate to="/login" />;
 
   const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true); };
-  const openEdit = (p: Product) => { setForm({ name: p.name, description: p.description, brand: p.brand, category: p.category, price: p.price, stock: p.stock, image: p.image }); setEditProduct(p); setShowForm(true); };
+  const openEdit = (p: Product) => { setForm({ name: p.name, description: p.description, brand: p.brand, category: p.category, subcategory: p.subcategory || '', price: p.price, stock: p.stock, image: p.image }); setEditProduct(p); setShowForm(true); };
+
+  const selectedCategoryObj = categories.find((c) => c.name === form.category);
 
   const handleSave = () => {
     if (!form.name || !form.brand || form.price <= 0) { toast.error('Completá todos los campos'); return; }
+    const data = { ...form, subcategory: form.subcategory || undefined };
     if (editProduct) {
-      updateProduct(editProduct.id, form as Partial<Product>);
+      updateProduct(editProduct.id, data as Partial<Product>);
       toast.success('Producto actualizado');
     } else {
-      addProduct(form as Omit<Product, 'id'>);
+      addProduct(data as Omit<Product, 'id'>);
       toast.success('Producto creado');
     }
     setShowForm(false);
@@ -45,16 +51,47 @@ const Admin = () => {
     toast.success('Producto eliminado');
   };
 
-  const handleAddCategory = () => {
-    if (!catForm.name.trim()) { toast.error('Ingresá un nombre para la categoría'); return; }
-    addCategory({
-      name: catForm.name.trim(),
-      image: catForm.image || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop',
-      description: catForm.description || '',
-    });
-    toast.success('Categoría creada');
+  const openCatNew = () => {
     setCatForm({ name: '', image: '', description: '' });
+    setEditingCategory(null);
+    setShowCatForm(true);
+  };
+
+  const openCatEdit = (cat: CategoryItem) => {
+    setCatForm({ name: cat.name, image: cat.image, description: cat.description });
+    setEditingCategory(cat);
+    setNewSubcategory('');
+    setShowCatForm(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (!catForm.name.trim()) { toast.error('Ingresá un nombre para la categoría'); return; }
+    if (editingCategory) {
+      // If name changed, update products too
+      if (editingCategory.name !== catForm.name.trim()) {
+        products.forEach((p) => {
+          if (p.category === editingCategory.name) {
+            updateProduct(p.id, { category: catForm.name.trim() });
+          }
+        });
+      }
+      updateCategory(editingCategory.name, {
+        name: catForm.name.trim(),
+        image: catForm.image || editingCategory.image,
+        description: catForm.description,
+      });
+      toast.success('Categoría actualizada');
+    } else {
+      addCategory({
+        name: catForm.name.trim(),
+        image: catForm.image || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop',
+        description: catForm.description || '',
+        subcategories: [],
+      });
+      toast.success('Categoría creada');
+    }
     setShowCatForm(false);
+    setEditingCategory(null);
   };
 
   const handleDeleteCategory = (name: string) => {
@@ -62,6 +99,26 @@ const Admin = () => {
     if (hasProducts) { toast.error('No se puede eliminar una categoría con productos asociados'); return; }
     deleteCategory(name);
     toast.success('Categoría eliminada');
+  };
+
+  const handleAddSubcategory = (categoryName: string) => {
+    if (!newSubcategory.trim()) return;
+    addSubcategory(categoryName, newSubcategory.trim());
+    setNewSubcategory('');
+    toast.success('Subcategoría agregada');
+    // Refresh editing category
+    const updated = useCategoryStore.getState().categories.find((c) => c.name === categoryName);
+    if (updated) setEditingCategory(updated);
+  };
+
+  const handleRemoveSubcategory = (categoryName: string, sub: string) => {
+    // Check if any products use this subcategory
+    const hasProducts = products.some((p) => p.category === categoryName && p.subcategory === sub);
+    if (hasProducts) { toast.error('No se puede eliminar una subcategoría con productos asociados'); return; }
+    removeSubcategory(categoryName, sub);
+    toast.success('Subcategoría eliminada');
+    const updated = useCategoryStore.getState().categories.find((c) => c.name === categoryName);
+    if (updated) setEditingCategory(updated);
   };
 
   const statusColor = (status: string) => {
@@ -117,7 +174,10 @@ const Admin = () => {
                       </div>
                     </td>
                     <td className="p-3 font-body text-sm text-muted-foreground hidden md:table-cell">{p.brand}</td>
-                    <td className="p-3 font-body text-sm text-muted-foreground hidden md:table-cell">{p.category}</td>
+                    <td className="p-3 font-body text-sm text-muted-foreground hidden md:table-cell">
+                      {p.category}
+                      {p.subcategory && <span className="text-xs"> › {p.subcategory}</span>}
+                    </td>
                     <td className="p-3 text-right font-body text-sm tabular-nums text-foreground">{formatPrice(p.price)}</td>
                     <td className="p-3 text-right hidden sm:table-cell">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-body font-medium ${p.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -142,7 +202,7 @@ const Admin = () => {
         <>
           <div className="flex justify-between items-center mb-4">
             <p className="font-body text-sm text-muted-foreground">{categories.length} categorías</p>
-            <button onClick={() => { setCatForm({ name: '', image: '', description: '' }); setShowCatForm(true); }} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+            <button onClick={openCatNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               <Plus className="h-3.5 w-3.5" /> Nueva Categoría
             </button>
           </div>
@@ -152,17 +212,34 @@ const Admin = () => {
                 <div className="aspect-[16/9] bg-muted">
                   <img src={c.image} alt={c.name} className="h-full w-full object-cover" />
                 </div>
-                <div className="p-4 flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-body text-sm font-medium text-foreground">{c.name}</h3>
-                    <p className="font-body text-xs text-muted-foreground mt-0.5">{c.description}</p>
-                    <p className="font-body text-xs text-muted-foreground mt-1">
-                      {products.filter((p) => p.category === c.name).length} productos
-                    </p>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-body text-sm font-medium text-foreground">{c.name}</h3>
+                      <p className="font-body text-xs text-muted-foreground mt-0.5">{c.description}</p>
+                      <p className="font-body text-xs text-muted-foreground mt-1">
+                        {products.filter((p) => p.category === c.name).length} productos
+                      </p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button onClick={() => openCatEdit(c)} className="p-1.5 rounded hover:bg-accent transition-colors">
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                      <button onClick={() => handleDeleteCategory(c.name)} className="p-1.5 rounded hover:bg-red-50 transition-colors">
+                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => handleDeleteCategory(c.name)} className="p-1.5 rounded hover:bg-red-50 transition-colors flex-shrink-0">
-                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                  </button>
+                  {c.subcategories && c.subcategories.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {c.subcategories.map((sub) => (
+                        <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-body text-foreground">
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          {sub}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -221,11 +298,20 @@ const Admin = () => {
               </div>
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Categoría</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
+                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, subcategory: '' })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
                   {categories.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
             </div>
+            {selectedCategoryObj && selectedCategoryObj.subcategories.length > 0 && (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Subcategoría</label>
+                <select value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
+                  <option value="">Sin subcategoría</option>
+                  {selectedCategoryObj.subcategories.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Precio</label>
@@ -248,10 +334,10 @@ const Admin = () => {
       </Dialog>
 
       {/* Category form dialog */}
-      <Dialog open={showCatForm} onOpenChange={setShowCatForm}>
+      <Dialog open={showCatForm} onOpenChange={(open) => { setShowCatForm(open); if (!open) setEditingCategory(null); }}>
         <DialogContent className="bg-background max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Nueva Categoría</DialogTitle>
+            <DialogTitle className="font-display text-2xl">{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>
@@ -266,8 +352,40 @@ const Admin = () => {
               <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">URL de imagen</label>
               <input value={catForm.image} onChange={(e) => setCatForm({ ...catForm, image: e.target.value })} placeholder="https://..." className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
             </div>
-            <button onClick={handleAddCategory} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
-              Crear Categoría
+
+            {/* Subcategories management (only in edit mode) */}
+            {editingCategory && (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
+                {editingCategory.subcategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {editingCategory.subcategories.map((sub) => (
+                      <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
+                        {sub}
+                        <button onClick={() => handleRemoveSubcategory(editingCategory.name, sub)} className="hover:text-destructive transition-colors">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    value={newSubcategory}
+                    onChange={(e) => setNewSubcategory(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSubcategory(editingCategory.name); } }}
+                    placeholder="Nueva subcategoría..."
+                    className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                  />
+                  <button onClick={() => handleAddSubcategory(editingCategory.name)} className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button onClick={handleSaveCategory} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+              {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
             </button>
           </div>
         </DialogContent>

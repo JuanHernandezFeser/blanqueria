@@ -3,6 +3,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -12,8 +13,10 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
   const addItem = useCartStore((s) => s.addItem);
+  const items = useCartStore((s) => s.items);
 
   const outOfStock = product.stock <= 0;
+  const inCart = items.some((i) => i.product.id === product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -42,7 +45,12 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
             Sin stock
           </span>
         )}
-        {!outOfStock && product.isNew && (
+        {!outOfStock && inCart && (
+          <span className="absolute top-3 right-3 bg-foreground/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-background flex items-center gap-1">
+            <ShoppingBag className="h-3 w-3" /> En carrito
+          </span>
+        )}
+        {!outOfStock && !inCart && product.isNew && (
           <span className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-foreground">
             Nuevo
           </span>
@@ -65,10 +73,12 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
         className={`mt-3 w-full rounded-md border py-2.5 text-xs font-medium uppercase tracking-wider transition-all duration-200 font-body ${
           outOfStock
             ? 'border-accent text-muted-foreground cursor-not-allowed opacity-50'
+            : inCart
+            ? 'border-foreground bg-foreground text-background hover:opacity-90'
             : 'border-accent text-foreground hover:bg-foreground hover:text-background hover:border-foreground'
         }`}
       >
-        {outOfStock ? 'Sin stock' : 'Agregar al carrito'}
+        {outOfStock ? 'Sin stock' : inCart ? 'Agregar otra unidad' : 'Agregar al carrito'}
       </button>
     </motion.div>
   );

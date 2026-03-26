@@ -5,7 +5,7 @@ import { formatPrice } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, ShoppingBag } from 'lucide-react';
 
 interface ProductDetailProps {
   product: Product | null;
@@ -15,12 +15,15 @@ interface ProductDetailProps {
 
 const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const addItem = useCartStore((s) => s.addItem);
+  const items = useCartStore((s) => s.items);
   const [selectedVariant, setSelectedVariant] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
 
   if (!product) return null;
 
   const outOfStock = product.stock <= 0;
+  const cartItem = items.find((i) => i.product.id === product.id);
+  const inCart = !!cartItem;
 
   const handleAdd = () => {
     if (outOfStock) return;
@@ -44,6 +47,16 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               <SheetTitle className="font-display text-2xl text-foreground leading-tight">{product.name}</SheetTitle>
             </SheetHeader>
             <p className="font-body text-xl tabular-nums text-foreground">{formatPrice(product.price)}</p>
+
+            {inCart && (
+              <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5">
+                <ShoppingBag className="h-4 w-4 text-foreground" />
+                <p className="font-body text-sm text-foreground">
+                  Ya tenés <span className="font-medium">{cartItem.quantity}</span> en tu carrito
+                </p>
+              </div>
+            )}
+
             <p className="font-body text-sm text-muted-foreground leading-relaxed">{product.description}</p>
 
             {product.variants && product.variants.length > 0 && (
@@ -89,7 +102,7 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
                   : 'bg-foreground text-background hover:opacity-90'
               }`}
             >
-              {outOfStock ? 'Sin stock' : 'Agregar al carrito'}
+              {outOfStock ? 'Sin stock' : inCart ? 'Agregar más al carrito' : 'Agregar al carrito'}
             </button>
 
             <div className="pt-2">
@@ -102,6 +115,7 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               </p>
               <p className="font-body text-xs text-muted-foreground">
                 Categoría: {product.category}
+                {product.subcategory && ` › ${product.subcategory}`}
               </p>
             </div>
           </div>

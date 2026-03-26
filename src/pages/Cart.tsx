@@ -1,17 +1,22 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useProductStore } from '@/stores/productStore';
 import { formatPrice } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
+import ProductDetail from '@/components/ProductDetail';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import type { Product } from '@/data/products';
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, subtotal, clearCart } = useCartStore();
+  const products = useProductStore((s) => s.products);
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const [checkoutDone, setCheckoutDone] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleCheckout = () => {
     if (!user) {
@@ -22,6 +27,11 @@ const Cart = () => {
     setCheckoutDone(true);
     clearCart();
     toast.success('¡Pedido realizado con éxito!');
+  };
+
+  const handleProductClick = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (product) setSelectedProduct(product);
   };
 
   if (checkoutDone) {
@@ -56,12 +66,20 @@ const Cart = () => {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
             <div key={item.product.id} className="flex gap-4 rounded-lg shadow-card p-4">
-              <div className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0">
+              <div
+                onClick={() => handleProductClick(item.product.id)}
+                className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              >
                 <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-body text-[10px] uppercase tracking-widest text-muted-foreground">{item.product.brand}</p>
-                <p className="font-body text-sm font-medium text-foreground truncate">{item.product.name}</p>
+                <p
+                  onClick={() => handleProductClick(item.product.id)}
+                  className="font-body text-sm font-medium text-foreground truncate cursor-pointer hover:underline"
+                >
+                  {item.product.name}
+                </p>
                 {item.variant && <p className="font-body text-xs text-muted-foreground">{item.variant}</p>}
                 <p className="font-body text-sm tabular-nums text-foreground mt-1">{formatPrice(item.product.price)}</p>
                 <div className="flex items-center gap-2 mt-2">
@@ -95,6 +113,8 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      <ProductDetail product={selectedProduct} open={!!selectedProduct} onClose={() => setSelectedProduct(null)} />
     </div>
   );
 };

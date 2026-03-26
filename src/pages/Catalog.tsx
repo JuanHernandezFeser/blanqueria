@@ -6,7 +6,7 @@ import { useCategoryStore } from '@/stores/categoryStore';
 import type { Product } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -19,6 +19,7 @@ const Catalog = () => {
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get('category') || ''
   );
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -26,19 +27,23 @@ const Catalog = () => {
 
   const debouncedSearch = useDebounce(search, 300);
 
+  const activeCategoryObj = categories.find((c) => c.name === selectedCategory);
+
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (debouncedSearch && !p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) && !p.brand.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
       if (selectedCategory && p.category !== selectedCategory) return false;
+      if (selectedSubcategory && p.subcategory !== selectedSubcategory) return false;
       if (selectedBrand && p.brand !== selectedBrand) return false;
       if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
       if (inStockOnly && p.stock <= 0) return false;
       return true;
     });
-  }, [products, debouncedSearch, selectedCategory, selectedBrand, priceRange, inStockOnly]);
+  }, [products, debouncedSearch, selectedCategory, selectedSubcategory, selectedBrand, priceRange, inStockOnly]);
 
   const clearFilters = () => {
     setSelectedCategory('');
+    setSelectedSubcategory('');
     setSelectedBrand('');
     setPriceRange([0, 100000]);
     setInStockOnly(false);
@@ -46,21 +51,43 @@ const Catalog = () => {
     setSearchParams({});
   };
 
-  const hasActiveFilters = selectedCategory || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000;
+  const hasActiveFilters = selectedCategory || selectedSubcategory || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000;
 
   const FilterContent = () => (
     <div className="space-y-6">
       <div>
         <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Categoría</p>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {categories.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => { setSelectedCategory(selectedCategory === c.name ? '' : c.name); setSearchParams(selectedCategory === c.name ? {} : { category: c.name }); }}
-              className={`block w-full text-left px-3 py-2 rounded-md text-sm font-body transition-colors ${selectedCategory === c.name ? 'bg-foreground text-background' : 'text-foreground hover:bg-accent'}`}
-            >
-              {c.name}
-            </button>
+            <div key={c.name}>
+              <button
+                onClick={() => {
+                  const newCat = selectedCategory === c.name ? '' : c.name;
+                  setSelectedCategory(newCat);
+                  setSelectedSubcategory('');
+                  setSearchParams(newCat ? { category: newCat } : {});
+                }}
+                className={`block w-full text-left px-3 py-2 rounded-md text-sm font-body transition-colors ${selectedCategory === c.name ? 'bg-foreground text-background' : 'text-foreground hover:bg-accent'}`}
+              >
+                {c.name}
+              </button>
+              {selectedCategory === c.name && c.subcategories && c.subcategories.length > 0 && (
+                <div className="ml-3 mt-1 space-y-1">
+                  {c.subcategories.map((sub) => (
+                    <button
+                      key={sub}
+                      onClick={() => setSelectedSubcategory(selectedSubcategory === sub ? '' : sub)}
+                      className={`flex items-center gap-1 w-full text-left px-3 py-1.5 rounded-md text-xs font-body transition-colors ${
+                        selectedSubcategory === sub ? 'bg-foreground/80 text-background' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      }`}
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>
