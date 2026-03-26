@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useDebounce } from '@/hooks/useDebounce';
 
 const Catalog = () => {
+  const products = useProductStore((s) => s.products);
   const categories = useCategoryStore((s) => s.categories);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

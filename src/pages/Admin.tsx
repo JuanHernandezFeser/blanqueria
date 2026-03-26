@@ -31,7 +31,7 @@ const Admin = () => {
   const handleSave = () => {
     if (!form.name || !form.brand || form.price <= 0) { toast.error('Completá todos los campos'); return; }
     if (editProduct) {
-      updateProduct(editProduct.id, form);
+      updateProduct(editProduct.id, form as Partial<Product>);
       toast.success('Producto actualizado');
     } else {
       addProduct(form as Omit<Product, 'id'>);
