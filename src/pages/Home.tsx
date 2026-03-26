@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import heroBg from '@/assets/hero-bg.jpg';
 import { motion } from 'framer-motion';
 import { useProductStore } from '@/stores/productStore';
-import { categories } from '@/data/products';
+import { useCategoryStore } from '@/stores/categoryStore';
 
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
@@ -12,6 +12,7 @@ import { ArrowRight } from 'lucide-react';
 
 const Home = () => {
   const products = useProductStore((s) => s.products);
+  const categories = useCategoryStore((s) => s.categories);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const newArrivals = products.filter((p) => p.isNew).slice(0, 6);
