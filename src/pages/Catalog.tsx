@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProductStore } from '@/stores/productStore';
-import { categories, brands, type Category } from '@/data/products';
+import { brands } from '@/data/products';
+import { useCategoryStore } from '@/stores/categoryStore';
 import type { Product } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
@@ -11,11 +12,12 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 const Catalog = () => {
   const products = useProductStore((s) => s.products);
+  const categories = useCategoryStore((s) => s.categories);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<Category | ''>(
-    (searchParams.get('category') as Category) || ''
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get('category') || ''
   );
   const [selectedBrand, setSelectedBrand] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);

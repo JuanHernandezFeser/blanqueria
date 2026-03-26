@@ -20,7 +20,10 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
   if (!product) return null;
 
+  const outOfStock = product.stock <= 0;
+
   const handleAdd = () => {
+    if (outOfStock) return;
     for (let i = 0; i < quantity; i++) {
       addItem(product, selectedVariant);
     }
@@ -79,9 +82,14 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
             <button
               onClick={handleAdd}
-              className="w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background transition-opacity duration-200 hover:opacity-90 font-body"
+              disabled={outOfStock}
+              className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-opacity duration-200 font-body ${
+                outOfStock
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-foreground text-background hover:opacity-90'
+              }`}
             >
-              Agregar al carrito
+              {outOfStock ? 'Sin stock' : 'Agregar al carrito'}
             </button>
 
             <div className="pt-2">
