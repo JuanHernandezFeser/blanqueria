@@ -83,14 +83,14 @@ const Cart = () => {
                 {item.variant && <p className="font-body text-xs text-muted-foreground">{item.variant}</p>}
                 <p className="font-body text-sm tabular-nums text-foreground mt-1">{formatPrice(item.product.price)}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="p-1 rounded hover:bg-accent transition-colors">
+                  <button onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)} className="p-1 rounded hover:bg-accent transition-colors">
                     <Minus className="h-3 w-3" />
                   </button>
                   <span className="font-body text-sm tabular-nums w-6 text-center">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="p-1 rounded hover:bg-accent transition-colors">
+                  <button onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)} className="p-1 rounded hover:bg-accent transition-colors">
                     <Plus className="h-3 w-3" />
                   </button>
-                  <button onClick={() => { removeItem(item.product.id); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors">
+                  <button onClick={() => { removeItem(item.product.id, item.variant); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>

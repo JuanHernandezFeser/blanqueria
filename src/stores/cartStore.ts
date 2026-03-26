@@ -11,8 +11,8 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   addItem: (product: Product, variant?: string) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, variant?: string) => void;
+  updateQuantity: (productId: string, quantity: number, variant?: string) => void;
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
@@ -31,12 +31,13 @@ export const useCartStore = create<CartState>()(
           set({ items: [...items, { product, quantity: 1, variant }] });
         }
       },
-      removeItem: (productId) => set({ items: get().items.filter((i) => i.product.id !== productId) }),
-      updateQuantity: (productId, quantity) => {
+      removeItem: (productId, variant) => set({ items: get().items.filter((i) => !(i.product.id === productId && i.variant === variant)) }),
+      updateQuantity: (productId, quantity, variant) => {
+        const match = (i: CartItem) => i.product.id === productId && i.variant === variant;
         if (quantity <= 0) {
-          set({ items: get().items.filter((i) => i.product.id !== productId) });
+          set({ items: get().items.filter((i) => !match(i)) });
         } else {
-          set({ items: get().items.map((i) => i.product.id === productId ? { ...i, quantity } : i) });
+          set({ items: get().items.map((i) => match(i) ? { ...i, quantity } : i) });
         }
       },
       clearCart: () => set({ items: [] }),

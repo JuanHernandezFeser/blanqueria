@@ -25,8 +25,11 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const cartItem = items.find((i) => i.product.id === product.id);
   const inCart = !!cartItem;
 
+  const hasVariants = product.variants && product.variants.length > 0;
+  const variantRequired = hasVariants && !selectedVariant;
+
   const handleAdd = () => {
-    if (outOfStock) return;
+    if (outOfStock || variantRequired) return;
     for (let i = 0; i < quantity; i++) {
       addItem(product, selectedVariant);
     }
@@ -93,16 +96,20 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               </div>
             </div>
 
+            {variantRequired && (
+              <p className="font-body text-xs text-destructive">Seleccioná un tamaño para continuar</p>
+            )}
+
             <button
               onClick={handleAdd}
-              disabled={outOfStock}
+              disabled={outOfStock || variantRequired}
               className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-opacity duration-200 font-body ${
-                outOfStock
+                outOfStock || variantRequired
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'
                   : 'bg-foreground text-background hover:opacity-90'
               }`}
             >
-              {outOfStock ? 'Sin stock' : inCart ? 'Agregar más al carrito' : 'Agregar al carrito'}
+              {outOfStock ? 'Sin stock' : variantRequired ? 'Seleccioná un tamaño' : inCart ? 'Agregar más al carrito' : 'Agregar al carrito'}
             </button>
 
             <div className="pt-2">
