@@ -1,4 +1,4 @@
-import type { Product } from '@/data/products';
+import { type Product, getTotalStock } from '@/data/products';
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
 import { motion } from 'framer-motion';
@@ -15,7 +15,7 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
   const addItem = useCartStore((s) => s.addItem);
   const items = useCartStore((s) => s.items);
 
-  const outOfStock = product.stock <= 0;
+  const outOfStock = getTotalStock(product) <= 0;
   const inCart = items.some((i) => i.product.id === product.id);
 
   const handleAdd = (e: React.MouseEvent) => {

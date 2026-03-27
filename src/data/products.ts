@@ -11,8 +11,30 @@ export interface Product {
   images?: string[];
   variants?: string[];
   colors?: string[];
+  variantStock?: Record<string, number>;
   featured?: boolean;
   isNew?: boolean;
+}
+
+/** Build a variantStock key from variant and/or color */
+export function variantStockKey(variant?: string, color?: string): string {
+  if (variant && color) return `${variant}|||${color}`;
+  if (variant) return variant;
+  if (color) return color;
+  return '__default__';
+}
+
+/** Get stock for a specific variant/color combo, falling back to product.stock */
+export function getVariantStock(product: Product, variant?: string, color?: string): number {
+  if (!product.variantStock) return product.stock;
+  const key = variantStockKey(variant, color);
+  return product.variantStock[key] ?? 0;
+}
+
+/** Get total stock across all variants */
+export function getTotalStock(product: Product): number {
+  if (!product.variantStock) return product.stock;
+  return Object.values(product.variantStock).reduce((sum, s) => sum + s, 0);
 }
 
 export type Category = 'Sábanas' | 'Toallas' | 'Almohadas' | 'Acolchados' | 'Manteles';

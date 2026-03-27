@@ -4,7 +4,7 @@ import { useCategoryStore } from '@/stores/categoryStore';
 import type { CategoryItem } from '@/stores/categoryStore';
 import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
-import type { Product } from '@/data/products';
+import { type Product, variantStockKey, getTotalStock } from '@/data/products';
 import { mockOrders } from '@/data/orders';
 import { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, Upload, Image, Search } from 'lucide-react';
@@ -30,6 +30,7 @@ const Admin = () => {
   const emptyForm = {
     name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '',
     price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
+    variantStock: {} as Record<string, number>,
   };
   const [form, setForm] = useState(emptyForm);
   const [catForm, setCatForm] = useState({ name: '', image: '', description: '' });
@@ -45,6 +46,7 @@ const Admin = () => {
       name: p.name, description: p.description, brand: p.brand, category: p.category,
       subcategory: p.subcategory || '', price: p.price, stock: p.stock,
       image: p.image, images: p.images || [], variants: p.variants || [], colors: p.colors || [],
+      variantStock: p.variantStock || {},
     });
     setEditProduct(p);
     setShowForm(true);
@@ -97,17 +99,26 @@ const Admin = () => {
     setForm({ ...form, colors: form.colors.filter((x) => x !== c) });
   };
 
+  const hasVariantCombos = form.variants.length > 0 || form.colors.length > 0;
+
   const handleSave = () => {
     if (!form.name || !form.brand || form.price <= 0) { toast.error('Completá todos los campos'); return; }
     if (form.images.length === 0 && !form.image) { toast.error('Cargá al menos una imagen'); return; }
+
+    // Compute total stock from variantStock when combos exist
+    const computedStock = hasVariantCombos
+      ? Object.values(form.variantStock).reduce((sum, s) => sum + s, 0)
+      : form.stock;
+
     const data: Partial<Product> = {
       name: form.name, description: form.description, brand: form.brand,
       category: form.category, subcategory: form.subcategory || undefined,
-      price: form.price, stock: form.stock,
+      price: form.price, stock: computedStock,
       image: form.image || form.images[0],
       images: form.images.length > 0 ? form.images : undefined,
       variants: form.variants.length > 0 ? form.variants : undefined,
       colors: form.colors.length > 0 ? form.colors : undefined,
+      variantStock: hasVariantCombos ? form.variantStock : undefined,
     };
     if (editProduct) {
       updateProduct(editProduct.id, data);
@@ -273,9 +284,14 @@ const Admin = () => {
                     </td>
                     <td className="p-3 text-right font-body text-sm tabular-nums text-foreground">{formatPrice(p.price)}</td>
                     <td className="p-3 text-right hidden sm:table-cell">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-body font-medium ${p.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {p.stock > 0 ? `${p.stock}` : 'Sin stock'}
-                      </span>
+                      {(() => {
+                        const total = getTotalStock(p);
+                        return (
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-body font-medium ${total > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {total > 0 ? `${total}` : 'Sin stock'}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-1">
@@ -433,15 +449,17 @@ const Admin = () => {
                 </select>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className={hasVariantCombos ? '' : 'grid grid-cols-2 gap-3'}>
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Precio</label>
                 <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               </div>
-              <div>
-                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Stock</label>
-                <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              </div>
+              {!hasVariantCombos && (
+                <div>
+                  <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Stock</label>
+                  <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                </div>
+              )}
             </div>
 
             {/* Image upload */}
@@ -542,6 +560,45 @@ const Admin = () => {
                 </button>
               </div>
             </div>
+
+            {/* Per-variant stock grid */}
+            {hasVariantCombos && (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">
+                  Stock por combinación
+                  <span className="normal-case tracking-normal text-muted-foreground/70 ml-1">
+                    (Total: {Object.values(form.variantStock).reduce((s, v) => s + v, 0)})
+                  </span>
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto rounded-md border border-accent p-3">
+                  {(() => {
+                    const variants = form.variants.length > 0 ? form.variants : [undefined];
+                    const colors = form.colors.length > 0 ? form.colors : [undefined];
+                    return variants.flatMap((v) =>
+                      colors.map((c) => {
+                        const key = variantStockKey(v, c);
+                        const label = [v, c].filter(Boolean).join(' / ');
+                        return (
+                          <div key={key} className="flex items-center justify-between gap-3">
+                            <span className="font-body text-xs text-foreground truncate flex-1">{label}</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={form.variantStock[key] ?? 0}
+                              onChange={(e) => setForm((prev) => ({
+                                ...prev,
+                                variantStock: { ...prev.variantStock, [key]: Math.max(0, Number(e.target.value)) },
+                              }))}
+                              className="w-20 rounded-md border border-accent bg-background px-2 py-1.5 text-sm font-body text-foreground text-right focus:outline-none focus:ring-1 focus:ring-foreground"
+                            />
+                          </div>
+                        );
+                      })
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
 
             <button onClick={handleSave} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               {editProduct ? 'Guardar Cambios' : 'Crear Producto'}
