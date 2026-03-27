@@ -99,17 +99,26 @@ const Admin = () => {
     setForm({ ...form, colors: form.colors.filter((x) => x !== c) });
   };
 
+  const hasVariantCombos = form.variants.length > 0 || form.colors.length > 0;
+
   const handleSave = () => {
     if (!form.name || !form.brand || form.price <= 0) { toast.error('Completá todos los campos'); return; }
     if (form.images.length === 0 && !form.image) { toast.error('Cargá al menos una imagen'); return; }
+
+    // Compute total stock from variantStock when combos exist
+    const computedStock = hasVariantCombos
+      ? Object.values(form.variantStock).reduce((sum, s) => sum + s, 0)
+      : form.stock;
+
     const data: Partial<Product> = {
       name: form.name, description: form.description, brand: form.brand,
       category: form.category, subcategory: form.subcategory || undefined,
-      price: form.price, stock: form.stock,
+      price: form.price, stock: computedStock,
       image: form.image || form.images[0],
       images: form.images.length > 0 ? form.images : undefined,
       variants: form.variants.length > 0 ? form.variants : undefined,
       colors: form.colors.length > 0 ? form.colors : undefined,
+      variantStock: hasVariantCombos ? form.variantStock : undefined,
     };
     if (editProduct) {
       updateProduct(editProduct.id, data);
