@@ -6,8 +6,8 @@ import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
 import type { Product } from '@/data/products';
 import { mockOrders } from '@/data/orders';
-import { useState, useRef } from 'react';
-import { Pencil, Trash2, Plus, X, ChevronRight, Upload, Image } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, Upload, Image, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -21,6 +21,11 @@ const Admin = () => {
   const [showCatForm, setShowCatForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [newSubcategory, setNewSubcategory] = useState('');
+  const [newCatSubcategory, setNewCatSubcategory] = useState('');
+  const [catSubcategories, setCatSubcategories] = useState<string[]>([]);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 15;
 
   const emptyForm = {
     name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '',
@@ -121,6 +126,8 @@ const Admin = () => {
 
   const openCatNew = () => {
     setCatForm({ name: '', image: '', description: '' });
+    setCatSubcategories([]);
+    setNewCatSubcategory('');
     setEditingCategory(null);
     setShowCatForm(true);
   };
@@ -153,12 +160,13 @@ const Admin = () => {
         name: catForm.name.trim(),
         image: catForm.image || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop',
         description: catForm.description || '',
-        subcategories: [],
+        subcategories: catSubcategories,
       });
       toast.success('Categoría creada');
     }
     setShowCatForm(false);
     setEditingCategory(null);
+    setCatSubcategories([]);
   };
 
   const handleDeleteCategory = (name: string) => {
@@ -207,13 +215,33 @@ const Admin = () => {
         ))}
       </div>
 
-      {tab === 'products' && (
+      {tab === 'products' && (() => {
+        const adminFiltered = products.filter((p) =>
+          !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || p.brand.toLowerCase().includes(adminSearch.toLowerCase()) || p.category.toLowerCase().includes(adminSearch.toLowerCase())
+        );
+        const totalPages = Math.ceil(adminFiltered.length / PRODUCTS_PER_PAGE);
+        const safePage = Math.min(currentPage, totalPages || 1);
+        const paginatedProducts = adminFiltered.slice((safePage - 1) * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE);
+
+        return (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <p className="font-body text-sm text-muted-foreground">{products.length} productos</p>
-            <button onClick={openNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
-              <Plus className="h-3.5 w-3.5" /> Nuevo Producto
-            </button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <div className="relative flex-1 w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={adminSearch}
+                onChange={(e) => { setAdminSearch(e.target.value); setCurrentPage(1); }}
+                className="w-full rounded-md border border-accent bg-background pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <p className="font-body text-sm text-muted-foreground">{adminFiltered.length} productos</p>
+              <button onClick={openNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+                <Plus className="h-3.5 w-3.5" /> Nuevo Producto
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto rounded-lg shadow-card">
             <table className="w-full">
@@ -228,7 +256,7 @@ const Admin = () => {
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {paginatedProducts.map((p) => (
                   <tr key={p.id} className="border-b border-accent/50 hover:bg-secondary/30 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
@@ -260,8 +288,36 @@ const Admin = () => {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4 text-foreground" />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-8 w-8 rounded-md text-sm font-body transition-colors ${page === safePage ? 'bg-foreground text-background' : 'text-foreground hover:bg-accent'}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="h-4 w-4 text-foreground" />
+              </button>
+            </div>
+          )}
         </>
-      )}
+        );
+      })()}
 
       {tab === 'categories' && (
         <>
@@ -514,7 +570,7 @@ const Admin = () => {
               <input value={catForm.image} onChange={(e) => setCatForm({ ...catForm, image: e.target.value })} placeholder="https://..." className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
             </div>
 
-            {editingCategory && (
+            {editingCategory ? (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
                 {editingCategory.subcategories.length > 0 && (
@@ -538,6 +594,50 @@ const Admin = () => {
                     className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                   />
                   <button onClick={() => handleAddSubcategory(editingCategory.name)} className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
+                {catSubcategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {catSubcategories.map((sub) => (
+                      <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
+                        {sub}
+                        <button onClick={() => setCatSubcategories(catSubcategories.filter((s) => s !== sub))} className="hover:text-destructive transition-colors">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    value={newCatSubcategory}
+                    onChange={(e) => setNewCatSubcategory(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newCatSubcategory.trim() && !catSubcategories.includes(newCatSubcategory.trim())) {
+                          setCatSubcategories([...catSubcategories, newCatSubcategory.trim()]);
+                          setNewCatSubcategory('');
+                        }
+                      }
+                    }}
+                    placeholder="Nueva subcategoría..."
+                    className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newCatSubcategory.trim() && !catSubcategories.includes(newCatSubcategory.trim())) {
+                        setCatSubcategories([...catSubcategories, newCatSubcategory.trim()]);
+                        setNewCatSubcategory('');
+                      }
+                    }}
+                    className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
