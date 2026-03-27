@@ -444,15 +444,17 @@ const Admin = () => {
                 </select>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className={hasVariantCombos ? '' : 'grid grid-cols-2 gap-3'}>
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Precio</label>
                 <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               </div>
-              <div>
-                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Stock</label>
-                <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              </div>
+              {!hasVariantCombos && (
+                <div>
+                  <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Stock</label>
+                  <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                </div>
+              )}
             </div>
 
             {/* Image upload */}
