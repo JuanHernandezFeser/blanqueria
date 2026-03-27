@@ -5,7 +5,7 @@ const Footer = () => (
         <div>
           <h4 className="font-display text-xl text-foreground mb-3">AIKE</h4>
           <p className="font-body text-sm text-muted-foreground leading-relaxed">
-            El arte de descansar bien. Textiles premium para tu hogar.
+            Hacemos de tu casa tu refugio. Textiles premium para tu hogar.
           </p>
         </div>
         <div>

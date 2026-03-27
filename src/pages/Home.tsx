@@ -34,10 +34,10 @@ const Home = () => {
             className="max-w-2xl"
           >
             <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground leading-[1.1]">
-              El arte de descansar bien.
+              AIKE
             </h1>
             <p className="mt-5 font-body text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-              Textiles de hogar de primera calidad. Algodón egipcio, lino natural y acabados artesanales.
+              Hacemos de tu casa tu refugio.
             </p>
             <Link
               to="/catalogo"
