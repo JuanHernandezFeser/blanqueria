@@ -573,7 +573,7 @@ const Admin = () => {
             {editingCategory ? (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
-                {editingCategory.subcategories.length > 0 && (
+                {(editingCategory.subcategories?.length ?? 0) > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {editingCategory.subcategories.map((sub) => (
                       <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
