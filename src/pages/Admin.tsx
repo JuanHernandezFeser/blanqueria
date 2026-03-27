@@ -215,13 +215,33 @@ const Admin = () => {
         ))}
       </div>
 
-      {tab === 'products' && (
+      {tab === 'products' && (() => {
+        const adminFiltered = products.filter((p) =>
+          !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || p.brand.toLowerCase().includes(adminSearch.toLowerCase()) || p.category.toLowerCase().includes(adminSearch.toLowerCase())
+        );
+        const totalPages = Math.ceil(adminFiltered.length / PRODUCTS_PER_PAGE);
+        const safePage = Math.min(currentPage, totalPages || 1);
+        const paginatedProducts = adminFiltered.slice((safePage - 1) * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE);
+
+        return (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <p className="font-body text-sm text-muted-foreground">{products.length} productos</p>
-            <button onClick={openNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
-              <Plus className="h-3.5 w-3.5" /> Nuevo Producto
-            </button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <div className="relative flex-1 w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={adminSearch}
+                onChange={(e) => { setAdminSearch(e.target.value); setCurrentPage(1); }}
+                className="w-full rounded-md border border-accent bg-background pl-10 pr-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <p className="font-body text-sm text-muted-foreground">{adminFiltered.length} productos</p>
+              <button onClick={openNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+                <Plus className="h-3.5 w-3.5" /> Nuevo Producto
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto rounded-lg shadow-card">
             <table className="w-full">
@@ -236,7 +256,7 @@ const Admin = () => {
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {paginatedProducts.map((p) => (
                   <tr key={p.id} className="border-b border-accent/50 hover:bg-secondary/30 transition-colors">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
@@ -268,8 +288,36 @@ const Admin = () => {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4 text-foreground" />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-8 w-8 rounded-md text-sm font-body transition-colors ${page === safePage ? 'bg-foreground text-background' : 'text-foreground hover:bg-accent'}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="h-4 w-4 text-foreground" />
+              </button>
+            </div>
+          )}
         </>
-      )}
+        );
+      })()}
 
       {tab === 'categories' && (
         <>
