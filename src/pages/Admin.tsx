@@ -6,8 +6,8 @@ import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
 import type { Product } from '@/data/products';
 import { mockOrders } from '@/data/orders';
-import { useState } from 'react';
-import { Pencil, Trash2, Plus, X, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Pencil, Trash2, Plus, X, ChevronRight, Upload, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -22,22 +22,90 @@ const Admin = () => {
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [newSubcategory, setNewSubcategory] = useState('');
 
-  const emptyForm = { name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '', price: 0, stock: 0, image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop' };
+  const emptyForm = {
+    name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '',
+    price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
+  };
   const [form, setForm] = useState(emptyForm);
   const [catForm, setCatForm] = useState({ name: '', image: '', description: '' });
+  const [newVariant, setNewVariant] = useState('');
+  const [newColor, setNewColor] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user?.isAdmin) return <Navigate to="/login" />;
 
   const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true); };
-  const openEdit = (p: Product) => { setForm({ name: p.name, description: p.description, brand: p.brand, category: p.category, subcategory: p.subcategory || '', price: p.price, stock: p.stock, image: p.image }); setEditProduct(p); setShowForm(true); };
+  const openEdit = (p: Product) => {
+    setForm({
+      name: p.name, description: p.description, brand: p.brand, category: p.category,
+      subcategory: p.subcategory || '', price: p.price, stock: p.stock,
+      image: p.image, images: p.images || [], variants: p.variants || [], colors: p.colors || [],
+    });
+    setEditProduct(p);
+    setShowForm(true);
+  };
 
   const selectedCategoryObj = categories.find((c) => c.name === form.category);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setForm((prev) => ({
+          ...prev,
+          images: [...prev.images, dataUrl],
+          image: prev.image || dataUrl,
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setForm((prev) => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return { ...prev, images: newImages, image: newImages[0] || '' };
+    });
+  };
+
+  const handleAddVariant = () => {
+    if (!newVariant.trim() || form.variants.includes(newVariant.trim())) return;
+    setForm({ ...form, variants: [...form.variants, newVariant.trim()] });
+    setNewVariant('');
+  };
+
+  const handleRemoveVariant = (v: string) => {
+    setForm({ ...form, variants: form.variants.filter((x) => x !== v) });
+  };
+
+  const handleAddColor = () => {
+    if (!newColor.trim() || form.colors.includes(newColor.trim())) return;
+    setForm({ ...form, colors: [...form.colors, newColor.trim()] });
+    setNewColor('');
+  };
+
+  const handleRemoveColor = (c: string) => {
+    setForm({ ...form, colors: form.colors.filter((x) => x !== c) });
+  };
+
   const handleSave = () => {
     if (!form.name || !form.brand || form.price <= 0) { toast.error('Completá todos los campos'); return; }
-    const data = { ...form, subcategory: form.subcategory || undefined };
+    if (form.images.length === 0 && !form.image) { toast.error('Cargá al menos una imagen'); return; }
+    const data: Partial<Product> = {
+      name: form.name, description: form.description, brand: form.brand,
+      category: form.category, subcategory: form.subcategory || undefined,
+      price: form.price, stock: form.stock,
+      image: form.image || form.images[0],
+      images: form.images.length > 0 ? form.images : undefined,
+      variants: form.variants.length > 0 ? form.variants : undefined,
+      colors: form.colors.length > 0 ? form.colors : undefined,
+    };
     if (editProduct) {
-      updateProduct(editProduct.id, data as Partial<Product>);
+      updateProduct(editProduct.id, data);
       toast.success('Producto actualizado');
     } else {
       addProduct(data as Omit<Product, 'id'>);
@@ -67,7 +135,6 @@ const Admin = () => {
   const handleSaveCategory = () => {
     if (!catForm.name.trim()) { toast.error('Ingresá un nombre para la categoría'); return; }
     if (editingCategory) {
-      // If name changed, update products too
       if (editingCategory.name !== catForm.name.trim()) {
         products.forEach((p) => {
           if (p.category === editingCategory.name) {
@@ -106,13 +173,11 @@ const Admin = () => {
     addSubcategory(categoryName, newSubcategory.trim());
     setNewSubcategory('');
     toast.success('Subcategoría agregada');
-    // Refresh editing category
     const updated = useCategoryStore.getState().categories.find((c) => c.name === categoryName);
     if (updated) setEditingCategory(updated);
   };
 
   const handleRemoveSubcategory = (categoryName: string, sub: string) => {
-    // Check if any products use this subcategory
     const hasProducts = products.some((p) => p.category === categoryName && p.subcategory === sub);
     if (hasProducts) { toast.error('No se puede eliminar una subcategoría con productos asociados'); return; }
     removeSubcategory(categoryName, sub);
@@ -168,7 +233,7 @@ const Admin = () => {
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                          <img src={p.image} alt="" className="h-full w-full object-cover" />
+                          <img src={p.images?.[0] || p.image} alt="" className="h-full w-full object-cover" />
                         </div>
                         <span className="font-body text-sm text-foreground truncate max-w-[200px]">{p.name}</span>
                       </div>
@@ -278,7 +343,7 @@ const Admin = () => {
 
       {/* Product form dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="bg-background max-w-md">
+        <DialogContent className="bg-background max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{editProduct ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
           </DialogHeader>
@@ -322,10 +387,106 @@ const Admin = () => {
                 <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               </div>
             </div>
+
+            {/* Image upload */}
             <div>
-              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">URL de imagen</label>
-              <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Imágenes</label>
+              {form.images.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {form.images.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-muted group">
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <button
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 rounded-full bg-background/80 backdrop-blur-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3 text-foreground" />
+                      </button>
+                      {idx === 0 && (
+                        <span className="absolute bottom-1 left-1 bg-foreground/80 text-background text-[9px] px-1.5 py-0.5 rounded font-body">Principal</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 w-full rounded-md border border-dashed border-accent px-4 py-3 text-sm font-body text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Subir imágenes desde tu dispositivo</span>
+              </button>
+              {form.images.length === 0 && form.image && (
+                <div className="mt-2 flex items-center gap-2 text-xs font-body text-muted-foreground">
+                  <Image className="h-3.5 w-3.5" />
+                  <span className="truncate">{form.image.substring(0, 50)}...</span>
+                </div>
+              )}
             </div>
+
+            {/* Sizes (variants) */}
+            <div>
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Tamaños</label>
+              {form.variants.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {form.variants.map((v) => (
+                    <span key={v} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
+                      {v}
+                      <button onClick={() => handleRemoveVariant(v)} className="hover:text-destructive transition-colors"><X className="h-3 w-3" /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={newVariant}
+                  onChange={(e) => setNewVariant(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddVariant(); } }}
+                  placeholder="Ej: 1 Plaza, 2 Plazas, King..."
+                  className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                />
+                <button onClick={handleAddVariant} className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div>
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Colores</label>
+              {form.colors.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {form.colors.map((c) => (
+                    <span key={c} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
+                      {c}
+                      <button onClick={() => handleRemoveColor(c)} className="hover:text-destructive transition-colors"><X className="h-3 w-3" /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={newColor}
+                  onChange={(e) => setNewColor(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddColor(); } }}
+                  placeholder="Ej: Blanco, Gris, Beige..."
+                  className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                />
+                <button onClick={handleAddColor} className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
             <button onClick={handleSave} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               {editProduct ? 'Guardar Cambios' : 'Crear Producto'}
             </button>
@@ -353,7 +514,6 @@ const Admin = () => {
               <input value={catForm.image} onChange={(e) => setCatForm({ ...catForm, image: e.target.value })} placeholder="https://..." className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
             </div>
 
-            {/* Subcategories management (only in edit mode) */}
             {editingCategory && (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
