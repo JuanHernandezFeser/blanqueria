@@ -4,7 +4,7 @@ import { useCategoryStore } from '@/stores/categoryStore';
 import type { CategoryItem } from '@/stores/categoryStore';
 import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
-import type { Product } from '@/data/products';
+import { type Product, variantStockKey, getTotalStock } from '@/data/products';
 import { mockOrders } from '@/data/orders';
 import { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, Upload, Image, Search } from 'lucide-react';
@@ -30,6 +30,7 @@ const Admin = () => {
   const emptyForm = {
     name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '',
     price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
+    variantStock: {} as Record<string, number>,
   };
   const [form, setForm] = useState(emptyForm);
   const [catForm, setCatForm] = useState({ name: '', image: '', description: '' });
@@ -45,6 +46,7 @@ const Admin = () => {
       name: p.name, description: p.description, brand: p.brand, category: p.category,
       subcategory: p.subcategory || '', price: p.price, stock: p.stock,
       image: p.image, images: p.images || [], variants: p.variants || [], colors: p.colors || [],
+      variantStock: p.variantStock || {},
     });
     setEditProduct(p);
     setShowForm(true);
