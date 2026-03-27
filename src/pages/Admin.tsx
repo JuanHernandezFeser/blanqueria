@@ -424,7 +424,7 @@ const Admin = () => {
                 </select>
               </div>
             </div>
-            {selectedCategoryObj && selectedCategoryObj.subcategories.length > 0 && (
+            {selectedCategoryObj && selectedCategoryObj.subcategories?.length > 0 && (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Subcategoría</label>
                 <select value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
@@ -573,7 +573,7 @@ const Admin = () => {
             {editingCategory ? (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
-                {editingCategory.subcategories.length > 0 && (
+                {(editingCategory.subcategories?.length ?? 0) > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {editingCategory.subcategories.map((sub) => (
                       <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
