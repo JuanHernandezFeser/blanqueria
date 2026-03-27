@@ -284,9 +284,14 @@ const Admin = () => {
                     </td>
                     <td className="p-3 text-right font-body text-sm tabular-nums text-foreground">{formatPrice(p.price)}</td>
                     <td className="p-3 text-right hidden sm:table-cell">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-body font-medium ${p.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {p.stock > 0 ? `${p.stock}` : 'Sin stock'}
-                      </span>
+                      {(() => {
+                        const total = getTotalStock(p);
+                        return (
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-body font-medium ${total > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {total > 0 ? `${total}` : 'Sin stock'}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-1">
