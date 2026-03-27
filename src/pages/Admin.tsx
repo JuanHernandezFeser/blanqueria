@@ -126,6 +126,8 @@ const Admin = () => {
 
   const openCatNew = () => {
     setCatForm({ name: '', image: '', description: '' });
+    setCatSubcategories([]);
+    setNewCatSubcategory('');
     setEditingCategory(null);
     setShowCatForm(true);
   };
