@@ -160,12 +160,13 @@ const Admin = () => {
         name: catForm.name.trim(),
         image: catForm.image || 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop',
         description: catForm.description || '',
-        subcategories: [],
+        subcategories: catSubcategories,
       });
       toast.success('Categoría creada');
     }
     setShowCatForm(false);
     setEditingCategory(null);
+    setCatSubcategories([]);
   };
 
   const handleDeleteCategory = (name: string) => {
