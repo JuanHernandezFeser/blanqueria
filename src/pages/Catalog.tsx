@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProductStore } from '@/stores/productStore';
-import { brands } from '@/data/products';
 import { useCategoryStore } from '@/stores/categoryStore';
 import type { Product } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
@@ -27,7 +26,11 @@ const Catalog = () => {
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const activeCategoryObj = categories.find((c) => c.name === selectedCategory);
+  // Dynamic brands from actual products
+  const dynamicBrands = useMemo(() => {
+    const brandSet = new Set(products.map((p) => p.brand));
+    return Array.from(brandSet).sort();
+  }, [products]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -94,7 +97,7 @@ const Catalog = () => {
       <div>
         <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Marca</p>
         <div className="space-y-2">
-          {brands.map((b) => (
+          {dynamicBrands.map((b) => (
             <button
               key={b}
               onClick={() => setSelectedBrand(selectedBrand === b ? '' : b)}
@@ -134,7 +137,6 @@ const Catalog = () => {
     <div className="container py-8 md:py-12">
       <h1 className="font-display text-4xl md:text-5xl text-foreground mb-8">Catálogo</h1>
 
-      {/* Search + mobile filter toggle */}
       <div className="flex gap-3 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -160,12 +162,10 @@ const Catalog = () => {
       </div>
 
       <div className="flex gap-8">
-        {/* Desktop sidebar */}
         <aside className="hidden md:block w-56 flex-shrink-0">
           <FilterContent />
         </aside>
 
-        {/* Product grid */}
         <div className="flex-1">
           <p className="font-body text-xs text-muted-foreground mb-4">{filtered.length} productos</p>
           {filtered.length === 0 ? (
