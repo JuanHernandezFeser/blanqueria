@@ -570,7 +570,7 @@ const Admin = () => {
               <input value={catForm.image} onChange={(e) => setCatForm({ ...catForm, image: e.target.value })} placeholder="https://..." className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
             </div>
 
-            {editingCategory && (
+            {editingCategory ? (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
                 {editingCategory.subcategories.length > 0 && (
@@ -594,6 +594,50 @@ const Admin = () => {
                     className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                   />
                   <button onClick={() => handleAddSubcategory(editingCategory.name)} className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Subcategorías</label>
+                {catSubcategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {catSubcategories.map((sub) => (
+                      <span key={sub} className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-body text-foreground">
+                        {sub}
+                        <button onClick={() => setCatSubcategories(catSubcategories.filter((s) => s !== sub))} className="hover:text-destructive transition-colors">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    value={newCatSubcategory}
+                    onChange={(e) => setNewCatSubcategory(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newCatSubcategory.trim() && !catSubcategories.includes(newCatSubcategory.trim())) {
+                          setCatSubcategories([...catSubcategories, newCatSubcategory.trim()]);
+                          setNewCatSubcategory('');
+                        }
+                      }
+                    }}
+                    placeholder="Nueva subcategoría..."
+                    className="flex-1 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newCatSubcategory.trim() && !catSubcategories.includes(newCatSubcategory.trim())) {
+                        setCatSubcategories([...catSubcategories, newCatSubcategory.trim()]);
+                        setNewCatSubcategory('');
+                      }
+                    }}
+                    className="rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background font-body hover:opacity-90 transition-opacity"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
