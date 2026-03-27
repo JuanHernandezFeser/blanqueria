@@ -424,7 +424,7 @@ const Admin = () => {
                 </select>
               </div>
             </div>
-            {selectedCategoryObj && selectedCategoryObj.subcategories.length > 0 && (
+            {selectedCategoryObj && selectedCategoryObj.subcategories?.length > 0 && (
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Subcategoría</label>
                 <select value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
