@@ -556,6 +556,45 @@ const Admin = () => {
               </div>
             </div>
 
+            {/* Per-variant stock grid */}
+            {hasVariantCombos && (
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2 block">
+                  Stock por combinación
+                  <span className="normal-case tracking-normal text-muted-foreground/70 ml-1">
+                    (Total: {Object.values(form.variantStock).reduce((s, v) => s + v, 0)})
+                  </span>
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto rounded-md border border-accent p-3">
+                  {(() => {
+                    const variants = form.variants.length > 0 ? form.variants : [undefined];
+                    const colors = form.colors.length > 0 ? form.colors : [undefined];
+                    return variants.flatMap((v) =>
+                      colors.map((c) => {
+                        const key = variantStockKey(v, c);
+                        const label = [v, c].filter(Boolean).join(' / ');
+                        return (
+                          <div key={key} className="flex items-center justify-between gap-3">
+                            <span className="font-body text-xs text-foreground truncate flex-1">{label}</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={form.variantStock[key] ?? 0}
+                              onChange={(e) => setForm((prev) => ({
+                                ...prev,
+                                variantStock: { ...prev.variantStock, [key]: Math.max(0, Number(e.target.value)) },
+                              }))}
+                              className="w-20 rounded-md border border-accent bg-background px-2 py-1.5 text-sm font-body text-foreground text-right focus:outline-none focus:ring-1 focus:ring-foreground"
+                            />
+                          </div>
+                        );
+                      })
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
             <button onClick={handleSave} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               {editProduct ? 'Guardar Cambios' : 'Crear Producto'}
             </button>
