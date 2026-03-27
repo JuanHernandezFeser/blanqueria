@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
-import type { Product } from '@/data/products';
+import { type Product, getTotalStock } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import ProductDetail from '@/components/ProductDetail';
 import { Search, SlidersHorizontal, ChevronRight } from 'lucide-react';
@@ -39,7 +39,7 @@ const Catalog = () => {
       if (selectedSubcategory && p.subcategory !== selectedSubcategory) return false;
       if (selectedBrand && p.brand !== selectedBrand) return false;
       if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
-      if (inStockOnly && p.stock <= 0) return false;
+      if (inStockOnly && getTotalStock(p) <= 0) return false;
       return true;
     });
   }, [products, debouncedSearch, selectedCategory, selectedSubcategory, selectedBrand, priceRange, inStockOnly]);
