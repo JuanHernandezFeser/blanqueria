@@ -1,4 +1,4 @@
-import type { Product } from '@/data/products';
+import { type Product, getTotalStock, getVariantStock } from '@/data/products';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
@@ -24,7 +24,8 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   if (!product) return null;
 
   const allImages = product.images && product.images.length > 0 ? product.images : [product.image];
-  const outOfStock = product.stock <= 0;
+  const totalStock = getTotalStock(product);
+  const outOfStock = totalStock <= 0;
   const cartItem = items.find((i) => i.product.id === product.id);
   const inCart = !!cartItem;
 
@@ -34,8 +35,36 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const hasColors = product.colors && product.colors.length > 0;
   const colorRequired = hasColors && !selectedColor;
 
+  // Compute stock for the selected combo
+  const hasVariantStock = !!product.variantStock;
+  const selectedComboStock = hasVariantStock
+    ? getVariantStock(product, selectedVariant, selectedColor)
+    : product.stock;
+  const selectedComboOutOfStock = hasVariantStock && !variantRequired && !colorRequired && selectedComboStock <= 0;
+
+  // Check if a specific variant has any stock (across all colors)
+  const isVariantAvailable = (variant: string): boolean => {
+    if (!hasVariantStock) return product.stock > 0;
+    if (hasColors) {
+      return product.colors!.some((c) => getVariantStock(product, variant, c) > 0);
+    }
+    return getVariantStock(product, variant) > 0;
+  };
+
+  // Check if a specific color has any stock (across all variants, or for the selected variant)
+  const isColorAvailable = (color: string): boolean => {
+    if (!hasVariantStock) return product.stock > 0;
+    if (selectedVariant) {
+      return getVariantStock(product, selectedVariant, color) > 0;
+    }
+    if (hasVariants) {
+      return product.variants!.some((v) => getVariantStock(product, v, color) > 0);
+    }
+    return getVariantStock(product, undefined, color) > 0;
+  };
+
   const handleAdd = () => {
-    if (outOfStock || variantRequired || colorRequired) return;
+    if (outOfStock || variantRequired || colorRequired || selectedComboOutOfStock) return;
     for (let i = 0; i < quantity; i++) {
       addItem(product, selectedVariant);
     }
@@ -45,6 +74,8 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
   const nextImage = () => setCurrentImageIndex((i) => (i + 1) % allImages.length);
   const prevImage = () => setCurrentImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
+
+  const canAdd = !outOfStock && !variantRequired && !colorRequired && !selectedComboOutOfStock;
 
   return (
     <Sheet open={open} onOpenChange={() => { onClose(); setCurrentImageIndex(0); setSelectedVariant(undefined); setSelectedColor(undefined); }}>
@@ -94,19 +125,25 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               <div className="space-y-2">
                 <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Tamaño</p>
                 <div className="flex flex-wrap gap-2">
-                  {product.variants!.map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setSelectedVariant(v)}
-                      className={`rounded-md border px-4 py-2 text-xs font-body transition-all duration-200 ${
-                        selectedVariant === v
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-accent text-foreground hover:border-foreground'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
+                  {product.variants!.map((v) => {
+                    const available = !outOfStock && isVariantAvailable(v);
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => available && setSelectedVariant(v)}
+                        disabled={!available}
+                        className={`rounded-md border px-4 py-2 text-xs font-body transition-all duration-200 ${
+                          !available
+                            ? 'border-accent text-muted-foreground/50 cursor-not-allowed line-through'
+                            : selectedVariant === v
+                            ? 'border-foreground bg-foreground text-background'
+                            : 'border-accent text-foreground hover:border-foreground'
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -115,19 +152,25 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               <div className="space-y-2">
                 <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Color</p>
                 <div className="flex flex-wrap gap-2">
-                  {product.colors!.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedColor(c)}
-                      className={`rounded-md border px-4 py-2 text-xs font-body transition-all duration-200 ${
-                        selectedColor === c
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-accent text-foreground hover:border-foreground'
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
+                  {product.colors!.map((c) => {
+                    const available = !outOfStock && isColorAvailable(c);
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => available && setSelectedColor(c)}
+                        disabled={!available}
+                        className={`rounded-md border px-4 py-2 text-xs font-body transition-all duration-200 ${
+                          !available
+                            ? 'border-accent text-muted-foreground/50 cursor-not-allowed line-through'
+                            : selectedColor === c
+                            ? 'border-foreground bg-foreground text-background'
+                            : 'border-accent text-foreground hover:border-foreground'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -155,17 +198,25 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               </p>
             )}
 
+            {selectedComboOutOfStock && (
+              <p className="font-body text-xs text-destructive">
+                Esta combinación no tiene stock disponible
+              </p>
+            )}
+
             <button
               onClick={handleAdd}
-              disabled={outOfStock || variantRequired || colorRequired}
+              disabled={!canAdd}
               className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-opacity duration-200 font-body ${
-                outOfStock || variantRequired || colorRequired
+                !canAdd
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'
                   : 'bg-foreground text-background hover:opacity-90'
               }`}
             >
               {outOfStock
                 ? 'Sin stock'
+                : selectedComboOutOfStock
+                ? 'Sin stock en esta combinación'
                 : variantRequired || colorRequired
                 ? 'Seleccioná las opciones'
                 : inCart
@@ -179,7 +230,13 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
             <div className="pt-2 space-y-2">
               <p className="font-body text-xs text-muted-foreground">
-                Stock: {product.stock > 0 ? `${product.stock} disponibles` : 'Sin stock'}
+                Stock: {hasVariantStock
+                  ? selectedVariant || selectedColor
+                    ? `${selectedComboStock} disponibles para esta combinación`
+                    : `${totalStock} disponibles en total`
+                  : totalStock > 0
+                  ? `${totalStock} disponibles`
+                  : 'Sin stock'}
               </p>
               <p className="font-body text-xs text-muted-foreground">
                 Categoría: {product.category}
