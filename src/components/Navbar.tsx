@@ -44,7 +44,7 @@ const Navbar = () => {
 
         {/* Logo */}
         <Link to="/" className="font-display text-2xl text-foreground tracking-tight">
-          Blanquería
+          AIKE
         </Link>
 
         {/* Desktop nav */}
