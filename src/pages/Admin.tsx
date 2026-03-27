@@ -6,8 +6,8 @@ import { Navigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
 import type { Product } from '@/data/products';
 import { mockOrders } from '@/data/orders';
-import { useState, useRef } from 'react';
-import { Pencil, Trash2, Plus, X, ChevronRight, Upload, Image } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, Upload, Image, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
