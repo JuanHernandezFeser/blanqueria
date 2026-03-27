@@ -35,7 +35,7 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
     >
       <div className="relative overflow-hidden rounded-lg bg-muted aspect-[4/5] mb-3">
         <img
-          src={product.image}
+          src={product.images?.[0] || product.image}
           alt={product.name}
           className={`h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:scale-[1.02] image-outline ${outOfStock ? 'opacity-50 grayscale' : ''}`}
           loading="lazy"
