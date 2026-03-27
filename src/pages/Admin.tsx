@@ -21,6 +21,11 @@ const Admin = () => {
   const [showCatForm, setShowCatForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [newSubcategory, setNewSubcategory] = useState('');
+  const [newCatSubcategory, setNewCatSubcategory] = useState('');
+  const [catSubcategories, setCatSubcategories] = useState<string[]>([]);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 15;
 
   const emptyForm = {
     name: '', description: '', brand: '', category: categories[0]?.name || '', subcategory: '',
