@@ -1,25 +1,30 @@
 import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
-import { mockOrders } from '@/data/orders';
+import { useOrderStore } from '@/stores/orderStore';
+import { useBankConfigStore } from '@/stores/bankConfigStore';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
+import StatusBadge from '@/components/shared/StatusBadge';
+import PageLayout from '@/components/shared/PageLayout';
+import { formatDate } from '@/lib/helpers';
+import { CreditCard, Banknote, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import type { Order } from '@/data/orders';
 
 const MyAccount = () => {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const { orders, fetchOrders } = useOrderStore();
+  useEffect(() => { fetchOrders(); }, []);
+  const bankConfig = useBankConfigStore((s) => s.config);
+  const navigate = useNavigate();
+  const [showTransferInfo, setShowTransferInfo] = useState<string | null>(null);
 
   if (!user) return <Navigate to="/login" />;
 
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'Entregado': return 'bg-green-100 text-green-800';
-      case 'Enviado': return 'bg-blue-100 text-blue-800';
-      case 'En preparación': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-secondary text-foreground';
-    }
-  };
+  const userOrders = orders.filter((o) => o.customerEmail === user.email);
 
   return (
-    <div className="container max-w-2xl py-12 md:py-20">
+    <PageLayout className="max-w-2xl">
       <h1 className="font-display text-4xl text-foreground mb-8">Mi Cuenta</h1>
       <div className="space-y-6">
         <div className="rounded-lg bg-secondary/50 p-6 space-y-3">
@@ -34,27 +39,59 @@ const MyAccount = () => {
 
         <div>
           <h2 className="font-display text-2xl text-foreground mb-4">Mis Pedidos</h2>
-          {mockOrders.length === 0 ? (
-            <p className="font-body text-sm text-muted-foreground">No tenés pedidos todavía.</p>
+          {userOrders.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="font-body text-sm text-muted-foreground mb-4">No tenés pedidos todavía.</p>
+              <button onClick={() => navigate('/catalogo')} className="inline-block rounded-md bg-foreground px-6 py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+                Explorar catálogo
+              </button>
+            </div>
           ) : (
             <div className="space-y-3">
-              {mockOrders.map((o) => (
-                <div key={o.id} className="rounded-lg shadow-card p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
-                    <p className="font-body text-xs text-muted-foreground">{o.date}</p>
+              {userOrders.map((o: Order) => (
+                <div key={o.id}>
+                  <div className="rounded-lg shadow-card p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
+                        <p className="font-body text-xs text-muted-foreground">{formatDate(o.date)}</p>
+                      </div>
+                      <div className="text-right flex items-center gap-3">
+                        <StatusBadge status={o.orderStatus} />
+                        <p className="font-body text-sm tabular-nums font-medium text-foreground">{formatPrice(o.total)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-body">
+                      <div className="flex items-center gap-1">
+                        {o.paymentMethod === 'mercadopago' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
+                        <span>{o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}</span>
+                      </div>
+                      <span className={`${o.paymentStatus === 'aprobado' ? 'text-green-600' : o.paymentStatus === 'rechazado' ? 'text-red-600' : 'text-yellow-600'}`}>
+                        {o.paymentStatus === 'aprobado' ? 'Pagado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                      </span>
+                      {o.paymentMethod === 'transferencia' && o.paymentStatus === 'pendiente' && (
+                        <button onClick={() => setShowTransferInfo(showTransferInfo === o.id ? null : o.id)} className="flex items-center gap-1 text-foreground underline">
+                          <Eye className="h-3 w-3" /> Datos para transferir
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right flex items-center gap-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-body font-medium ${statusColor(o.status)}`}>{o.status}</span>
-                    <p className="font-body text-sm tabular-nums font-medium text-foreground">{formatPrice(o.total)}</p>
-                  </div>
+                  {showTransferInfo === o.id && (
+                    <div className="rounded-lg bg-secondary/50 p-4 mt-1 space-y-1 text-sm font-body">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">Datos para transferir</p>
+                      <p className="text-foreground">Banco: {bankConfig.bankName}</p>
+                      <p className="text-foreground">CBU: {bankConfig.cbu}</p>
+                      <p className="text-foreground">Alias: {bankConfig.alias}</p>
+                      <p className="text-foreground">Titular: {bankConfig.accountHolder}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

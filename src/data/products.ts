@@ -26,14 +26,14 @@ export function variantStockKey(variant?: string, color?: string): string {
 
 /** Get stock for a specific variant/color combo, falling back to product.stock */
 export function getVariantStock(product: Product, variant?: string, color?: string): number {
-  if (!product.variantStock) return product.stock;
+  if (!product.variantStock || Object.keys(product.variantStock).length === 0) return product.stock;
   const key = variantStockKey(variant, color);
   return product.variantStock[key] ?? 0;
 }
 
 /** Get total stock across all variants */
 export function getTotalStock(product: Product): number {
-  if (!product.variantStock) return product.stock;
+  if (!product.variantStock || Object.keys(product.variantStock).length === 0) return product.stock;
   return Object.values(product.variantStock).reduce((sum, s) => sum + s, 0);
 }
 

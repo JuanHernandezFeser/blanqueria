@@ -41,19 +41,33 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
           loading="lazy"
         />
         {outOfStock && (
-          <span className="absolute top-3 right-3 bg-destructive/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-destructive-foreground">
+          <span className="absolute top-3 left-3 bg-destructive px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-destructive-foreground shadow-sm">
             Sin stock
           </span>
         )}
         {!outOfStock && inCart && (
-          <span className="absolute top-3 right-3 bg-foreground/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-background flex items-center gap-1">
+          <span className="absolute top-3 left-3 bg-foreground px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-background flex items-center gap-1 shadow-sm">
             <ShoppingBag className="h-3 w-3" /> En carrito
           </span>
         )}
-        {!outOfStock && !inCart && product.isNew && (
-          <span className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest text-foreground">
-            Nuevo
-          </span>
+        {!outOfStock && !inCart && (
+          <>
+            {product.isNew && product.featured && (
+              <span className="absolute top-3 left-3 bg-emerald-600 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+                Nuevo
+              </span>
+            )}
+            {product.featured && !product.isNew && (
+              <span className="absolute top-3 left-3 bg-amber-600 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+                Destacado
+              </span>
+            )}
+            {product.isNew && !product.featured && (
+              <span className="absolute top-3 left-3 bg-foreground px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest text-background shadow-sm">
+                Nuevo
+              </span>
+            )}
+          </>
         )}
       </div>
       <div className="space-y-1">

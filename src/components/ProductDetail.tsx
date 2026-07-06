@@ -5,7 +5,8 @@ import { formatPrice } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Minus, Plus, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
+import QuantitySelector from '@/components/shared/QuantitySelector';
+import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductDetailProps {
   product: Product | null;
@@ -36,15 +37,13 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const colorRequired = hasColors && !selectedColor;
 
   // Compute stock for the selected combo
-  const hasVariantStock = !!product.variantStock;
-  const selectedComboStock = hasVariantStock
-    ? getVariantStock(product, selectedVariant, selectedColor)
-    : product.stock;
-  const selectedComboOutOfStock = hasVariantStock && !variantRequired && !colorRequired && selectedComboStock <= 0;
+  const hasVariantStockEntries = product.variantStock && Object.keys(product.variantStock).length > 0;
+  const selectedComboStock = getVariantStock(product, selectedVariant, selectedColor);
+  const selectedComboOutOfStock = hasVariantStockEntries && !variantRequired && !colorRequired && selectedComboStock <= 0;
 
   // Check if a specific variant has any stock (across all colors)
   const isVariantAvailable = (variant: string): boolean => {
-    if (!hasVariantStock) return product.stock > 0;
+    if (!hasVariantStockEntries) return product.stock > 0;
     if (hasColors) {
       return product.colors!.some((c) => getVariantStock(product, variant, c) > 0);
     }
@@ -53,7 +52,7 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
   // Check if a specific color has any stock (across all variants, or for the selected variant)
   const isColorAvailable = (color: string): boolean => {
-    if (!hasVariantStock) return product.stock > 0;
+    if (!hasVariantStockEntries) return product.stock > 0;
     if (selectedVariant) {
       return getVariantStock(product, selectedVariant, color) > 0;
     }
@@ -177,15 +176,12 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
             <div className="flex items-center gap-3">
               <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Cantidad</p>
-              <div className="flex items-center gap-2 border border-accent rounded-md">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 hover:bg-accent transition-colors rounded-l-md">
-                  <Minus className="h-3 w-3" />
-                </button>
-                <span className="font-body text-sm tabular-nums w-8 text-center">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="p-2 hover:bg-accent transition-colors rounded-r-md">
-                  <Plus className="h-3 w-3" />
-                </button>
-              </div>
+              <QuantitySelector
+                quantity={quantity}
+                onDecrease={() => setQuantity(Math.max(1, quantity - 1))}
+                onIncrease={() => setQuantity(quantity + 1)}
+                size="md"
+              />
             </div>
 
             {(variantRequired || colorRequired) && (
@@ -230,10 +226,8 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
 
             <div className="pt-2 space-y-2">
               <p className="font-body text-xs text-muted-foreground">
-                Stock: {hasVariantStock
-                  ? selectedVariant || selectedColor
-                    ? `${selectedComboStock} disponibles para esta combinación`
-                    : `${totalStock} disponibles en total`
+                Stock: {hasVariantStockEntries && (selectedVariant || selectedColor)
+                  ? `${selectedComboStock} disponibles para esta combinación`
                   : totalStock > 0
                   ? `${totalStock} disponibles`
                   : 'Sin stock'}

@@ -1,50 +1,63 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api, setToken } from '@/services/api';
 
 export interface User {
   email: string;
   name: string;
   isAdmin: boolean;
+  phone?: string;
+  address?: string;
+  locality?: string;
+  province?: string;
+  postalCode?: string;
 }
 
 interface AuthState {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, extra?: { phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }) => Promise<boolean>;
   logout: () => void;
+  restoreSession: () => Promise<void>;
 }
-
-const mockUsers: { email: string; password: string; name: string; isAdmin: boolean }[] = [
-  { email: 'user@tienda.com', password: 'user123', name: 'Usuario Demo', isAdmin: false },
-  { email: 'admin@tienda.com', password: 'admin123', name: 'Administrador', isAdmin: true },
-];
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      login: (email, password) => {
-        const found = mockUsers.find((u) => u.email === email && u.password === password);
-        if (found) {
-          set({ user: { email: found.email, name: found.name, isAdmin: found.isAdmin } });
+      login: async (email, password) => {
+        try {
+          const res = await api.login(email, password);
+          setToken(res.token);
+          set({ user: res.user });
           return true;
+        } catch (e: any) {
+          throw e;
         }
-        // Allow any valid email/password combo as regular user
-        if (email.includes('@') && password.length >= 4) {
-          set({ user: { email, name: email.split('@')[0], isAdmin: false } });
-          return true;
-        }
-        return false;
       },
-      register: (name, email, password) => {
-        if (email.includes('@') && password.length >= 4 && name.length > 0) {
-          mockUsers.push({ email, password, name, isAdmin: false });
-          set({ user: { email, name, isAdmin: false } });
-          return true;
-        }
-        return false;
+  register: async (name, email, password, extra?) => {
+    try {
+      const res = await api.register(name, email, password, extra);
+      setToken(res.token);
+      set({ user: res.user });
+      return true;
+    } catch (e: any) {
+      throw e;
+    }
+  },
+      logout: () => {
+        setToken(null);
+        set({ user: null });
       },
-      logout: () => set({ user: null }),
+      restoreSession: async () => {
+        try {
+          const user = await api.getMe();
+          set({ user });
+        } catch {
+          setToken(null);
+          set({ user: null });
+        }
+      },
     }),
     { name: 'auth-storage' }
   )

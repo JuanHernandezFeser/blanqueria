@@ -1,0 +1,13 @@
+{
+  "name": "blanqueria-server",
+  "version": "1.0.0",
+  "dependencies": {
+    "hono": "^4.7.0"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts"
+  },
+  "type": "module"
+}

@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateShipping, formatPrice } from '@/services/shippingService';
 import { Truck } from 'lucide-react';
 
-const ShippingCalculator = () => {
+interface ShippingCalculatorProps {
+  onShippingChange?: (cost: number) => void;
+}
+
+const ShippingCalculator = ({ onShippingChange }: ShippingCalculatorProps) => {
   const [postalCode, setPostalCode] = useState('');
   const result = calculateShipping(postalCode);
+
+  useEffect(() => {
+    onShippingChange?.(result?.cost ?? 0);
+  }, [result, onShippingChange]);
 
   return (
     <div className="space-y-3 p-4 rounded-lg bg-secondary/50">

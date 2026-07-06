@@ -1,0 +1,13 @@
+name = "blanqueria-api"
+main = "src/index.ts"
+compatibility_date = "2026-07-03"
+
+[vars]
+MERCADOPAGO_ACCESS_TOKEN = ""
+MERCADOPAGO_PUBLIC_KEY = ""
+SITE_URL = "http://localhost:8080"
+
+[[kv_namespaces]]
+binding = "ORDERS_KV"
+id = ""
+preview_id = ""

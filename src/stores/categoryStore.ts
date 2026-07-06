@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { api } from '@/services/api';
 
 export interface CategoryItem {
   name: string;
@@ -8,60 +8,52 @@ export interface CategoryItem {
   subcategories: string[];
 }
 
-const defaultCategories: CategoryItem[] = [
-  { name: 'Sábanas', image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=750&fit=crop', description: 'Algodón premium para tu descanso', subcategories: [] },
-  { name: 'Toallas', image: 'https://images.unsplash.com/photo-1616627561950-9f746e330187?w=600&h=750&fit=crop', description: 'Suavidad en cada detalle', subcategories: [] },
-  { name: 'Almohadas', image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&h=750&fit=crop', description: 'El soporte perfecto', subcategories: [] },
-  { name: 'Acolchados', image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&h=750&fit=crop', description: 'Calidez y estilo', subcategories: [] },
-  { name: 'Manteles', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=750&fit=crop', description: 'Elegancia en tu mesa', subcategories: [] },
-];
+export type CategoryInput = Omit<CategoryItem, 'image'> & { image?: string };
 
 interface CategoryState {
   categories: CategoryItem[];
-  addCategory: (cat: CategoryItem) => void;
-  updateCategory: (oldName: string, cat: Partial<CategoryItem>) => void;
-  deleteCategory: (name: string) => void;
-  addSubcategory: (categoryName: string, subcategory: string) => void;
-  removeSubcategory: (categoryName: string, subcategory: string) => void;
+  loading: boolean;
+  fetchCategories: () => Promise<void>;
+  addCategory: (cat: CategoryInput) => Promise<void>;
+  updateCategory: (oldName: string, cat: Partial<CategoryItem>) => Promise<void>;
+  deleteCategory: (name: string) => Promise<void>;
+  addSubcategory: (categoryName: string, subcategory: string) => Promise<void>;
+  removeSubcategory: (categoryName: string, subcategory: string) => Promise<void>;
 }
 
-export const useCategoryStore = create<CategoryState>()(
-  persist(
-    (set, get) => ({
-      categories: defaultCategories,
-      addCategory: (cat) => {
-        if (get().categories.some((c) => c.name === cat.name)) return;
-        set({ categories: [...get().categories, { ...cat, subcategories: cat.subcategories || [] }] });
-      },
-      updateCategory: (oldName, data) => {
-        set({
-          categories: get().categories.map((c) =>
-            c.name === oldName ? { ...c, ...data } : c
-          ),
-        });
-      },
-      deleteCategory: (name) => {
-        set({ categories: get().categories.filter((c) => c.name !== name) });
-      },
-      addSubcategory: (categoryName, subcategory) => {
-        set({
-          categories: get().categories.map((c) =>
-            c.name === categoryName && !c.subcategories.includes(subcategory)
-              ? { ...c, subcategories: [...c.subcategories, subcategory] }
-              : c
-          ),
-        });
-      },
-      removeSubcategory: (categoryName, subcategory) => {
-        set({
-          categories: get().categories.map((c) =>
-            c.name === categoryName
-              ? { ...c, subcategories: c.subcategories.filter((s) => s !== subcategory) }
-              : c
-          ),
-        });
-      },
-    }),
-    { name: 'category-storage' }
-  )
-);
+export const useCategoryStore = create<CategoryState>((set, get) => ({
+  categories: [],
+  loading: true,
+  fetchCategories: async () => {
+    try {
+      const categories = await api.getCategories<CategoryItem[]>();
+      set({ categories, loading: false });
+    } catch {
+      set({ loading: false });
+    }
+  },
+  addCategory: async (cat) => {
+    const created = await api.createCategory(cat);
+    set({ categories: [...get().categories, created] });
+  },
+  updateCategory: async (oldName, data) => {
+    const updated = await api.updateCategory(oldName, data);
+    set({ categories: get().categories.map((c) => (c.name === (data.name || oldName) ? updated : c)) });
+  },
+  deleteCategory: async (name) => {
+    await api.deleteCategory(name);
+    set({ categories: get().categories.filter((c) => c.name !== name) });
+  },
+  addSubcategory: async (categoryName, subcategory) => {
+    const cat = get().categories.find((c) => c.name === categoryName);
+    if (!cat || cat.subcategories.includes(subcategory)) return;
+    const updated = await api.updateCategory(categoryName, { subcategories: [...cat.subcategories, subcategory] });
+    set({ categories: get().categories.map((c) => (c.name === categoryName ? updated : c)) });
+  },
+  removeSubcategory: async (categoryName, subcategory) => {
+    const cat = get().categories.find((c) => c.name === categoryName);
+    if (!cat) return;
+    const updated = await api.updateCategory(categoryName, { subcategories: cat.subcategories.filter((s) => s !== subcategory) });
+    set({ categories: get().categories.map((c) => (c.name === categoryName ? updated : c)) });
+  },
+}));
