@@ -41,6 +41,11 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const selectedComboStock = getVariantStock(product, selectedVariant, selectedColor);
   const selectedComboOutOfStock = hasVariantStockEntries && !variantRequired && !colorRequired && selectedComboStock <= 0;
 
+  const maxQuantity = hasVariantStockEntries && (selectedVariant || selectedColor)
+    ? selectedComboStock
+    : totalStock;
+  const atStockLimit = maxQuantity > 0 && quantity >= maxQuantity;
+
   // Check if a specific variant has any stock (across all colors)
   const isVariantAvailable = (variant: string): boolean => {
     if (!hasVariantStockEntries) return product.stock > 0;
@@ -179,18 +184,24 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               <QuantitySelector
                 quantity={quantity}
                 onDecrease={() => setQuantity(Math.max(1, quantity - 1))}
-                onIncrease={() => setQuantity(quantity + 1)}
+                onIncrease={() => setQuantity(q => Math.min(q + 1, Math.max(maxQuantity, 1)))}
                 size="md"
               />
             </div>
 
             {(variantRequired || colorRequired) && (
-              <p className="font-body text-xs text-destructive">
+              <p data-testid="variant-error" className="font-body text-xs text-destructive">
                 {variantRequired && colorRequired
                   ? 'Seleccioná un tamaño y un color para continuar'
                   : variantRequired
                   ? 'Seleccioná un tamaño para continuar'
                   : 'Seleccioná un color para continuar'}
+              </p>
+            )}
+
+            {atStockLimit && !variantRequired && !colorRequired && !selectedComboOutOfStock && (
+              <p data-testid="stock-limit-error" className="font-body text-xs text-destructive">
+                Solo hay {maxQuantity} disponibles. No podés agregar más unidades.
               </p>
             )}
 
@@ -226,7 +237,7 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
             </div>
 
             <div className="pt-2 space-y-2">
-              <p className="font-body text-xs text-muted-foreground">
+              <p data-testid="stock-info" className="font-body text-xs text-muted-foreground">
                 Stock: {hasVariantStockEntries && (selectedVariant || selectedColor)
                   ? `${selectedComboStock} disponibles para esta combinación`
                   : totalStock > 0

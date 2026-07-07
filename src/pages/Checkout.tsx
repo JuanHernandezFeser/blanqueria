@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -37,6 +37,7 @@ const Checkout = () => {
   const [shippingCost, setShippingCost] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [orderDone, setOrderDone] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [formErrors, setFormErrors] = useState<{ email?: string; phone?: string }>({});
@@ -165,6 +166,8 @@ const Checkout = () => {
   };
 
   const handleTransferConfirm = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const id = await createOrderViaApi('pendiente');
@@ -172,6 +175,7 @@ const Checkout = () => {
       toast.success('Pedido creado con éxito');
     } catch { toast.error('Error al crear pedido'); }
     setSubmitting(false);
+    submittingRef.current = false;
   };
 
   const handleMpFallback = async () => {
