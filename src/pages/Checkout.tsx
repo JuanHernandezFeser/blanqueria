@@ -39,6 +39,7 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [orderDone, setOrderDone] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [formErrors, setFormErrors] = useState<{ email?: string; phone?: string }>({});
 
   if (items.length === 0 && !orderDone) return <EmptyCart message="Agregá productos antes de finalizar la compra." actionLabel="Explorar Catálogo" />;
 
@@ -48,7 +49,7 @@ const Checkout = () => {
         <div className="max-w-md mx-auto py-12 text-center">
           <h1 className="font-display text-4xl text-foreground mb-4">Checkout</h1>
           <div className="space-y-3">
-            <button onClick={() => setGuestMode(true)} className="w-full rounded-md bg-foreground py-4 text-sm font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+            <button onClick={() => setGuestMode(true)} data-testid="guest-checkout" className="w-full rounded-md bg-foreground py-4 text-sm font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               Comprar como invitado
             </button>
             <div className="pt-4 space-y-2">
@@ -70,7 +71,7 @@ const Checkout = () => {
     return (
       <div className="container max-w-lg py-20 text-center">
         <h1 className="font-display text-4xl text-foreground mb-4">¡Gracias por tu compra!</h1>
-        <p className="font-body text-muted-foreground mb-2">Pedido <span className="font-medium text-foreground">{orderId}</span></p>
+        <p className="font-body text-muted-foreground mb-2">Pedido <span className="font-medium text-foreground" data-testid="order-id">{orderId}</span></p>
         {paymentMethod === 'transferencia' && (
           <div className="rounded-lg bg-secondary/50 p-6 text-left space-y-2 mb-6">
             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Datos para transferir</p>
@@ -100,12 +101,21 @@ const Checkout = () => {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
     if (!shipping.name || !shipping.address || !shipping.city || !shipping.province || !shipping.postalCode || !shipping.phone) {
       toast.error('Completá todos los datos de envío');
       return;
     }
     if (guestMode && !shipping.email) {
       toast.error('Ingresá tu email');
+      return;
+    }
+    if (guestMode && shipping.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shipping.email)) {
+      setFormErrors((prev) => ({ ...prev, email: 'Ingresá un email válido' }));
+      return;
+    }
+    if (shipping.phone && !/^\+?[\d\s\-()]+$/.test(shipping.phone)) {
+      setFormErrors((prev) => ({ ...prev, phone: 'Ingresá un teléfono válido (solo números, espacios, guiones y paréntesis)' }));
       return;
     }
     setStep(2);
@@ -197,30 +207,31 @@ const Checkout = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           {step === 1 && (
-            <form onSubmit={handleShippingSubmit} className="space-y-4">
+            <form onSubmit={handleShippingSubmit} noValidate className="space-y-4">
               <h2 className="font-display text-2xl text-foreground mb-4">Datos de envío</h2>
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Nombre completo</label>
-                <input value={shipping.name} onChange={(e) => setShipping({ ...shipping, name: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                <input data-testid="checkout-name" value={shipping.name} onChange={(e) => setShipping({ ...shipping, name: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               </div>
               {guestMode && (
                 <div>
                   <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Email</label>
-                  <input type="email" value={shipping.email} onChange={(e) => setShipping({ ...shipping, email: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  <input type="email" data-testid="checkout-email" value={shipping.email} onChange={(e) => { setShipping({ ...shipping, email: e.target.value }); setFormErrors((prev) => ({ ...prev, email: undefined })); }} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  {formErrors.email && <p data-testid="error-email" className="text-xs text-destructive mt-1">{formErrors.email}</p>}
                 </div>
               )}
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Dirección</label>
-                <input value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                <input data-testid="checkout-address" value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Ciudad</label>
-                  <input value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  <input data-testid="checkout-city" value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
                 </div>
                 <div>
                   <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Provincia</label>
-                  <select value={shipping.province} onChange={(e) => setShipping({ ...shipping, province: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
+                  <select data-testid="checkout-province" value={shipping.province} onChange={(e) => setShipping({ ...shipping, province: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
                     <option value="">Seleccionar</option>
                     {provinces.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -229,15 +240,16 @@ const Checkout = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Código postal</label>
-                  <input value={shipping.postalCode} onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value.replace(/\D/g, '').slice(0, 4) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  <input data-testid="checkout-postal" value={shipping.postalCode} onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value.replace(/\D/g, '').slice(0, 4) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
                 </div>
                 <div>
                   <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Teléfono</label>
-                  <input value={shipping.phone} onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  <input data-testid="checkout-phone" value={shipping.phone} onChange={(e) => { setShipping({ ...shipping, phone: e.target.value }); setFormErrors((prev) => ({ ...prev, phone: undefined })); }} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+                  {formErrors.phone && <p data-testid="error-phone" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
                 </div>
               </div>
               <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} /></div>
-              <button type="submit" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
+              <button type="submit" data-testid="continue-to-payment" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>
             </form>
@@ -253,7 +265,7 @@ const Checkout = () => {
                   <p className="font-body text-xs text-muted-foreground">Débito, crédito, transferencia o efectivo</p>
                 </div>
               </button>
-              <button onClick={() => setPaymentMethod('transferencia')} className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'transferencia' ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
+              <button onClick={() => setPaymentMethod('transferencia')} data-testid="payment-transferencia" className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'transferencia' ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
                 <Banknote className="h-6 w-6 text-foreground flex-shrink-0" />
                 <div>
                   <p className="font-body text-sm font-medium text-foreground">Transferencia bancaria</p>
@@ -264,7 +276,7 @@ const Checkout = () => {
                 <button onClick={() => setStep(1)} className="flex items-center gap-2 rounded-md border border-accent px-6 py-3 text-xs font-body text-foreground hover:bg-accent transition-colors">
                   <ChevronLeft className="h-4 w-4" /> Volver
                 </button>
-                <button onClick={() => { if (paymentMethod) setStep(3); else toast.error('Seleccioná un método de pago'); }} className="flex-1 flex items-center justify-center gap-2 rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+                <button onClick={() => { if (paymentMethod) setStep(3); else toast.error('Seleccioná un método de pago'); }} data-testid="continue-to-confirm" className="flex-1 flex items-center justify-center gap-2 rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
                   Continuar <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -290,7 +302,7 @@ const Checkout = () => {
               </div>
 
               {paymentMethod === 'transferencia' && (
-                <div className="rounded-lg bg-secondary/50 p-5 space-y-1">
+                <div className="rounded-lg bg-secondary/50 p-5 space-y-1" data-testid="bank-details">
                   <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Datos para transferir</p>
                   <p className="font-body text-sm text-foreground">Banco: {bankConfig.bankName}</p>
                   <p className="font-body text-sm text-foreground">CBU: {bankConfig.cbu}</p>
@@ -316,7 +328,7 @@ const Checkout = () => {
               )}
 
               {paymentMethod === 'transferencia' && (
-                <PrimaryButton onClick={handleTransferConfirm} loading={submitting}>
+                <PrimaryButton onClick={handleTransferConfirm} loading={submitting} data-testid="confirm-order">
                   Confirmar pedido
                 </PrimaryButton>
               )}

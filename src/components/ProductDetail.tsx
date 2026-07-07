@@ -203,6 +203,7 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
             <button
               onClick={handleAdd}
               disabled={!canAdd}
+              data-testid="add-to-cart-detail"
               className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-opacity duration-200 font-body ${
                 !canAdd
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'

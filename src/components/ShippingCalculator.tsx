@@ -25,10 +25,11 @@ const ShippingCalculator = ({ onShippingChange }: ShippingCalculatorProps) => {
         placeholder="Código postal"
         value={postalCode}
         onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+        data-testid="shipping-input"
         className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground transition-shadow"
       />
       {result && (
-        <div className="flex items-center justify-between text-sm font-body">
+        <div className="flex items-center justify-between text-sm font-body" data-testid="shipping-result">
           <div>
             <p className="text-foreground font-medium">{result.method}</p>
             <p className="text-xs text-muted-foreground">{result.days}</p>

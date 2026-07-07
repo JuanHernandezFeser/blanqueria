@@ -32,6 +32,7 @@ const ProductCard = ({ product, onSelect, index = 0 }: ProductCardProps) => {
       transition={{ duration: 0.4, delay: index * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
       className="group cursor-pointer"
       onClick={() => onSelect(product)}
+      data-testid="product-card"
     >
       <div className="relative overflow-hidden rounded-lg bg-muted aspect-[4/5] mb-3">
         <img

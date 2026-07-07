@@ -109,7 +109,7 @@ const Navbar = () => {
           <Link to="/login" className="md:hidden p-2">
             <User className="h-5 w-5 text-foreground" />
           </Link>
-          <button onClick={() => setCartOpen(true)} className="relative p-2 -mr-2">
+          <button onClick={() => setCartOpen(true)} className="relative p-2 -mr-2" data-testid="cart-button">
             <ShoppingBag className="h-5 w-5 text-foreground" />
             {totalItems > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[10px] font-medium text-background">
