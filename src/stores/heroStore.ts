@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { api } from '@/services/api';
 
-export type HeroSlideType = 'image' | 'product';
+export type HeroSlideType = 'image' | 'video' | 'product';
 
 export interface HeroSlide {
   id: string;
   type: HeroSlideType;
   image: string;
+  videoUrl?: string;
   productId?: string;
   title?: string;
   subtitle?: string;

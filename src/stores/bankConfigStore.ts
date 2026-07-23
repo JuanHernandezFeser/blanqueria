@@ -6,6 +6,7 @@ export interface BankConfig {
   cbu: string;
   alias: string;
   accountHolder: string;
+  discountPercentage: number;
 }
 
 interface BankConfigState {
@@ -16,7 +17,7 @@ interface BankConfigState {
 }
 
 export const useBankConfigStore = create<BankConfigState>((set, get) => ({
-  config: { bankName: '', cbu: '', alias: '', accountHolder: '' },
+  config: { bankName: '', cbu: '', alias: '', accountHolder: '', discountPercentage: 0 },
   loading: true,
   fetchConfig: async () => {
     try {

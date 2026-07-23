@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
+import { useAmbienteStore } from '@/stores/ambienteStore';
 import { type Product, getTotalStock } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
-import ProductDetail from '@/components/ProductDetail';
 import FilterContent from '@/components/CatalogFilters';
 import SearchAutocomplete from '@/components/shared/SearchAutocomplete';
 import EmptyState from '@/components/shared/EmptyState';
@@ -19,26 +19,17 @@ type SortOrder = 'featured' | 'price-desc' | 'price-asc';
 const Catalog = () => {
   const products = useProductStore((s) => s.products);
   const categories = useCategoryStore((s) => s.categories);
+  const ambientes = useAmbienteStore((s) => s.ambientes);
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [selectedAmbiente, setSelectedAmbiente] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('featured');
-
-  useEffect(() => {
-    const openId = (location.state as { openProductId?: string })?.openProductId;
-    if (openId) {
-      const product = products.find((p) => p.id === openId);
-      if (product) setSelectedProduct(product);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state, products]);
 
   useEffect(() => {
     const searchFromUrl = searchParams.get('search') || '';
@@ -59,11 +50,12 @@ const Catalog = () => {
       if (selectedCategory && p.category !== selectedCategory) return false;
       if (selectedSubcategory && p.subcategory !== selectedSubcategory) return false;
       if (selectedBrand && p.brand !== selectedBrand) return false;
+      if (selectedAmbiente && (!p.ambientes || !p.ambientes.includes(selectedAmbiente))) return false;
       if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
       if (inStockOnly && getTotalStock(p) <= 0) return false;
       return true;
     });
-  }, [products, debouncedSearch, selectedCategory, selectedSubcategory, selectedBrand, priceRange, inStockOnly]);
+  }, [products, debouncedSearch, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand, priceRange, inStockOnly]);
 
   const sorted = useMemo(() => {
     const list = [...filtered];
@@ -73,18 +65,19 @@ const Catalog = () => {
   }, [filtered, sortOrder]);
 
   const clearFilters = () => {
-    setSelectedCategory(''); setSelectedSubcategory(''); setSelectedBrand('');
+    setSelectedCategory(''); setSelectedSubcategory(''); setSelectedAmbiente(''); setSelectedBrand('');
     setPriceRange([0, 100000]); setInStockOnly(false); setSearch('');
     setSearchParams({});
   };
 
-  const hasActiveFilters = selectedCategory || selectedSubcategory || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000;
+  const hasActiveFilters = selectedCategory || selectedSubcategory || selectedAmbiente || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000;
 
   const filterProps = {
-    categories, selectedCategory, selectedSubcategory, selectedBrand,
+    categories, ambientes, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand,
     priceRange, inStockOnly, brands: dynamicBrands,
     onCategoryChange: setSelectedCategory,
     onSubcategoryChange: setSelectedSubcategory,
+    onAmbienteChange: setSelectedAmbiente,
     onBrandChange: setSelectedBrand,
     onPriceRangeChange: setPriceRange,
     onInStockOnlyChange: setInStockOnly,
@@ -105,7 +98,7 @@ const Catalog = () => {
               <SlidersHorizontal className="h-4 w-4" /> Filtros
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 bg-background pt-10">
+          <SheetContent side="left" className="w-72 bg-background pt-10 overflow-y-auto">
             <FilterContent {...filterProps} />
           </SheetContent>
         </Sheet>
@@ -136,14 +129,13 @@ const Catalog = () => {
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
               {sorted.map((p, i) => (
-                <ProductCard key={p.id} product={p} onSelect={setSelectedProduct} index={i} />
+                <ProductCard key={p.id} product={p} index={i} badgeContext="catalogo" />
               ))}
             </div>
           )}
         </div>
       </div>
 
-      <ProductDetail product={selectedProduct} open={!!selectedProduct} onClose={() => setSelectedProduct(null)} />
     </PageLayout>
   );
 };

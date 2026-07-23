@@ -12,6 +12,26 @@ const AdminPayment = () => {
   return (
     <div className="max-w-md space-y-6">
       <h2 className="font-display text-2xl text-foreground">Medios de pago</h2>
+
+      <div className="space-y-4">
+        <h3 className="font-body text-sm font-medium text-foreground">Descuento por transferencia / efectivo</h3>
+        <div>
+          <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Porcentaje de descuento (%)</label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={0.5}
+            value={bankForm.discountPercentage}
+            onChange={(e) => setBankForm({ ...bankForm, discountPercentage: parseFloat(e.target.value) || 0 })}
+            className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+          />
+          <p className="font-body text-xs text-muted-foreground mt-1.5">
+            Este descuento se aplica a todos los productos para pagos con transferencia bancaria o efectivo. Débito y crédito mantienen el precio original.
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <h3 className="font-body text-sm font-medium text-foreground">Transferencia bancaria</h3>
         <div>

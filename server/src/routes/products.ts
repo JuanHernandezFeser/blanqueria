@@ -9,6 +9,7 @@ interface ProductRow {
   subcategory: string; price: number; stock: number; image: string;
   images_json: string; variants_json: string; colors_json: string;
   variant_stock_json: string; featured: number; is_new: number;
+  ambientes_json: string;
 }
 
 function formatProduct(row: ProductRow) {
@@ -20,6 +21,7 @@ function formatProduct(row: ProductRow) {
     variants: JSON.parse(row.variants_json || '[]'),
     colors: JSON.parse(row.colors_json || '[]'),
     variantStock: JSON.parse(row.variant_stock_json || '{}'),
+    ambientes: JSON.parse(row.ambientes_json || '[]'),
     featured: !!row.featured, isNew: !!row.is_new,
   };
 }
@@ -42,11 +44,12 @@ products.post('/', authMiddleware, adminMiddleware, async (c) => {
   const db = getDb();
   const id = String(Date.now());
   db.run(
-    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, featured, is_new) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, featured, is_new) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
     body.price, body.stock || 0, body.image || '',
     JSON.stringify(body.images || []), JSON.stringify(body.variants || []),
     JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
+    JSON.stringify(body.ambientes || []),
     body.featured ? 1 : 0, body.isNew ? 1 : 0
   );
   const row = db.query('SELECT * FROM products WHERE id = ?').get(id) as ProductRow;
@@ -70,6 +73,7 @@ products.put('/:id', authMiddleware, adminMiddleware, async (c) => {
   fields.push('variants_json = ?'); vals.push(JSON.stringify(body.variants ?? []));
   fields.push('colors_json = ?'); vals.push(JSON.stringify(body.colors ?? []));
   fields.push('variant_stock_json = ?'); vals.push(JSON.stringify(body.variantStock ?? {}));
+  fields.push('ambientes_json = ?'); vals.push(JSON.stringify(body.ambientes ?? []));
   for (const [k, v] of Object.entries(map)) {
     if (v !== undefined) {
       if (k === 'featured' || k === 'is_new') { fields.push(`${k} = ?`); vals.push(v ? 1 : 0); }

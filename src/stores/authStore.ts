@@ -11,40 +11,33 @@ export interface User {
   locality?: string;
   province?: string;
   postalCode?: string;
+  emailVerified?: boolean;
 }
 
 interface AuthState {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, extra?: { phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }) => Promise<boolean>;
+  register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   restoreSession: () => Promise<void>;
+  updateProfile: (data: { name: string; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       login: async (email, password) => {
-        try {
-          const res = await api.login(email, password);
-          setToken(res.token);
-          set({ user: res.user });
-          return true;
-        } catch (e: any) {
-          throw e;
-        }
+        const res = await api.login(email, password);
+        setToken(res.token);
+        set({ user: res.user });
+        return true;
       },
-  register: async (name, email, password, extra?) => {
-    try {
-      const res = await api.register(name, email, password, extra);
-      setToken(res.token);
-      set({ user: res.user });
-      return true;
-    } catch (e: any) {
-      throw e;
-    }
-  },
+      register: async (email, password) => {
+        const res = await api.register(email, password);
+        setToken(res.token);
+        set({ user: res.user });
+      },
       logout: () => {
         setToken(null);
         set({ user: null });
@@ -56,6 +49,13 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           setToken(null);
           set({ user: null });
+        }
+      },
+      updateProfile: async (data) => {
+        await api.updateProfile(data);
+        const currentUser = get().user;
+        if (currentUser) {
+          set({ user: { ...currentUser, ...data } });
         }
       },
     }),

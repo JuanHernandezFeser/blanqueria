@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import auth from './routes/auth';
 import products from './routes/products';
 import categories from './routes/categories';
+import ambientes from './routes/ambientes';
 import heroSlides from './routes/hero-slides';
 import orders from './routes/orders';
 import bankConfig from './routes/bank-config';
@@ -33,6 +34,7 @@ app.use('/api/*', cors({
 app.route('/api/auth', auth);
 app.route('/api/products', products);
 app.route('/api/categories', categories);
+app.route('/api/ambientes', ambientes);
 app.route('/api/hero-slides', heroSlides);
 app.route('/api/orders', orders);
 app.route('/api/bank-config', bankConfig);

@@ -1,14 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProductStore } from '@/stores/productStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
-import { formatPrice } from '@/services/shippingService';
+import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
-import { CreditCard, Banknote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight } from 'lucide-react';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import OrderSummary from '@/components/shared/OrderSummary';
@@ -41,6 +41,14 @@ const Checkout = () => {
   const [orderDone, setOrderDone] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [formErrors, setFormErrors] = useState<{ email?: string; phone?: string }>({});
+
+  const hasDiscount = bankConfig.discountPercentage > 0;
+  const applyDiscount = hasDiscount && paymentMethod === 'transferencia';
+  const effectiveSubtotal = applyDiscount ? getDiscountedPrice(subtotal(), bankConfig.discountPercentage) : subtotal();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step, orderDone]);
 
   if (items.length === 0 && !orderDone) return <EmptyCart message="Agregá productos antes de finalizar la compra." actionLabel="Explorar Catálogo" />;
 
@@ -98,7 +106,7 @@ const Checkout = () => {
     );
   }
 
-  const total = subtotal() + shippingCost;
+  const total = effectiveSubtotal + shippingCost;
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,38 +131,35 @@ const Checkout = () => {
   };
 
   const createOrderViaApi = async (paymentStatus: 'aprobado' | 'pendiente' | 'rechazado') => {
+    const orderItems = items.map((i) => ({
+      productId: i.product.id, productName: i.product.name, quantity: i.quantity,
+      price: applyDiscount ? getDiscountedPrice(i.product.price, bankConfig.discountPercentage) : i.product.price,
+      variant: i.variant,
+    }));
     const created = await api.createOrder({
       customerName: shipping.name, customerEmail: user?.email ?? shipping.email,
       shippingAddress: { address: shipping.address, city: shipping.city, province: shipping.province, postalCode: shipping.postalCode, phone: shipping.phone },
-      items: items.map((i) => ({ productId: i.product.id, productName: i.product.name, quantity: i.quantity, price: i.product.price, variant: i.variant })),
-      subtotal: subtotal(), shippingCost, total, paymentMethod: paymentMethod!, paymentStatus,
+      items: orderItems,
+      subtotal: effectiveSubtotal, shippingCost, total, paymentMethod: paymentMethod!, paymentStatus, source: 'web',
     });
     addOrder(created);
     return created.id;
   };
 
-  const isDev = import.meta.env.DEV;
-
   const handleMpPayment = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
-    if (isDev) {
-      setTimeout(async () => {
-        try {
-          const id = await createOrderViaApi('aprobado');
-          setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
-          toast.success('🧪 Pago simulado con éxito');
-        } catch { toast.error('Error al crear pedido'); }
-        setSubmitting(false);
-      }, 1000);
-      return;
-    }
     try {
+      const id = await createOrderViaApi('pendiente');
       const { initPoint } = await api.createMpPreference({
         items: items.map((i) => ({ title: i.product.name, quantity: i.quantity, unitPrice: i.product.price })),
         customerEmail: user?.email ?? shipping.email,
+        orderId: id,
       });
+      clearCart();
       window.location.href = initPoint;
-    } catch { toast.error('Error al conectar con Mercado Pago. Intentalo de nuevo.'); setSubmitting(false); }
+    } catch { toast.error('Error al conectar con Mercado Pago. Intentalo de nuevo.'); setSubmitting(false); submittingRef.current = false; }
   };
 
   const handleSimulatePayment = async () => {
@@ -189,11 +194,6 @@ const Checkout = () => {
   return (
     <PageLayout>
       <PageBreadcrumbs items={[{ label: 'Inicio', href: '/' }, { label: 'Carrito', href: '/carrito' }, { label: 'Checkout' }]} />
-      {isDev && (
-        <div className="mb-6 rounded-md bg-yellow-100 text-yellow-800 px-4 py-3 text-sm font-body">
-          🧪 Modo desarrollo — los pagos se simulan localmente. Las órdenes se guardan en el navegador.
-        </div>
-      )}
       <h1 className="font-display text-4xl text-foreground mb-8">Checkout</h1>
 
       <div className="flex items-center gap-2 mb-8 font-body text-sm">
@@ -262,8 +262,11 @@ const Checkout = () => {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="font-display text-2xl text-foreground mb-4">Método de pago</h2>
-              <button onClick={() => setPaymentMethod('mercadopago')} className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'mercadopago' ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
-                <CreditCard className="h-6 w-6 text-foreground flex-shrink-0" />
+              <button onClick={() => setPaymentMethod('mercadopago')} className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'mercadopago' ? 'border-[#009ee3] bg-[#009ee3]/5' : 'border-accent hover:border-[#009ee3]/50'}`}>
+                <svg viewBox="0 0 36 36" className="h-6 w-6 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="36" height="36" rx="6" fill="#009ee3"/>
+                  <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="14">MP</text>
+                </svg>
                 <div>
                   <p className="font-body text-sm font-medium text-foreground">Mercado Pago</p>
                   <p className="font-body text-xs text-muted-foreground">Débito, crédito, transferencia o efectivo</p>
@@ -300,7 +303,7 @@ const Checkout = () => {
               <div className="rounded-lg bg-secondary/50 p-5 space-y-2">
                 <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Método de pago</p>
                 <div className="flex items-center gap-2">
-                  {paymentMethod === 'mercadopago' ? <CreditCard className="h-4 w-4" /> : <Banknote className="h-4 w-4" />}
+                  {paymentMethod === 'mercadopago' ? <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><rect width="20" height="20" rx="3" fill="#009ee3"/><text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="8">MP</text></svg> : <Banknote className="h-4 w-4" />}
                   <p className="font-body text-sm text-foreground">{paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia bancaria'}</p>
                 </div>
               </div>
@@ -317,17 +320,16 @@ const Checkout = () => {
 
               {paymentMethod === 'mercadopago' && (
                 <div className="flex flex-col gap-3 pt-2">
-                  <PrimaryButton onClick={handleMpPayment} loading={submitting} loadingText="Conectando con Mercado Pago...">
-                    Pagar con Mercado Pago
-                  </PrimaryButton>
+                  <button onClick={handleMpPayment} disabled={submitting} className="w-full flex items-center justify-center gap-2 rounded-md bg-[#009ee3] py-3.5 text-xs font-medium uppercase tracking-wider text-white font-body hover:bg-[#0087d1] disabled:opacity-50 transition-colors">
+                    <svg viewBox="0 0 36 36" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="36" height="36" rx="6" fill="white"/>
+                      <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="#009ee3" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="14">MP</text>
+                    </svg>
+                    {submitting ? 'Conectando con Mercado Pago...' : 'Pagar con Mercado Pago'}
+                  </button>
                   <button onClick={handleMpFallback} className="w-full rounded-md border border-accent py-3 text-xs font-body text-muted-foreground hover:text-foreground transition-colors">
                     Pagar después (crear pedido pendiente)
                   </button>
-                  {isDev && (
-                    <button onClick={handleSimulatePayment} className="w-full rounded-md bg-green-600 py-3 text-xs font-medium uppercase tracking-wider text-white font-body hover:bg-green-700 transition-colors">
-                      🧪 Simular pago aprobado (solo desarrollo)
-                    </button>
-                  )}
                 </div>
               )}
 
@@ -358,11 +360,11 @@ const Checkout = () => {
                     {item.variant && <p className="font-body text-[10px] text-muted-foreground">{item.variant}</p>}
                     <p className="font-body text-xs text-muted-foreground">x{item.quantity}</p>
                   </div>
-                  <p className="font-body text-xs tabular-nums text-foreground font-medium">{formatPrice(item.product.price * item.quantity)}</p>
+                  <p className="font-body text-xs tabular-nums text-foreground font-medium">{formatPrice((applyDiscount ? getDiscountedPrice(item.product.price, bankConfig.discountPercentage) : item.product.price) * item.quantity)}</p>
                 </div>
               ))}
             </div>
-            <OrderSummary subtotal={subtotal()} shippingCost={shippingCost} total={total} />
+            <OrderSummary subtotal={effectiveSubtotal} shippingCost={shippingCost} total={total} />
           </div>
         </div>
       </div>

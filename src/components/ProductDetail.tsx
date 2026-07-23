@@ -1,28 +1,36 @@
 import { type Product, getTotalStock, getVariantStock } from '@/data/products';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
-import { formatPrice } from '@/services/shippingService';
+import { useBankConfigStore } from '@/stores/bankConfigStore';
+import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import QuantitySelector from '@/components/shared/QuantitySelector';
-import { ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 
-interface ProductDetailProps {
-  product: Product | null;
-  open: boolean;
-  onClose: () => void;
-}
-
-const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
+const ProductDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const products = useProductStore((s) => s.products);
   const addItem = useCartStore((s) => s.addItem);
   const items = useCartStore((s) => s.items);
+  const discountPercentage = useBankConfigStore((s) => s.config.discountPercentage);
   const [selectedVariant, setSelectedVariant] = useState<string | undefined>();
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  if (!product) return null;
+  const product = products.find((p) => p.id === id) ?? null;
+
+  if (!product) {
+    return (
+      <div className="container py-8 md:py-12">
+        <p className="font-body text-muted-foreground">Producto no encontrado.</p>
+      </div>
+    );
+  }
 
   const allImages = product.images && product.images.length > 0 ? product.images : [product.image];
   const totalStock = getTotalStock(product);
@@ -36,7 +44,6 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const hasColors = product.colors && product.colors.length > 0;
   const colorRequired = hasColors && !selectedColor;
 
-  // Compute stock for the selected combo
   const hasVariantStockEntries = product.variantStock && Object.keys(product.variantStock).length > 0;
   const selectedComboStock = getVariantStock(product, selectedVariant, selectedColor);
   const selectedComboOutOfStock = hasVariantStockEntries && !variantRequired && !colorRequired && selectedComboStock <= 0;
@@ -46,7 +53,6 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
     : totalStock;
   const atStockLimit = maxQuantity > 0 && quantity >= maxQuantity;
 
-  // Check if a specific variant has any stock (across all colors)
   const isVariantAvailable = (variant: string): boolean => {
     if (!hasVariantStockEntries) return product.stock > 0;
     if (hasColors) {
@@ -55,7 +61,6 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
     return getVariantStock(product, variant) > 0;
   };
 
-  // Check if a specific color has any stock (across all variants, or for the selected variant)
   const isColorAvailable = (color: string): boolean => {
     if (!hasVariantStockEntries) return product.stock > 0;
     if (selectedVariant) {
@@ -79,40 +84,78 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
   const nextImage = () => setCurrentImageIndex((i) => (i + 1) % allImages.length);
   const prevImage = () => setCurrentImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
 
-  const canAdd = !outOfStock && !variantRequired && !colorRequired && !selectedComboOutOfStock;
+  const canAdd = !outOfStock && !variantRequired && !colorRequired && !selectedComboOutOfStock && !(inCart && atStockLimit);
 
   return (
-    <Sheet open={open} onOpenChange={() => { onClose(); setCurrentImageIndex(0); setSelectedVariant(undefined); setSelectedColor(undefined); }}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto bg-background p-0">
-        <div className="flex flex-col">
-          <div className="relative aspect-[4/5] w-full bg-muted">
-            <img src={allImages[currentImageIndex]} alt={product.name} className="h-full w-full object-cover image-outline" />
+    <div className="min-h-screen">
+      <div className="container py-6 md:py-10">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" /> Volver
+        </button>
+
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_520px] gap-8">
+          {/* Left column: image + thumbnail carousel */}
+          <div className="flex flex-col gap-4 min-w-0">
+            {/* Main image */}
+            <div className="relative w-full max-h-[50vh] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+              <img
+                src={allImages[currentImageIndex]}
+                alt={product.name}
+                className="max-h-[50vh] w-full object-contain image-outline"
+              />
+            </div>
+
+            {/* Thumbnail carousel */}
             {allImages.length > 1 && (
-              <>
-                <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 hover:bg-background transition-colors">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={prevImage}
+                  className="shrink-0 rounded-full bg-background border border-border p-1.5 hover:bg-muted transition-colors"
+                >
                   <ChevronLeft className="h-4 w-4 text-foreground" />
                 </button>
-                <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 hover:bg-background transition-colors">
-                  <ChevronRight className="h-4 w-4 text-foreground" />
-                </button>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {allImages.map((_, idx) => (
+                <div className="flex gap-2 overflow-x-auto flex-1 justify-center">
+                  {allImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-foreground scale-125' : 'bg-foreground/40'}`}
-                    />
+                      className={`w-20 h-20 rounded-md overflow-hidden border-2 transition-all shrink-0 ${
+                        idx === currentImageIndex
+                          ? 'border-foreground opacity-100'
+                          : 'border-transparent opacity-50 hover:opacity-80'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
                   ))}
                 </div>
-              </>
+                <button
+                  onClick={nextImage}
+                  className="shrink-0 rounded-full bg-background border border-border p-1.5 hover:bg-muted transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4 text-foreground" />
+                </button>
+              </div>
             )}
           </div>
-          <div className="p-6 space-y-5">
-            <SheetHeader className="text-left p-0">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-body">{product.brand}</p>
-              <SheetTitle className="font-display text-2xl text-foreground leading-tight">{product.name}</SheetTitle>
-            </SheetHeader>
-            <p className="font-body text-xl tabular-nums text-foreground">{formatPrice(product.price)}</p>
+
+          {/* Right column: product details */}
+          <div className="w-full lg:w-[520px] shrink-0 space-y-5">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-body">{product.brand}</p>
+              <h1 className="font-display text-3xl lg:text-4xl text-foreground leading-tight mt-1">{product.name}</h1>
+            </div>
+            <div className="space-y-1">
+              <p className="font-body text-2xl tabular-nums text-foreground">{formatPrice(product.price)}</p>
+              {discountPercentage > 0 && (
+                <p className="font-body text-lg tabular-nums text-gold font-medium">
+                  {formatPrice(getDiscountedPrice(product.price, discountPercentage))}<span className="ml-2">transferencia / efectivo</span>
+                </p>
+              )}
+            </div>
 
             {inCart && (
               <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5">
@@ -215,10 +258,12 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
               onClick={handleAdd}
               disabled={!canAdd}
               data-testid="add-to-cart-detail"
-              className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-opacity duration-200 font-body ${
+              className={`w-full rounded-md py-3.5 text-xs font-medium uppercase tracking-wider transition-all duration-200 font-body ${
                 !canAdd
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-foreground text-background hover:opacity-90'
+                  : inCart
+                  ? 'bg-gold text-gold-foreground hover:opacity-90'
+                  : 'border border-gold text-gold hover:bg-gold hover:text-gold-foreground'
               }`}
             >
               {outOfStock
@@ -227,10 +272,21 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
                 ? 'Sin stock en esta combinación'
                 : variantRequired || colorRequired
                 ? 'Seleccioná las opciones'
+                : inCart && atStockLimit
+                ? 'Stock máximo en carrito'
                 : inCart
                 ? 'Agregar más al carrito'
                 : 'Agregar al carrito'}
             </button>
+
+            {inCart && (
+              <button
+                onClick={() => navigate('/carrito')}
+                className="w-full rounded-md border border-accent py-3.5 text-xs font-medium uppercase tracking-wider text-foreground hover:bg-muted transition-colors font-body"
+              >
+                Ir al carrito
+              </button>
+            )}
 
             <div className="pt-2">
               <ShippingCalculator />
@@ -251,8 +307,8 @@ const ProductDetail = ({ product, open, onClose }: ProductDetailProps) => {
             </div>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 };
 

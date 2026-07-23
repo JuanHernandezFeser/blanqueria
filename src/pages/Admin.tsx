@@ -3,15 +3,17 @@ import { Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import AdminProducts from './admin/AdminProducts';
 import AdminCategories from './admin/AdminCategories';
+import AdminAmbientes from './admin/AdminAmbientes';
 import AdminOrders from './admin/AdminOrders';
 import AdminHero from './admin/AdminHero';
 import AdminPayment from './admin/AdminPayment';
 
-type Tab = 'products' | 'orders' | 'categories' | 'payment' | 'hero';
+type Tab = 'products' | 'orders' | 'categories' | 'ambientes' | 'payment' | 'hero';
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'products', label: 'Productos' },
   { key: 'categories', label: 'Categorías' },
+  { key: 'ambientes', label: 'Ambientes' },
   { key: 'hero', label: 'Hero' },
   { key: 'orders', label: 'Pedidos' },
   { key: 'payment', label: 'Medios de pago' },
@@ -36,6 +38,7 @@ const Admin = () => {
       </div>
       {tab === 'products' && <AdminProducts />}
       {tab === 'categories' && <AdminCategories />}
+      {tab === 'ambientes' && <AdminAmbientes />}
       {tab === 'hero' && <AdminHero />}
       {tab === 'orders' && <AdminOrders />}
       {tab === 'payment' && <AdminPayment />}

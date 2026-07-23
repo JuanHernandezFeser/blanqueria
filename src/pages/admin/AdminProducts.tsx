@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
+import { useAmbienteStore } from '@/stores/ambienteStore';
 import { type Product, variantStockKey, getTotalStock } from '@/data/products';
 import { formatPrice } from '@/services/shippingService';
 import SearchInput from '@/components/shared/SearchInput';
@@ -13,7 +14,7 @@ import { toast } from 'sonner';
 const PRODUCTS_PER_PAGE = 15;
 
 const emptyForm = {
-  name: '', description: '', brand: '', category: '', subcategory: '',
+  name: '', description: '', brand: '', category: '', subcategory: '', ambientes: [] as string[],
   price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
   variantStock: {} as Record<string, number>,
   featured: false, isNew: false,
@@ -22,6 +23,7 @@ const emptyForm = {
 const AdminProducts = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const categories = useCategoryStore((s) => s.categories);
+  const ambientes = useAmbienteStore((s) => s.ambientes);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -35,7 +37,8 @@ const AdminProducts = () => {
   const openEdit = (p: Product) => {
     setForm({
       name: p.name, description: p.description, brand: p.brand, category: p.category,
-      subcategory: p.subcategory || '', price: p.price, stock: p.stock,
+      subcategory: p.subcategory || '', ambientes: p.ambientes || [],
+      price: p.price, stock: p.stock,
       image: p.image, images: p.images || [], variants: p.variants || [], colors: p.colors || [],
       variantStock: p.variantStock || {},
       featured: p.featured || false, isNew: p.isNew || false,
@@ -114,6 +117,7 @@ const AdminProducts = () => {
     const data: Partial<Product> = {
       name: form.name, description: form.description, brand: form.brand,
       category: form.category, subcategory: form.subcategory || undefined,
+      ambientes: form.ambientes,
       price: form.price, stock: computedStock,
       image: form.image || form.images[0],
       images: form.images,
@@ -166,6 +170,7 @@ const AdminProducts = () => {
               <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Producto</th>
               <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Marca</th>
               <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Categoría</th>
+              <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Ambientes</th>
               <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Precio</th>
               <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Stock</th>
               <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Acciones</th>
@@ -192,6 +197,9 @@ const AdminProducts = () => {
                 <td className="p-3 font-body text-sm text-muted-foreground hidden md:table-cell">
                   {p.category}
                   {p.subcategory && <span className="text-xs"> › {p.subcategory}</span>}
+                </td>
+                <td className="p-3 font-body text-sm text-muted-foreground hidden lg:table-cell">
+                  {p.ambientes && p.ambientes.length > 0 ? p.ambientes.join(', ') : '-'}
                 </td>
                 <td className="p-3 text-right font-body text-sm tabular-nums text-foreground">{formatPrice(p.price)}</td>
                 <td className="p-3 text-right hidden sm:table-cell">
@@ -266,6 +274,31 @@ const AdminProducts = () => {
                 </select>
               </div>
             )}
+            <div>
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Ambientes</label>
+              <div className="flex flex-wrap gap-2">
+                {ambientes.map((a) => {
+                  const selected = form.ambientes.includes(a.name);
+                  return (
+                    <button
+                      key={a.name}
+                      type="button"
+                      onClick={() => setForm((prev) => ({
+                        ...prev,
+                        ambientes: selected
+                          ? prev.ambientes.filter((n) => n !== a.name)
+                          : [...prev.ambientes, a.name],
+                      }))}
+                      className={`rounded-full px-3 py-1.5 text-xs font-body transition-colors ${
+                        selected ? 'bg-foreground text-background' : 'bg-secondary text-foreground hover:bg-accent'
+                      }`}
+                    >
+                      {a.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className={hasVariantCombos ? '' : 'grid grid-cols-2 gap-3'}>
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Precio</label>

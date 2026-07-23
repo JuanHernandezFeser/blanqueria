@@ -9,7 +9,7 @@ interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
   subtotal: number; shipping_cost: number; total: number;
   order_status: string; payment_method: string; payment_status: string;
-  items_json: string; shipping_address_json: string;
+  items_json: string; shipping_address_json: string; source: string;
 }
 
 function formatOrder(row: OrderRow) {
@@ -20,6 +20,7 @@ function formatOrder(row: OrderRow) {
     paymentMethod: row.payment_method, paymentStatus: row.payment_status,
     items: JSON.parse(row.items_json || '[]'),
     shippingAddress: JSON.parse(row.shipping_address_json || '{}'),
+    source: row.source,
   };
 }
 
@@ -42,10 +43,10 @@ orders.post('/', async (c) => {
   const date = new Date().toISOString();
 
   db.run(
-    'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, body.customerName, body.customerEmail, date, body.subtotal, body.shippingCost || 0,
     body.total, 'Pendiente', body.paymentMethod, body.paymentStatus || 'pendiente',
-    JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {})
+    JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web'
   );
 
   for (const item of body.items || []) {

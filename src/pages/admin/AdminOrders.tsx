@@ -3,30 +3,45 @@ import { useOrderStore } from '@/stores/orderStore';
 import { formatPrice } from '@/services/shippingService';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { formatDate } from '@/lib/helpers';
-import { CreditCard, Banknote, ChevronRight } from 'lucide-react';
+import { CreditCard, Banknote, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import ManualOrderForm from '@/components/admin/ManualOrderForm';
 
 const AdminOrders = () => {
   const { orders, loading, fetchOrders, updateStatus } = useOrderStore();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => { fetchOrders(); }, []);
 
   if (loading) return <p className="font-body text-sm text-muted-foreground text-center py-10">Cargando pedidos...</p>;
-  if (orders.length === 0) {
-    return <p className="font-body text-sm text-muted-foreground text-center py-10">No hay pedidos todavía.</p>;
-  }
 
   return (
     <div className="space-y-3">
-      <p className="font-body text-sm text-muted-foreground">{orders.length} pedidos</p>
-      {orders.map((o) => (
+      <div className="flex items-center justify-between">
+        <p className="font-body text-sm text-muted-foreground">{orders.length} pedidos</p>
+        <button onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-body font-medium text-background hover:opacity-90 transition-opacity">
+          <Plus className="h-3.5 w-3.5" /> Cargar pedido manual
+        </button>
+      </div>
+
+      <ManualOrderForm open={showForm} onClose={() => setShowForm(false)} />
+
+      {orders.length === 0 ? (
+        <p className="font-body text-sm text-muted-foreground text-center py-10">No hay pedidos todavía.</p>
+      ) : orders.map((o) => (
         <div key={o.id} className="rounded-lg shadow-card overflow-hidden">
           <div
             onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}
             className="p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
           >
             <div className="flex items-center gap-4">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-body font-medium uppercase tracking-wider ${
+                o.source === 'manual' ? 'bg-sky-100 text-sky-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {o.source === 'manual' ? 'Manual' : 'Web'}
+              </span>
               <div>
                 <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
                 <p className="font-body text-xs text-muted-foreground">{o.customerName} · {formatDate(o.date)}</p>

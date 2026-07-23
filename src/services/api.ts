@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = 'https://api.aikenblanco.com.ar/api';
 
 let token: string | null = localStorage.getItem('auth-token');
 
@@ -26,7 +26,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export interface User { email: string; name: string; isAdmin: boolean; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string; }
+export interface User { email: string; name: string; isAdmin: boolean; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string; emailVerified?: boolean; }
 export interface MpPreferenceResponse { initPoint: string; preferenceId: string; }
 export interface CreateOrderPayload {
   customerName: string; customerEmail: string;
@@ -34,14 +34,24 @@ export interface CreateOrderPayload {
   items: { productId: string; productName: string; quantity: number; price: number; variant?: string }[];
   subtotal: number; shippingCost: number; total: number;
   paymentMethod: 'mercadopago' | 'transferencia'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';
+  source?: 'web' | 'manual';
 }
 
 export const api = {
   login(email: string, password: string): Promise<{ token: string; user: User }> {
     return request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
   },
-  register(name: string, email: string, password: string, extra?: { phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }): Promise<{ token: string; user: User }> {
-    return request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password, ...extra }) });
+  register(email: string, password: string): Promise<{ token: string; user: User }> {
+    return request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
+  },
+  verifyEmail(token: string): Promise<{ message: string }> {
+    return request('/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) });
+  },
+  resendVerification(email: string): Promise<{ message: string }> {
+    return request('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) });
+  },
+  updateProfile(data: { name: string; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }): Promise<{ message: string }> {
+    return request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
   },
   getMe(): Promise<User> { return request('/auth/me'); },
 
@@ -55,6 +65,17 @@ export const api = {
   },
   deleteProduct(id: string): Promise<void> {
     return request('/products/' + id, { method: 'DELETE' });
+  },
+
+  getAmbientes<T = any>(): Promise<T> { return request('/ambientes'); },
+  createAmbiente<T = any>(data: any): Promise<T> {
+    return request('/ambientes', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateAmbiente<T = any>(name: string, data: any): Promise<T> {
+    return request(`/ambientes/${encodeURIComponent(name)}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteAmbiente(name: string): Promise<void> {
+    return request('/ambientes/' + encodeURIComponent(name), { method: 'DELETE' });
   },
 
   getCategories<T = any>(): Promise<T> { return request('/categories'); },
@@ -82,7 +103,7 @@ export const api = {
     return request('/hero-slides/reorder', { method: 'POST', body: JSON.stringify(data) });
   },
 
-  createMpPreference(payload: { items: { title: string; quantity: number; unitPrice: number }[]; customerEmail: string }): Promise<MpPreferenceResponse> {
+  createMpPreference(payload: { items: { title: string; quantity: number; unitPrice: number }[]; customerEmail: string; orderId?: string }): Promise<MpPreferenceResponse> {
     return request('/create-preference', { method: 'POST', body: JSON.stringify(payload) });
   },
 

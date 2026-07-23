@@ -78,6 +78,64 @@ function orderEmailHtml(order: any, bankConfig?: any): string {
 </html>`;
 }
 
+function verificationEmailHtml(name: string, token: string): string {
+  const siteUrl = process.env.SITE_URL || 'http://localhost:8080';
+  const verifyUrl = `${siteUrl}/verificar-email/${token}`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:system-ui,-apple-system,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+      <tr><td style="padding:32px 32px 0;text-align:center">
+        <h1 style="margin:0;font-size:24px;color:#1f2937;font-weight:600">Verificá tu email</h1>
+      </td></tr>
+      <tr><td style="padding:24px 32px">
+        <p style="margin:0;font-size:14px;color:#374151">Hola <strong>${name}</strong>,</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#6b7280;line-height:1.5">Gracias por crear tu cuenta. Para completar el registro, hacé click en el botón de abajo.</p>
+      </td></tr>
+      <tr><td style="padding:0 32px 24px;text-align:center">
+        <a href="${verifyUrl}" style="display:inline-block;padding:14px 32px;background:#1f2937;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.5px">Verificar email</a>
+      </td></tr>
+      <tr><td style="padding:0 32px 32px;text-align:center">
+        <p style="margin:0;font-size:13px;color:#9ca3af">Si no creaste esta cuenta, podés ignorar este mensaje.</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body>
+</html>`;
+}
+
+export async function sendVerificationEmail(email: string, name: string, token: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) { console.log('[mail] RESEND_API_KEY no configurada, email de verificación no enviado'); return; }
+
+  try {
+    const body = JSON.stringify({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      to: email,
+      subject: 'Verificá tu cuenta',
+      html: verificationEmailHtml(name, token),
+    });
+    console.log('[mail] Enviando email de verificación a', email);
+    const res = await fetch(RESEND_API, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body,
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      console.error('[mail] Error de Resend:', res.status, text);
+    } else {
+      console.log('[mail] Email de verificación enviado:', text);
+    }
+  } catch (err) {
+    console.error('[mail] Error al enviar email de verificación:', err);
+  }
+}
+
 export async function sendOrderConfirmation(order: any) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) { console.log('[mail] RESEND_API_KEY no configurada'); return; }

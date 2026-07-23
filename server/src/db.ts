@@ -42,6 +42,8 @@ function initSchema(db: Database) {
   runSilent(db, 'ALTER TABLE users ADD COLUMN locality TEXT DEFAULT \'\'');
   runSilent(db, 'ALTER TABLE users ADD COLUMN province TEXT DEFAULT \'\'');
   runSilent(db, 'ALTER TABLE users ADD COLUMN postal_code TEXT DEFAULT \'\'');
+  runSilent(db, 'ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0');
+  runSilent(db, 'ALTER TABLE users ADD COLUMN verification_token TEXT DEFAULT \'\'');
 
   db.run(`
     CREATE TABLE IF NOT EXISTS products (
@@ -75,6 +77,18 @@ function initSchema(db: Database) {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS ambientes (
+      name TEXT PRIMARY KEY,
+      image TEXT DEFAULT '',
+      description TEXT DEFAULT ''
+    )
+  `);
+
+  runSilent(db, "ALTER TABLE products ADD COLUMN ambientes_json TEXT DEFAULT '[]'");
+  runSilent(db, "ALTER TABLE hero_slides ADD COLUMN video_url TEXT DEFAULT ''");
+  runSilent(db, "ALTER TABLE orders ADD COLUMN source TEXT DEFAULT 'web'");
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS hero_slides (
       id TEXT PRIMARY KEY,
       type TEXT DEFAULT 'image',
@@ -100,7 +114,8 @@ function initSchema(db: Database) {
       payment_method TEXT NOT NULL,
       payment_status TEXT DEFAULT 'pendiente',
       items_json TEXT DEFAULT '[]',
-      shipping_address_json TEXT DEFAULT '{}'
+      shipping_address_json TEXT DEFAULT '{}',
+      source TEXT DEFAULT 'web'
     )
   `);
 
@@ -110,9 +125,12 @@ function initSchema(db: Database) {
       bank_name TEXT DEFAULT 'Banco Ejemplo',
       cbu TEXT DEFAULT '',
       alias TEXT DEFAULT '',
-      account_holder TEXT DEFAULT ''
+      account_holder TEXT DEFAULT '',
+      discount_percentage REAL DEFAULT 0
     )
   `);
+
+  runSilent(db, 'ALTER TABLE bank_config ADD COLUMN discount_percentage REAL DEFAULT 0');
 
   seed(db);
 }

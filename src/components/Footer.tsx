@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 
 const Footer = () => (
-  <footer className="border-t border-accent mt-20">
-    <div className="container py-12">
+  <footer className="border-t border-accent mt-10 md:mt-20">
+    <div className="container pt-12 pb-24 md:pb-12">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
-          <h4 className="font-display text-xl text-foreground mb-3">AIKEN</h4>
+          <img src="/logo-sin-fondo.png" alt="AIKEN" className="h-7 w-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4">
             Hacemos de tu casa tu refugio. Textiles premium para tu hogar.
           </p>
@@ -25,11 +25,12 @@ const Footer = () => (
         <div>
           <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Navegación</p>
           <ul className="space-y-2">
-            {[
-              { to: '/', label: 'Inicio' },
-              { to: '/catalogo', label: 'Catálogo' },
-              { to: '/mi-cuenta', label: 'Mi Cuenta' },
-            ].map((l) => (
+              {[
+                { to: '/', label: 'Inicio' },
+                { to: '/catalogo', label: 'Catálogo' },
+                { to: '/faq', label: 'Preguntas frecuentes' },
+                { to: '/mi-cuenta', label: 'Mi Cuenta' },
+              ].map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="font-body text-sm text-foreground hover:text-muted-foreground transition-colors">{l.label}</Link>
               </li>

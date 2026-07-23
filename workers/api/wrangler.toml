@@ -1,13 +1,20 @@
 name = "blanqueria-api"
 main = "src/index.ts"
-compatibility_date = "2026-07-03"
+compatibility_date = "2024-12-01"
 
 [vars]
-MERCADOPAGO_ACCESS_TOKEN = ""
-MERCADOPAGO_PUBLIC_KEY = ""
-SITE_URL = "http://localhost:8080"
+SITE_URL = "https://aikenblanco.com.ar"
+EMAIL_FROM = "onboarding@resend.dev"
 
-[[kv_namespaces]]
-binding = "ORDERS_KV"
-id = ""
-preview_id = ""
+# Secretos — setear desde el dashboard de Cloudflare o con:
+# wrangler secret put JWT_SECRET
+# wrangler secret put RESEND_API_KEY
+# wrangler secret put MERCADOPAGO_ACCESS_TOKEN
+# wrangler secret put MERCADOPAGO_PUBLIC_KEY
+# wrangler secret put MERCADOPAGO_WEBHOOK_SECRET
+# wrangler secret put IMGBB_API_KEY
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blanqueria-db"
+database_id = "f0b2dc3d-a6b2-4174-ae9c-1750eef96eee"

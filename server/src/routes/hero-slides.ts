@@ -7,10 +7,11 @@ const heroSlides = new Hono();
 interface SlideRow {
   id: string; type: string; image: string; product_id: string | null;
   title: string; subtitle: string; link: string; order: number;
+  video_url: string;
 }
 
 function formatSlide(row: SlideRow) {
-  return { id: row.id, type: row.type, image: row.image, productId: row.product_id, title: row.title, subtitle: row.subtitle, link: row.link, order: row.order };
+  return { id: row.id, type: row.type, image: row.image, videoUrl: row.video_url, productId: row.product_id, title: row.title, subtitle: row.subtitle, link: row.link, order: row.order };
 }
 
 heroSlides.get('/', (c) => {
@@ -25,8 +26,8 @@ heroSlides.post('/', authMiddleware, adminMiddleware, async (c) => {
   const id = `hero-${Date.now()}`;
   const maxRow = db.query('SELECT MAX("order") as max_order FROM hero_slides').get() as { max_order: number | null };
   const order = (maxRow.max_order ?? -1) + 1;
-  db.run('INSERT INTO hero_slides (id, type, image, product_id, title, subtitle, link, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    id, body.type || 'image', body.image || '', body.productId || null, body.title || '', body.subtitle || '', body.link || '', order);
+  db.run('INSERT INTO hero_slides (id, type, image, video_url, product_id, title, subtitle, link, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    id, body.type || 'image', body.image || '', body.videoUrl || '', body.productId || null, body.title || '', body.subtitle || '', body.link || '', order);
   const row = db.query('SELECT * FROM hero_slides WHERE id = ?').get(id) as SlideRow;
   return c.json(formatSlide(row), 201);
 });
@@ -40,6 +41,7 @@ heroSlides.put('/:id', authMiddleware, adminMiddleware, async (c) => {
   const vals: any[] = [];
   if (body.type !== undefined) fields.push('type = ?'), vals.push(body.type);
   if (body.image !== undefined) fields.push('image = ?'), vals.push(body.image);
+  if (body.videoUrl !== undefined) fields.push('video_url = ?'), vals.push(body.videoUrl);
   if (body.productId !== undefined) fields.push('product_id = ?'), vals.push(body.productId);
   if (body.title !== undefined) fields.push('title = ?'), vals.push(body.title);
   if (body.subtitle !== undefined) fields.push('subtitle = ?'), vals.push(body.subtitle);

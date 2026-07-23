@@ -6,8 +6,8 @@ export function seed(db: Database) {
 
   const hashPassword = (pw: string) => Bun.password.hashSync(pw, { algorithm: 'bcrypt', cost: 10 });
 
-  db.run('INSERT INTO users (id, email, password_hash, name, is_admin) VALUES (?, ?, ?, ?, ?)', ['usr-1', 'admin@tienda.com', hashPassword('admin123'), 'Administrador', 1]);
-  db.run('INSERT INTO users (id, email, password_hash, name, is_admin) VALUES (?, ?, ?, ?, ?)', ['usr-2', 'user@tienda.com', hashPassword('user123'), 'Usuario Demo', 0]);
+  db.run('INSERT INTO users (id, email, password_hash, name, is_admin, email_verified) VALUES (?, ?, ?, ?, ?, ?)', ['usr-1', 'admin@tienda.com', hashPassword('admin123'), 'Administrador', 1, 1]);
+  db.run('INSERT INTO users (id, email, password_hash, name, is_admin, email_verified) VALUES (?, ?, ?, ?, ?, ?)', ['usr-2', 'user@tienda.com', hashPassword('user123'), 'Usuario Demo', 0, 1]);
 
   const insertProduct = db.prepare('INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, featured, is_new) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
@@ -48,6 +48,38 @@ export function seed(db: Database) {
   insertCategory.run('Almohadas', '', 'El soporte perfecto', '[]');
   insertCategory.run('Acolchados', '', 'Calidez y estilo', '[]');
   insertCategory.run('Manteles', '', 'Elegancia en tu mesa', '[]');
+
+  const ambienteCount = db.query('SELECT COUNT(*) as count FROM ambientes').get() as { count: number };
+  if (ambienteCount.count === 0) {
+    const insertAmbiente = db.prepare('INSERT INTO ambientes (name, image, description) VALUES (?, ?, ?)');
+    insertAmbiente.run('Baño', '', 'Textiles para tu baño');
+    insertAmbiente.run('Living', '', 'Textiles para tu living');
+    insertAmbiente.run('Comedor', '', 'Textiles para tu comedor');
+    insertAmbiente.run('Cocina', '', 'Textiles para tu cocina');
+    insertAmbiente.run('Dormitorio', '', 'Textiles para tu dormitorio');
+
+    const updateAmbientes = db.prepare("UPDATE products SET ambientes_json = ? WHERE id = ?");
+    updateAmbientes.run('["Dormitorio"]', '1');
+    updateAmbientes.run('["Dormitorio"]', '2');
+    updateAmbientes.run('["Dormitorio"]', '3');
+    updateAmbientes.run('["Dormitorio"]', '4');
+    updateAmbientes.run('["Baño"]', '5');
+    updateAmbientes.run('["Baño"]', '6');
+    updateAmbientes.run('["Baño","Cocina"]', '7');
+    updateAmbientes.run('["Baño"]', '8');
+    updateAmbientes.run('["Dormitorio"]', '9');
+    updateAmbientes.run('["Dormitorio"]', '10');
+    updateAmbientes.run('["Dormitorio"]', '11');
+    updateAmbientes.run('["Dormitorio"]', '12');
+    updateAmbientes.run('["Dormitorio"]', '13');
+    updateAmbientes.run('["Dormitorio"]', '14');
+    updateAmbientes.run('["Dormitorio"]', '15');
+    updateAmbientes.run('["Dormitorio"]', '16');
+    updateAmbientes.run('["Comedor","Cocina"]', '17');
+    updateAmbientes.run('["Comedor","Cocina"]', '18');
+    updateAmbientes.run('["Comedor","Cocina"]', '19');
+    updateAmbientes.run('["Comedor","Cocina"]', '20');
+  }
 
   const insertSlide = db.prepare('INSERT INTO hero_slides (id, type, image, title, subtitle, "order") VALUES (?, ?, ?, ?, ?, ?)');
   insertSlide.run('default-1', 'image', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1400&h=700&fit=crop', 'AIKEN', 'Hacemos de tu casa tu refugio', 0);

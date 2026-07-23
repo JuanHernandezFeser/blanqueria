@@ -1,16 +1,21 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { CategoryItem } from '@/stores/categoryStore';
 
+import type { AmbienteItem } from '@/stores/ambienteStore';
+
 interface FilterContentProps {
   categories: CategoryItem[];
+  ambientes: AmbienteItem[];
   selectedCategory: string;
   selectedSubcategory: string;
+  selectedAmbiente: string;
   selectedBrand: string;
   priceRange: [number, number];
   inStockOnly: boolean;
   brands: string[];
   onCategoryChange: (v: string) => void;
   onSubcategoryChange: (v: string) => void;
+  onAmbienteChange: (v: string) => void;
   onBrandChange: (v: string) => void;
   onPriceRangeChange: (v: [number, number]) => void;
   onInStockOnlyChange: (v: boolean) => void;
@@ -19,9 +24,9 @@ interface FilterContentProps {
 }
 
 export default function FilterContent({
-  categories, selectedCategory, selectedSubcategory, selectedBrand,
+  categories, ambientes, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand,
   priceRange, inStockOnly, brands,
-  onCategoryChange, onSubcategoryChange, onBrandChange,
+  onCategoryChange, onSubcategoryChange, onAmbienteChange, onBrandChange,
   onPriceRangeChange, onInStockOnlyChange, onClearFilters, hasActiveFilters,
 }: FilterContentProps) {
   return (
@@ -60,6 +65,20 @@ export default function FilterContent({
                 </div>
               )}
             </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Ambiente</p>
+        <div className="space-y-1">
+          {ambientes.map((a) => (
+            <button
+              key={a.name}
+              onClick={() => onAmbienteChange(selectedAmbiente === a.name ? '' : a.name)}
+              className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-sm font-body transition-colors ${selectedAmbiente === a.name ? 'bg-foreground text-background' : 'text-foreground hover:bg-accent'}`}
+            >
+              <span>{a.name}</span>
+            </button>
           ))}
         </div>
       </div>

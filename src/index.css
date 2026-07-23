@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 30 20% 98%;
+    --background: 48 100% 99%;
     --foreground: 24 10% 10%;
 
     --card: 30 15% 97%;
@@ -45,6 +45,9 @@
     --sidebar-accent-foreground: 24 10% 10%;
     --sidebar-border: 25 10% 90%;
     --sidebar-ring: 24 10% 10%;
+
+    --gold: 43 74% 54%;
+    --gold-foreground: 30 20% 98%;
 
     /* Custom tokens */
     --stone-50: 30 20% 98%;

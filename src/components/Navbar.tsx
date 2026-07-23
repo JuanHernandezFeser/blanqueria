@@ -93,18 +93,10 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <button onClick={() => useAuthStore.getState().login('admin@tienda.com', 'admin123')} className="font-body text-xs text-muted-foreground/50 hover:text-foreground transition-colors border border-border/30 rounded px-1.5 py-0.5">
-                Admin
-              </button>
-              <button onClick={() => useAuthStore.getState().login('user@tienda.com', 'user123')} className="font-body text-xs text-muted-foreground/50 hover:text-foreground transition-colors border border-border/30 rounded px-1.5 py-0.5">
-                Cliente
-              </button>
-              <Link to="/login" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <User className="h-4 w-4" />
-                <span className="font-body">Ingresar</span>
-              </Link>
-            </div>
+            <Link to="/login" className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <User className="h-4 w-4" />
+              <span className="font-body">Ingresar</span>
+            </Link>
           )}
           <Link to="/login" className="md:hidden p-2">
             <User className="h-5 w-5 text-foreground" />

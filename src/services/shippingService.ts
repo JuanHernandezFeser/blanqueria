@@ -22,3 +22,8 @@ export const calculateShipping = (postalCode: string): ShippingResult | null => 
 export const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
 };
+
+export const getDiscountedPrice = (price: number, discountPercentage: number): number => {
+  if (!discountPercentage || discountPercentage <= 0) return price;
+  return Math.round(price * (1 - discountPercentage / 100));
+};

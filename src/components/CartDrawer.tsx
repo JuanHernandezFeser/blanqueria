@@ -1,9 +1,11 @@
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 import QuantitySelector from '@/components/shared/QuantitySelector';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { toast } from 'sonner';
 
 interface CartDrawerProps {
   open: boolean;
@@ -13,6 +15,24 @@ interface CartDrawerProps {
 const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
   const { items, removeItem, updateQuantity, subtotal } = useCartStore();
   const navigate = useNavigate();
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+
+  useEffect(() => {
+    if (!open) return;
+
+    window.history.pushState(null, '');
+
+    const handleBack = () => {
+      onOpenChangeRef.current(false);
+    };
+
+    window.addEventListener('popstate', handleBack);
+
+    return () => {
+      window.removeEventListener('popstate', handleBack);
+    };
+  }, [open]);
 
   const handleCheckout = () => {
     onOpenChange(false);
@@ -41,7 +61,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {items.map((item) => (
                 <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-3 rounded-lg bg-secondary/30 p-3">
-                  <Link to={`/catalogo`} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  <Link to={`/producto/${item.product.id}`} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
                   </Link>
                   <div className="flex-1 min-w-0">

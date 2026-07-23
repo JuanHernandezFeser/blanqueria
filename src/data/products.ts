@@ -5,6 +5,7 @@ export interface Product {
   brand: string;
   category: string;
   subcategory?: string;
+  ambientes?: string[];
   price: number;
   stock: number;
   image: string;

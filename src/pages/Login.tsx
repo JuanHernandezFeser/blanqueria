@@ -11,7 +11,12 @@ const Login = () => {
     try {
       await login(email, password);
       toast.success('¡Bienvenido!');
-      navigate('/');
+      const user = useAuthStore.getState().user;
+      if (user && !user.address) {
+        navigate('/completar-perfil');
+      } else {
+        navigate('/');
+      }
     } catch {
       toast.error('Credenciales inválidas');
     }
