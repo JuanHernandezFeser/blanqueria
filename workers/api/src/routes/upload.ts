@@ -12,7 +12,13 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 
 async function uploadToImgbb(file: File, apiKey: string): Promise<string> {
   const buffer = await file.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const base64 = btoa(binary);
 
   const form = new FormData();
   form.append('image', base64);
