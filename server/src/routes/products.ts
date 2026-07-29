@@ -10,6 +10,7 @@ interface ProductRow {
   images_json: string; variants_json: string; colors_json: string;
   variant_stock_json: string; featured: number; is_new: number;
   ambientes_json: string;
+  weight: number; width: number; height: number; length: number;
 }
 
 function formatProduct(row: ProductRow) {
@@ -22,6 +23,8 @@ function formatProduct(row: ProductRow) {
     colors: JSON.parse(row.colors_json || '[]'),
     variantStock: JSON.parse(row.variant_stock_json || '{}'),
     ambientes: JSON.parse(row.ambientes_json || '[]'),
+    weight: row.weight || undefined, width: row.width || undefined,
+    height: row.height || undefined, length: row.length || undefined,
     featured: !!row.featured, isNew: !!row.is_new,
   };
 }
@@ -44,12 +47,13 @@ products.post('/', authMiddleware, adminMiddleware, async (c) => {
   const db = getDb();
   const id = String(Date.now());
   db.run(
-    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, featured, is_new) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
     body.price, body.stock || 0, body.image || '',
     JSON.stringify(body.images || []), JSON.stringify(body.variants || []),
     JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
     JSON.stringify(body.ambientes || []),
+    body.weight || 0, body.width || 0, body.height || 0, body.length || 0,
     body.featured ? 1 : 0, body.isNew ? 1 : 0
   );
   const row = db.query('SELECT * FROM products WHERE id = ?').get(id) as ProductRow;
@@ -80,6 +84,10 @@ products.put('/:id', authMiddleware, adminMiddleware, async (c) => {
       else { fields.push(`${k} = ?`); vals.push(v); }
     }
   }
+  if (body.weight !== undefined) { fields.push('weight = ?'); vals.push(body.weight || 0); }
+  if (body.width !== undefined) { fields.push('width = ?'); vals.push(body.width || 0); }
+  if (body.height !== undefined) { fields.push('height = ?'); vals.push(body.height || 0); }
+  if (body.length !== undefined) { fields.push('length = ?'); vals.push(body.length || 0); }
   fields.push("updated_at = datetime('now')");
   vals.push(c.req.param('id'));
   db.run(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, ...vals);

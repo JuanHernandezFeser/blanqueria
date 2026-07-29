@@ -8,6 +8,9 @@ export interface Env {
   MERCADOPAGO_PUBLIC_KEY: string;
   MERCADOPAGO_WEBHOOK_SECRET: string;
   IMGBB_API_KEY: string;
+  MICORREO_CUSTOMER_ID: string;
+  MICORREO_EMAIL: string;
+  MICORREO_PASSWORD: string;
 }
 
 export interface JwtPayload {

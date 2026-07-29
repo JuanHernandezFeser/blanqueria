@@ -72,9 +72,11 @@ function initSchema(db: Database) {
       name TEXT PRIMARY KEY,
       image TEXT DEFAULT '',
       description TEXT DEFAULT '',
-      subcategories_json TEXT DEFAULT '[]'
+      subcategories_json TEXT DEFAULT '[]',
+      icon TEXT DEFAULT ''
     )
   `);
+  runSilent(db, "ALTER TABLE categories ADD COLUMN icon TEXT DEFAULT ''");
 
   db.run(`
     CREATE TABLE IF NOT EXISTS ambientes (
@@ -85,6 +87,10 @@ function initSchema(db: Database) {
   `);
 
   runSilent(db, "ALTER TABLE products ADD COLUMN ambientes_json TEXT DEFAULT '[]'");
+  runSilent(db, "ALTER TABLE products ADD COLUMN weight REAL DEFAULT 0");
+  runSilent(db, "ALTER TABLE products ADD COLUMN width REAL DEFAULT 0");
+  runSilent(db, "ALTER TABLE products ADD COLUMN height REAL DEFAULT 0");
+  runSilent(db, "ALTER TABLE products ADD COLUMN length REAL DEFAULT 0");
   runSilent(db, "ALTER TABLE hero_slides ADD COLUMN video_url TEXT DEFAULT ''");
   runSilent(db, "ALTER TABLE orders ADD COLUMN source TEXT DEFAULT 'web'");
 

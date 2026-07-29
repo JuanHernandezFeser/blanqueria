@@ -13,6 +13,10 @@ export interface Product {
   variants?: string[];
   colors?: string[];
   variantStock?: Record<string, number>;
+  weight?: number;
+  width?: number;
+  height?: number;
+  length?: number;
   featured?: boolean;
   isNew?: boolean;
 }

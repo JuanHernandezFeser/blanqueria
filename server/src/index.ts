@@ -12,6 +12,7 @@ import orders from './routes/orders';
 import bankConfig from './routes/bank-config';
 import mercadopago from './routes/mercadopago';
 import upload from './routes/upload';
+import shipping from './routes/shipping';
 import testing from './routes/testing';
 import { getDb } from './db';
 
@@ -40,6 +41,7 @@ app.route('/api/orders', orders);
 app.route('/api/bank-config', bankConfig);
 app.route('/api', mercadopago);
 app.route('/api/upload', upload);
+app.route('/api/shipping', shipping);
 app.route('/api/testing', testing);
 
 app.get('/uploads/:file', async (c) => {

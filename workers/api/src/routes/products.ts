@@ -5,7 +5,9 @@ interface ProductRow {
   id: string; name: string; description: string; brand: string; category: string;
   subcategory: string; price: number; stock: number; image: string;
   images_json: string; variants_json: string; colors_json: string;
-  variant_stock_json: string; ambientes_json: string; featured: number; is_new: number;
+  variant_stock_json: string; ambientes_json: string;
+  weight: number; width: number; height: number; length: number;
+  featured: number; is_new: number;
 }
 
 function formatProduct(row: ProductRow) {
@@ -18,6 +20,8 @@ function formatProduct(row: ProductRow) {
     colors: JSON.parse(row.colors_json || '[]'),
     variantStock: JSON.parse(row.variant_stock_json || '{}'),
     ambientes: JSON.parse(row.ambientes_json || '[]'),
+    weight: row.weight || undefined, width: row.width || undefined,
+    height: row.height || undefined, length: row.length || undefined,
     featured: !!row.featured, isNew: !!row.is_new,
   };
 }
@@ -48,14 +52,15 @@ export async function handleProducts(request: Request, env: Env, path: string, m
     const body = await request.json() as any;
     const id = String(Date.now());
     await env.DB.prepare(
-      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, featured, is_new)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
       body.price, body.stock || 0, body.image || '',
       JSON.stringify(body.images || []), JSON.stringify(body.variants || []),
       JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
       JSON.stringify(body.ambientes || []),
+      body.weight || 0, body.width || 0, body.height || 0, body.length || 0,
       body.featured ? 1 : 0, body.isNew ? 1 : 0
     ).run();
     const row = await env.DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first<ProductRow>();
@@ -84,6 +89,10 @@ export async function handleProducts(request: Request, env: Env, path: string, m
     for (const [k, v] of Object.entries(map)) {
       if (v !== undefined) { fields.push(`${k} = ?`); vals.push(v); }
     }
+    if (body.weight !== undefined) { fields.push('weight = ?'); vals.push(body.weight || 0); }
+    if (body.width !== undefined) { fields.push('width = ?'); vals.push(body.width || 0); }
+    if (body.height !== undefined) { fields.push('height = ?'); vals.push(body.height || 0); }
+    if (body.length !== undefined) { fields.push('length = ?'); vals.push(body.length || 0); }
     if (body.featured !== undefined) { fields.push('featured = ?'); vals.push(body.featured ? 1 : 0); }
     if (body.isNew !== undefined) { fields.push('is_new = ?'); vals.push(body.isNew ? 1 : 0); }
     fields.push("updated_at = datetime('now')");

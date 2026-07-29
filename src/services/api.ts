@@ -123,6 +123,10 @@ export const api = {
     return request('/bank-config', { method: 'PUT', body: JSON.stringify(config) });
   },
 
+  quoteShipping(payload: { postalCode: string; packages: { weight: number; height: number; width: number; length: number; quantity: number }[] }): Promise<{ method: string; days: string; cost: number; source: string }> {
+    return request('/shipping/quote', { method: 'POST', body: JSON.stringify(payload) });
+  },
+
   async upload<T = any>(files: FileList | File[]): Promise<T> {
     const formData = new FormData();
     for (const file of Array.from(files)) {

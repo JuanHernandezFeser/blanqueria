@@ -2,22 +2,28 @@ import { useState } from 'react';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
 import type { CategoryItem } from '@/stores/categoryStore';
-import { Pencil, Trash2, Plus, ChevronRight, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, ChevronRight, X, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { api } from '@/services/api';
 
 const AdminCategories = () => {
   const products = useProductStore((s) => s.products);
   const { categories, addCategory, updateCategory, deleteCategory, addSubcategory, removeSubcategory } = useCategoryStore();
   const [showCatForm, setShowCatForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
-  const [catForm, setCatForm] = useState({ name: '', description: '' });
+  const [catForm, setCatForm] = useState({ name: '', description: '', image: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
   const [newSubcategory, setNewSubcategory] = useState('');
   const [newCatSubcategory, setNewCatSubcategory] = useState('');
   const [catSubcategories, setCatSubcategories] = useState<string[]>([]);
 
   const openCatNew = () => {
-    setCatForm({ name: '', description: '' });
+    setCatForm({ name: '', description: '', image: '' });
+    setImageFile(null);
+    setImagePreview('');
     setCatSubcategories([]);
     setNewCatSubcategory('');
     setEditingCategory(null);
@@ -25,7 +31,9 @@ const AdminCategories = () => {
   };
 
   const openCatEdit = (cat: CategoryItem) => {
-    setCatForm({ name: cat.name, description: cat.description });
+    setCatForm({ name: cat.name, description: cat.description, image: cat.image || '' });
+    setImageFile(null);
+    setImagePreview('');
     setEditingCategory(cat);
     setNewSubcategory('');
     setShowCatForm(true);
@@ -33,7 +41,13 @@ const AdminCategories = () => {
 
   const handleSaveCategory = async () => {
     if (!catForm.name.trim()) { toast.error('Ingresá un nombre para la categoría'); return; }
+    setUploading(true);
     try {
+      let imageUrl = catForm.image;
+      if (imageFile) {
+        const uploaded = await api.upload([imageFile]) as { urls: string[] };
+        imageUrl = uploaded.urls[0];
+      }
       if (editingCategory) {
         if (editingCategory.name !== catForm.name.trim()) {
           for (const p of products) {
@@ -45,6 +59,7 @@ const AdminCategories = () => {
         await updateCategory(editingCategory.name, {
           name: catForm.name.trim(),
           description: catForm.description,
+          image: imageUrl,
         });
         toast.success('Categoría actualizada');
       } else {
@@ -52,6 +67,7 @@ const AdminCategories = () => {
           name: catForm.name.trim(),
           description: catForm.description || '',
           subcategories: catSubcategories,
+          image: imageUrl,
         });
         toast.success('Categoría creada');
       }
@@ -59,6 +75,7 @@ const AdminCategories = () => {
       setEditingCategory(null);
       setCatSubcategories([]);
     } catch { toast.error('Error al guardar la categoría'); }
+    finally { setUploading(false); }
   };
 
   const handleDeleteCategory = async (name: string) => {
@@ -105,9 +122,11 @@ const AdminCategories = () => {
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-body text-sm font-medium text-foreground">{c.name}</h3>
-                  <p className="font-body text-xs text-muted-foreground mt-0.5">{c.description}</p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-body text-sm font-medium text-foreground">{c.name}</h3>
+                    </div>
+                    <p className="font-body text-xs text-muted-foreground mt-0.5">{c.description}</p>
                   <p className="font-body text-xs text-muted-foreground mt-1">
                     {products.filter((p) => p.category === c.name).length} productos
                   </p>
@@ -149,6 +168,31 @@ const AdminCategories = () => {
             <div>
               <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Descripción</label>
               <input value={catForm.description} onChange={(e) => setCatForm({ ...catForm, description: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+            </div>
+
+            <div>
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Imagen</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
+                  }
+                }}
+                className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground file:mr-3 file:rounded file:border-0 file:bg-accent file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-accent/70 focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+              {(imagePreview || catForm.image) && (
+                <div className="mt-2 rounded-md overflow-hidden border border-accent w-32 h-32">
+                  <img
+                    src={imagePreview || catForm.image}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
             </div>
 
             {editingCategory ? (
@@ -225,8 +269,8 @@ const AdminCategories = () => {
               </div>
             )}
 
-            <button onClick={handleSaveCategory} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
-              {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
+            <button onClick={handleSaveCategory} disabled={uploading} className="w-full rounded-md bg-foreground py-3 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity disabled:opacity-50">
+              {uploading ? 'Subiendo...' : editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
             </button>
           </div>
         </DialogContent>

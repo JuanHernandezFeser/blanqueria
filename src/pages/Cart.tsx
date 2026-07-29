@@ -1,7 +1,7 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
-import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
+import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import QuantitySelector from '@/components/shared/QuantitySelector';
@@ -31,6 +31,7 @@ const Cart = () => {
   const sub = subtotal();
   const discountedSub = getDiscountedPrice(sub, discountPercentage);
   const hasDiscount = discountPercentage > 0;
+  const cartItemsForShipping: CartItemInput[] = items.map((i) => ({ product: i.product, quantity: i.quantity }));
 
   return (
     <PageLayout>
@@ -97,7 +98,7 @@ const Cart = () => {
                 <span className="tabular-nums text-gold font-bold">{formatPrice(discountedSub + shippingCost)}</span>
               </div>
             )}
-            <ShippingCalculator onShippingChange={setShippingCost} />
+            <ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} />
             <button onClick={handleCheckout} className="w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               Finalizar Compra
             </button>

@@ -5,6 +5,8 @@ import CategoryCard from '@/components/CategoryCard';
 import ProductSkeleton from '@/components/shared/ProductSkeleton';
 import ProductCarousel from '@/components/shared/ProductCarousel';
 import PaymentMethodsBar from '@/components/shared/PaymentMethodsBar';
+import ShippingBanner from '@/components/shared/ShippingBanner';
+import AllProductsSection from '@/components/shared/AllProductsSection';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const Home = () => {
@@ -87,6 +89,8 @@ const Home = () => {
         badgeContext="novedades"
       />
 
+      <ShippingBanner />
+
       {featured.length > 0 && (
         <ProductCarousel
           title="Destacados"
@@ -96,6 +100,8 @@ const Home = () => {
           badgeContext="destacados"
         />
       )}
+
+      <AllProductsSection products={products} loading={loading} />
 
     </div>
   );

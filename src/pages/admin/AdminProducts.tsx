@@ -17,6 +17,7 @@ const emptyForm = {
   name: '', description: '', brand: '', category: '', subcategory: '', ambientes: [] as string[],
   price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
   variantStock: {} as Record<string, number>,
+  weight: 0, width: 0, height: 0, length: 0,
   featured: false, isNew: false,
 };
 
@@ -41,6 +42,7 @@ const AdminProducts = () => {
       price: p.price, stock: p.stock,
       image: p.image, images: p.images || [], variants: p.variants || [], colors: p.colors || [],
       variantStock: p.variantStock || {},
+      weight: p.weight || 0, width: p.width || 0, height: p.height || 0, length: p.length || 0,
       featured: p.featured || false, isNew: p.isNew || false,
     });
     setEditProduct(p);
@@ -124,6 +126,10 @@ const AdminProducts = () => {
       variants: form.variants,
       colors: form.colors,
       variantStock: form.variantStock,
+      weight: form.weight || undefined,
+      width: form.width || undefined,
+      height: form.height || undefined,
+      length: form.length || undefined,
       featured: form.featured, isNew: form.isNew,
     };
     try {
@@ -310,6 +316,25 @@ const AdminProducts = () => {
                   <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
                 </div>
               )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Peso (kg)</label>
+                <input type="number" step="0.01" min="0" value={form.weight || ''} onChange={(e) => setForm({ ...form, weight: e.target.value === '' ? 0 : Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              </div>
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Alto (cm)</label>
+                <input type="number" step="0.01" min="0" value={form.height || ''} onChange={(e) => setForm({ ...form, height: e.target.value === '' ? 0 : Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              </div>
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Ancho (cm)</label>
+                <input type="number" step="0.01" min="0" value={form.width || ''} onChange={(e) => setForm({ ...form, width: e.target.value === '' ? 0 : Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              </div>
+              <div>
+                <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Largo (cm)</label>
+                <input type="number" step="0.01" min="0" value={form.length || ''} onChange={(e) => setForm({ ...form, length: e.target.value === '' ? 0 : Number(e.target.value) })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              </div>
             </div>
 
             <div className="flex gap-4">

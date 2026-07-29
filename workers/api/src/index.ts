@@ -8,6 +8,7 @@ import { handleOrders } from './routes/orders';
 import { handleBankConfig } from './routes/bank-config';
 import { handleMercadoPago } from './routes/mercadopago';
 import { handleUpload } from './routes/upload';
+import { handleShipping } from './routes/shipping';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +33,7 @@ async function handleRoute(request: Request, env: Env, path: string, method: str
   if (path.startsWith('/api/bank-config')) return handleBankConfig(request, env, path, method);
   if (path === '/api/create-preference' || path === '/api/webhooks/mercadopago') return handleMercadoPago(request, env, path, method);
   if (path === '/api/upload') return handleUpload(request, env, path, method);
+  if (path.startsWith('/api/shipping')) return handleShipping(request, env, path, method);
   if (path === '/api/health') return json({ status: 'ok', timestamp: new Date().toISOString() });
 
   return json({ error: 'Not found' }, 404);

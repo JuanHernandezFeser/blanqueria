@@ -42,12 +42,12 @@ export function seed(db: Database) {
     );
   }
 
-  const insertCategory = db.prepare('INSERT INTO categories (name, image, description, subcategories_json) VALUES (?, ?, ?, ?)');
-  insertCategory.run('Sábanas', '', 'Algodón premium para tu descanso', '[]');
-  insertCategory.run('Toallas', '', 'Suavidad en cada detalle', '[]');
-  insertCategory.run('Almohadas', '', 'El soporte perfecto', '[]');
-  insertCategory.run('Acolchados', '', 'Calidez y estilo', '[]');
-  insertCategory.run('Manteles', '', 'Elegancia en tu mesa', '[]');
+  const insertCategory = db.prepare('INSERT INTO categories (name, image, description, subcategories_json, icon) VALUES (?, ?, ?, ?, ?)');
+  insertCategory.run('Sábanas', '', 'Algodón premium para tu descanso', '[]', 'Sheet');
+  insertCategory.run('Toallas', '', 'Suavidad en cada detalle', '[]', 'ShowerHead');
+  insertCategory.run('Almohadas', '', 'El soporte perfecto', '[]', 'BedSingle');
+  insertCategory.run('Acolchados', '', 'Calidez y estilo', '[]', 'BedDouble');
+  insertCategory.run('Manteles', '', 'Elegancia en tu mesa', '[]', 'Table2');
 
   const ambienteCount = db.query('SELECT COUNT(*) as count FROM ambientes').get() as { count: number };
   if (ambienteCount.count === 0) {

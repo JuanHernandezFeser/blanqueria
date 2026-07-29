@@ -11,10 +11,7 @@ interface CategoryRow {
 const PLACEHOLDER_CATEGORY = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22750%22 viewBox=%220 0 600 750%22%3E%3Crect width=%22600%22 height=%22750%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%22300%22 y=%22375%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-family=%22sans-serif%22 font-size=%2224%22 fill=%22%23999%22%3EPor definir%3C/text%3E%3C/svg%3E';
 
 function formatCategory(row: CategoryRow) {
-  const db = getDb();
-  const product = db.query('SELECT image FROM products WHERE category = ? LIMIT 1').get(row.name) as { image?: string } | undefined;
-  const image = product?.image || PLACEHOLDER_CATEGORY;
-  return { name: row.name, image, description: row.description, subcategories: JSON.parse(row.subcategories_json || '[]') };
+  return { name: row.name, image: row.image || PLACEHOLDER_CATEGORY, description: row.description, subcategories: JSON.parse(row.subcategories_json || '[]') };
 }
 
 categories.get('/', (c) => {
