@@ -13,6 +13,9 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 });
 
 async function formatCategory(db: D1Database, row: CategoryRow) {
+  if (row.image) {
+    return { name: row.name, image: row.image, description: row.description, subcategories: JSON.parse(row.subcategories_json || '[]') };
+  }
   const product = await db.prepare('SELECT image FROM products WHERE category = ? LIMIT 1').bind(row.name).first<{ image?: string }>();
   const image = product?.image || PLACEHOLDER_CATEGORY;
   return { name: row.name, image, description: row.description, subcategories: JSON.parse(row.subcategories_json || '[]') };
