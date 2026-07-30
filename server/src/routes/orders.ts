@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db';
 import { authMiddleware, adminMiddleware } from '../auth';
-import { sendOrderConfirmation } from '../mail';
+import { sendOrderConfirmation, sendOrderStatusUpdateEmail, sendInternalOrderNotification } from '../mail';
 
 const orders = new Hono();
 
@@ -67,6 +67,8 @@ orders.post('/', async (c) => {
 
   await sendOrderConfirmation({ ...body, id });
 
+  sendInternalOrderNotification({ ...body, id }).catch((err) => console.error('[orders] Internal notification failed:', err));
+
   return c.json(formatOrder(row), 201);
 });
 
@@ -76,6 +78,12 @@ orders.patch('/:id/status', authMiddleware, adminMiddleware, async (c) => {
   const existing = db.query('SELECT id FROM orders WHERE id = ?').get(c.req.param('id'));
   if (!existing) { c.status(404); return c.json({ error: 'Pedido no encontrado' }); }
   db.run('UPDATE orders SET order_status = ? WHERE id = ?', body.orderStatus, c.req.param('id'));
+  if (body.orderStatus !== 'Pendiente') {
+    const row = db.query('SELECT * FROM orders WHERE id = ?').get(c.req.param('id')) as OrderRow;
+    if (row) {
+      sendOrderStatusUpdateEmail(formatOrder(row), body.orderStatus).catch((err) => console.error('[orders] Status email failed:', err));
+    }
+  }
   return c.json({ ok: true });
 });
 
