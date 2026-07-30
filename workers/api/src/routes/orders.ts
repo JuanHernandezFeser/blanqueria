@@ -1,6 +1,6 @@
 import type { Env } from '../types';
 import { requireAuth, requireAdmin } from '../auth';
-import { sendOrderConfirmation } from '../mail';
+import { sendOrderConfirmation, sendOrderStatusUpdateEmail, sendInternalOrderNotification } from '../mail';
 
 interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
@@ -76,6 +76,7 @@ export async function handleOrders(request: Request, env: Env, path: string, met
 
     const row = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first<OrderRow>();
     sendOrderConfirmation(env, { ...body, id });
+    sendInternalOrderNotification(env, { ...body, id }).catch((err) => console.error('[orders] Internal notification failed:', err));
     return json(formatOrder(row!), 201);
   }
 
@@ -87,6 +88,12 @@ export async function handleOrders(request: Request, env: Env, path: string, met
     const existing = await env.DB.prepare('SELECT id FROM orders WHERE id = ?').bind(orderMatch[1]).first();
     if (!existing) return json({ error: 'Pedido no encontrado' }, 404);
     await env.DB.prepare('UPDATE orders SET order_status = ? WHERE id = ?').bind(body.orderStatus, orderMatch[1]).run();
+    if (body.orderStatus !== 'Pendiente') {
+      const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderMatch[1]).first<OrderRow>();
+      if (updated) {
+        sendOrderStatusUpdateEmail(env, formatOrder(updated), body.orderStatus).catch((err) => console.error('[orders] Status email failed:', err));
+      }
+    }
     return json({ ok: true });
   }
 

@@ -5,7 +5,7 @@ const parts = [
 
 const ShippingBanner = () => (
   <div className="mt-12 mb-0 w-full overflow-hidden bg-amber-600 py-3 text-white px-4">
-    <div className="flex animate-marquee whitespace-nowrap font-body text-sm tracking-wide">
+    <div className="flex animate-marquee-mobile md:animate-marquee whitespace-nowrap font-body text-sm tracking-wide">
       <span className="flex items-center">
         <span>{parts[0]}</span>
         <span className="mx-3 text-white">★</span>

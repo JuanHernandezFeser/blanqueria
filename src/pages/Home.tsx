@@ -56,7 +56,7 @@ const Home = () => {
           <div
             ref={categoryScrollRef}
             onScroll={handleCategoryScroll}
-            className={`flex gap-8 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar px-4 md:px-0 ${
+            className={`flex gap-8 overflow-x-auto py-2 snap-x snap-mandatory no-scrollbar px-4 md:px-0 ${
               catOverflows ? 'justify-start' : 'justify-center'
             }`}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
