@@ -32,7 +32,8 @@ const Checkout = () => {
   const [step, setStep] = useState(1);
   const [guestMode, setGuestMode] = useState(false);
   const [shipping, setShipping] = useState<ShippingForm>({
-    name: user?.name || '', email: '', address: '', city: '', province: '', postalCode: '', phone: '',
+    name: user?.name || '', email: user?.email || '', address: user?.address || '',
+    city: user?.locality || '', province: user?.province || '', postalCode: user?.postalCode || '', phone: user?.phone || '',
   });
   const [shippingCost, setShippingCost] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | null>(null);
@@ -50,6 +51,20 @@ const Checkout = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [step, orderDone]);
+
+  useEffect(() => {
+    if (!user || guestMode) return;
+    setShipping((prev) => ({
+      ...prev,
+      name: prev.name || user.name || '',
+      email: prev.email || user.email || '',
+      address: prev.address || user.address || '',
+      city: prev.city || user.locality || '',
+      province: prev.province || user.province || '',
+      postalCode: prev.postalCode || user.postalCode || '',
+      phone: prev.phone || user.phone || '',
+    }));
+  }, [user, guestMode]);
 
   if (items.length === 0 && !orderDone) return <EmptyCart message="Agregá productos antes de finalizar la compra." actionLabel="Explorar Catálogo" />;
 
