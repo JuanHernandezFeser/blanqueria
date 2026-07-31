@@ -100,11 +100,11 @@ const ProductDetail = () => {
           {/* Left column: image + thumbnail carousel */}
           <div className="flex flex-col gap-4 min-w-0">
             {/* Main image */}
-            <div className="relative w-full max-h-[50vh] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="relative w-fit mx-auto max-h-[50vh] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
               <img
                 src={allImages[currentImageIndex]}
                 alt={product.name}
-                className="max-h-[50vh] w-full object-contain image-outline"
+                className="max-h-[50vh] max-w-full w-auto object-contain image-outline"
               />
             </div>
 

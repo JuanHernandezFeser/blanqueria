@@ -10,7 +10,6 @@ import ProductPhotoMarquee from '@/components/shared/ProductPhotoMarquee';
 import StaticBanner from '@/components/shared/StaticBanner';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { compareByName } from '@/lib/helpers';
-import { compareByName } from '@/lib/helpers';
 
 const Home = () => {
   const products = useProductStore((s) => s.products);

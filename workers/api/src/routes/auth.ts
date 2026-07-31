@@ -28,7 +28,7 @@ export async function handleAuth(request: Request, env: Env, ctx: ExecutionConte
 
     const token = await signToken({ id, email, name, isAdmin: false }, env.JWT_SECRET);
     ctx.waitUntil(sendVerificationEmail(env, email, name, verificationToken));
-    return json({ token, user: { email, name, isAdmin: false } }, 201);
+    return json({ token, user: { email, name, isAdmin: false, phone: '', address: '', locality: '', province: '', postalCode: '', emailVerified: true } }, 201);
   }
 
   // POST /api/auth/login
@@ -37,15 +37,22 @@ export async function handleAuth(request: Request, env: Env, ctx: ExecutionConte
     if (!email || !password) return json({ error: 'Email y password requeridos' }, 400);
 
     const user = await env.DB.prepare(
-      'SELECT id, email, password_hash, name, is_admin FROM users WHERE email = ?'
-    ).bind(email).first<{ id: string; email: string; password_hash: string; name: string; is_admin: number }>();
+      'SELECT id, email, password_hash, name, is_admin, phone, address, locality, province, postal_code, email_verified FROM users WHERE email = ?'
+    ).bind(email).first<{ id: string; email: string; password_hash: string; name: string; is_admin: number; phone: string; address: string; locality: string; province: string; postal_code: string; email_verified: number }>();
 
     if (!user) return json({ error: 'Credenciales inválidas' }, 401);
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) return json({ error: 'Credenciales inválidas' }, 401);
 
     const token = await signToken({ id: user.id, email: user.email, name: user.name, isAdmin: !!user.is_admin }, env.JWT_SECRET);
-    return json({ token, user: { email: user.email, name: user.name, isAdmin: !!user.is_admin } });
+    return json({
+      token,
+      user: {
+        email: user.email, name: user.name, isAdmin: !!user.is_admin,
+        phone: user.phone, address: user.address, locality: user.locality,
+        province: user.province, postalCode: user.postal_code, emailVerified: !!user.email_verified,
+      },
+    });
   }
 
   // GET /api/auth/me
