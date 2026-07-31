@@ -1,4 +1,18 @@
-# Welcome to your Lovable project
+# AIKEN / Blanqueria
+
+E-commerce de blanquería y textil para el hogar (sábanas, toallas, almohadas, acolchados, manteles).
+
+**Frontend:** https://aikenblanco.com.ar · **API:** https://api.aikenblanco.com.ar
+
+## Documentación
+
+📄 [Documentación completa del proyecto (Markdown)](docs/DOCUMENTACION.md) — stack, arquitectura, endpoints, base de datos, migraciones D1, comandos de desarrollo, flujo Git y deploy a producción.
+
+📕 [Versión PDF](docs/DOCUMENTACION.pdf) · 📘 [Guía de deploy (resumen)](docs/deploy-guide.md)
+
+---
+
+## Welcome to your Lovable project
 
 ## Project info
 
