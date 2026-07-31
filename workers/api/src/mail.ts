@@ -112,7 +112,7 @@ function verificationEmailHtml(name: string, token: string, siteUrl: string): st
 export async function sendVerificationEmail(env: Pick<Env, 'RESEND_API_KEY' | 'EMAIL_FROM' | 'SITE_URL'>, email: string, name: string, token: string) {
   if (!env.RESEND_API_KEY) return;
   try {
-    await fetch(RESEND_API, {
+    const res = await fetch(RESEND_API, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -122,6 +122,9 @@ export async function sendVerificationEmail(env: Pick<Env, 'RESEND_API_KEY' | 'E
         html: verificationEmailHtml(name, token, env.SITE_URL),
       }),
     });
+    const text = await res.text();
+    if (!res.ok) console.error(`[mail] Verification to ${email} rejected (${res.status}): ${text}`);
+    else console.log(`[mail] Verification email sent to ${email}: ${text}`);
   } catch (err) {
     console.error('[mail] Error sending verification email:', err);
   }
@@ -130,7 +133,7 @@ export async function sendVerificationEmail(env: Pick<Env, 'RESEND_API_KEY' | 'E
 export async function sendOrderConfirmation(env: Pick<Env, 'RESEND_API_KEY' | 'EMAIL_FROM'>, order: any) {
   if (!env.RESEND_API_KEY) return;
   try {
-    await fetch(RESEND_API, {
+    const res = await fetch(RESEND_API, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -140,6 +143,9 @@ export async function sendOrderConfirmation(env: Pick<Env, 'RESEND_API_KEY' | 'E
         html: orderEmailHtml(order, null),
       }),
     });
+    const text = await res.text();
+    if (!res.ok) console.error(`[mail] Order confirmation to ${order.customerEmail} rejected (${res.status}): ${text}`);
+    else console.log(`[mail] Order confirmation sent to ${order.customerEmail}: ${text}`);
   } catch (err) {
     console.error('[mail] Error sending order confirmation:', err);
   }
@@ -296,7 +302,7 @@ function internalOrderNotificationHtml(order: any, siteUrl: string): string {
 export async function sendInternalOrderNotification(env: Pick<Env, 'RESEND_API_KEY' | 'EMAIL_FROM' | 'SITE_URL'>, order: any) {
   if (!env.RESEND_API_KEY) return;
   try {
-    await fetch(RESEND_API, {
+    const res = await fetch(RESEND_API, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -306,6 +312,9 @@ export async function sendInternalOrderNotification(env: Pick<Env, 'RESEND_API_K
         html: internalOrderNotificationHtml(order, env.SITE_URL),
       }),
     });
+    const text = await res.text();
+    if (!res.ok) console.error(`[mail] Internal order notification rejected (${res.status}): ${text}`);
+    else console.log(`[mail] Internal order notification sent: ${text}`);
   } catch (err) {
     console.error('[mail] Error sending internal order notification:', err);
   }
@@ -316,7 +325,7 @@ export async function sendOrderStatusUpdateEmail(env: Pick<Env, 'RESEND_API_KEY'
   const suffix = STATUS_SUBJECTS[newStatus];
   if (!suffix) return;
   try {
-    await fetch(RESEND_API, {
+    const res = await fetch(RESEND_API, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -326,6 +335,9 @@ export async function sendOrderStatusUpdateEmail(env: Pick<Env, 'RESEND_API_KEY'
         html: orderStatusUpdateEmailHtml(order, newStatus),
       }),
     });
+    const text = await res.text();
+    if (!res.ok) console.error(`[mail] Status update to ${order.customerEmail} rejected (${res.status}): ${text}`);
+    else console.log(`[mail] Status update sent to ${order.customerEmail}: ${text}`);
   } catch (err) {
     console.error('[mail] Error sending status update email:', err);
   }

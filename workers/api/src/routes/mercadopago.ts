@@ -111,7 +111,7 @@ async function updateOrderPayment(env: Env, payment: MpPayment): Promise<boolean
   return false;
 }
 
-export async function handleMercadoPago(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleMercadoPago(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   if (method === 'POST' && path === '/api/create-preference') {
     if (!env.MERCADOPAGO_ACCESS_TOKEN) {
       return jsonResp({ error: 'Mercado Pago no configurado. Configurá MERCADOPAGO_ACCESS_TOKEN.' }, 400);

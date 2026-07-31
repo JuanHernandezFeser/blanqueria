@@ -26,7 +26,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
 });
 
-export async function handleOrders(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleOrders(request: Request, env: Env, ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   // GET /api/orders
   if (method === 'GET' && path === '/api/orders') {
     const user = await requireAuth(request, env);
@@ -75,8 +75,8 @@ export async function handleOrders(request: Request, env: Env, path: string, met
     }
 
     const row = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first<OrderRow>();
-    sendOrderConfirmation(env, { ...body, id });
-    sendInternalOrderNotification(env, { ...body, id }).catch((err) => console.error('[orders] Internal notification failed:', err));
+    ctx.waitUntil(sendOrderConfirmation(env, { ...body, id }));
+    ctx.waitUntil(sendInternalOrderNotification(env, { ...body, id }));
     return json(formatOrder(row!), 201);
   }
 
@@ -91,7 +91,7 @@ export async function handleOrders(request: Request, env: Env, path: string, met
     if (body.orderStatus !== 'Pendiente') {
       const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderMatch[1]).first<OrderRow>();
       if (updated) {
-        sendOrderStatusUpdateEmail(env, formatOrder(updated), body.orderStatus).catch((err) => console.error('[orders] Status email failed:', err));
+        ctx.waitUntil(sendOrderStatusUpdateEmail(env, formatOrder(updated), body.orderStatus));
       }
     }
     return json({ ok: true });

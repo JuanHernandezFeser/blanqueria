@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import PrimaryButton from './PrimaryButton';
 import { provinces } from '@/lib/helpers';
 
@@ -19,6 +20,7 @@ const AuthForm = ({ mode, onSubmit, initial }: AuthFormProps) => {
   const [province, setProvince] = useState(initial?.province || '');
   const [postalCode, setPostalCode] = useState(initial?.postalCode || '');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +64,24 @@ const AuthForm = ({ mode, onSubmit, initial }: AuthFormProps) => {
             </div>
             <div>
               <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Contraseña</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={4} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={4}
+                  className="w-full rounded-md border border-accent bg-background px-3 py-2.5 pr-10 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </>
         )}

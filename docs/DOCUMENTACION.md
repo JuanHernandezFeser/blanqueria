@@ -330,7 +330,7 @@ wrangler secret put MICORREO_PASSWORD
 | Variable | Valor |
 |---|---|
 | SITE_URL | https://aikenblanco.com.ar |
-| EMAIL_FROM | tienda@aikenblanco.com.ar |
+| EMAIL_FROM | compras@aikenblanco.com.ar |
 
 ---
 

@@ -13,8 +13,9 @@ import PageLayout from '@/components/shared/PageLayout';
 import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useDebounce } from '@/hooks/useDebounce';
+import { compareByName } from '@/lib/helpers';
 
-type SortOrder = 'featured' | 'price-desc' | 'price-asc';
+type SortOrder = 'name-asc' | 'featured' | 'price-desc' | 'price-asc';
 
 const Catalog = () => {
   const products = useProductStore((s) => s.products);
@@ -29,7 +30,7 @@ const Catalog = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>('featured');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('name-asc');
 
   useEffect(() => {
     const searchFromUrl = searchParams.get('search') || '';
@@ -59,7 +60,8 @@ const Catalog = () => {
 
   const sorted = useMemo(() => {
     const list = [...filtered];
-    if (sortOrder === 'price-desc') list.sort((a, b) => b.price - a.price);
+    if (sortOrder === 'name-asc') list.sort(compareByName);
+    else if (sortOrder === 'price-desc') list.sort((a, b) => b.price - a.price);
     else if (sortOrder === 'price-asc') list.sort((a, b) => a.price - b.price);
     return list;
   }, [filtered, sortOrder]);
@@ -70,7 +72,7 @@ const Catalog = () => {
     setSearchParams({});
   };
 
-  const hasActiveFilters = selectedCategory || selectedSubcategory || selectedAmbiente || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000;
+  const hasActiveFilters = Boolean(selectedCategory || selectedSubcategory || selectedAmbiente || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000);
 
   const filterProps = {
     categories, ambientes, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand,
@@ -117,6 +119,7 @@ const Catalog = () => {
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
                 className="appearance-none rounded-md border border-accent bg-background pl-3 pr-8 py-2 text-xs font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground cursor-pointer"
               >
+                <option value="name-asc">Orden alfabético (A - Z)</option>
                 <option value="featured">Destacados</option>
                 <option value="price-desc">Mayor precio primero</option>
                 <option value="price-asc">Menor precio primero</option>

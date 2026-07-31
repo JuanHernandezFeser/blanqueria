@@ -23,24 +23,24 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-async function handleRoute(request: Request, env: Env, path: string, method: string): Promise<Response> {
-  if (path.startsWith('/api/auth/')) return handleAuth(request, env, path, method);
-  if (path.startsWith('/api/products')) return handleProducts(request, env, path, method);
-  if (path.startsWith('/api/categories')) return handleCategories(request, env, path, method);
-  if (path.startsWith('/api/ambientes')) return handleAmbientes(request, env, path, method);
-  if (path.startsWith('/api/hero-slides')) return handleHeroSlides(request, env, path, method);
-  if (path.startsWith('/api/orders')) return handleOrders(request, env, path, method);
-  if (path.startsWith('/api/bank-config')) return handleBankConfig(request, env, path, method);
-  if (path === '/api/create-preference' || path === '/api/webhooks/mercadopago') return handleMercadoPago(request, env, path, method);
-  if (path === '/api/upload') return handleUpload(request, env, path, method);
-  if (path.startsWith('/api/shipping')) return handleShipping(request, env, path, method);
+async function handleRoute(request: Request, env: Env, ctx: ExecutionContext, path: string, method: string): Promise<Response> {
+  if (path.startsWith('/api/auth/')) return handleAuth(request, env, ctx, path, method);
+  if (path.startsWith('/api/products')) return handleProducts(request, env, ctx, path, method);
+  if (path.startsWith('/api/categories')) return handleCategories(request, env, ctx, path, method);
+  if (path.startsWith('/api/ambientes')) return handleAmbientes(request, env, ctx, path, method);
+  if (path.startsWith('/api/hero-slides')) return handleHeroSlides(request, env, ctx, path, method);
+  if (path.startsWith('/api/orders')) return handleOrders(request, env, ctx, path, method);
+  if (path.startsWith('/api/bank-config')) return handleBankConfig(request, env, ctx, path, method);
+  if (path === '/api/create-preference' || path === '/api/webhooks/mercadopago') return handleMercadoPago(request, env, ctx, path, method);
+  if (path === '/api/upload') return handleUpload(request, env, ctx, path, method);
+  if (path.startsWith('/api/shipping')) return handleShipping(request, env, ctx, path, method);
   if (path === '/api/health') return json({ status: 'ok', timestamp: new Date().toISOString() });
 
   return json({ error: 'Not found' }, 404);
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
@@ -50,7 +50,7 @@ export default {
     }
 
     try {
-      return await handleRoute(request, env, path, method);
+      return await handleRoute(request, env, ctx, path, method);
     } catch (err) {
       if (err instanceof Response) return err;
       const message = err instanceof Error ? err.message : 'Internal error';
