@@ -72,6 +72,14 @@ export async function handleAuth(request: Request, env: Env, ctx: ExecutionConte
     return json({ message: 'Perfil actualizado' });
   }
 
+  // DELETE /api/auth/account
+  if (method === 'DELETE' && path === '/api/auth/account') {
+    const jwt = await requireAuth(request, env);
+    await env.DB.prepare('DELETE FROM orders WHERE customer_email = ?').bind(jwt.email).run();
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(jwt.id).run();
+    return json({ message: 'Cuenta eliminada' });
+  }
+
   // POST /api/auth/verify-email
   if (method === 'POST' && path === '/api/auth/verify-email') {
     const { token } = await request.json() as { token: string };
