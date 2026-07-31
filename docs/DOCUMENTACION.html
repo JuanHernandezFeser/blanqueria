@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Documentación del Proyecto — AIKEN / Blanqueria</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --brand: #0f766e;
+    --brand-dark: #115e59;
+    --line: #d1d5db;
+    --light: #f3f4f6;
+    --code-bg: #f9fafb;
+    --accent: #b45309;
+  }
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+  h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; }
+  h1 { font-size: 20pt; }
+  h2 {
+    font-size: 15pt;
+    border-bottom: 2px solid var(--brand);
+    padding-bottom: 4px;
+    margin: 28px 0 12px;
+  }
+  h3 { font-size: 12pt; margin: 20px 0 8px; }
+  h4 { font-size: 10.5pt; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0 6px 0; padding-left: 20px; }
+  li { margin: 2px 0; }
+  a { color: var(--brand); text-decoration: none; }
+  code {
+    font-family: "Consolas", "Cascadia Mono", monospace;
+    font-size: 8.8pt;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0 3px;
+    color: var(--accent);
+  }
+  pre {
+    font-family: "Consolas", "Cascadia Mono", monospace;
+    font-size: 8.6pt;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 8px 0;
+  }
+  pre code { background: none; border: none; padding: 0; color: var(--ink); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px;
+    font-size: 9pt;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 4px 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--light); font-weight: 600; }
+  tr { page-break-inside: avoid; }
+  /* Portada */
+  .cover { page-break-after: always; text-align: center; padding-top: 60mm; }
+  .cover .brand { font-size: 30pt; font-weight: 700; color: var(--brand); letter-spacing: 4px; }
+  .cover h1 { font-size: 22pt; margin: 10px 0 2px; }
+  .cover .subtitle { color: var(--muted); font-size: 12pt; margin-bottom: 26mm; }
+  .cover .meta { font-size: 10pt; color: var(--muted); }
+  .cover .meta div { margin: 4px 0; }
+  .cover .badges { margin-top: 18mm; }
+  .cover .badge {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 3px 10px;
+    margin: 3px;
+    font-size: 8.5pt;
+    color: var(--ink);
+  }
+  /* Índice */
+  .toc { page-break-after: always; }
+  .toc ol { list-style: none; padding-left: 0; counter-reset: toc; }
+  .toc li { margin: 5px 0; }
+  .toc a { color: var(--ink); }
+  .toc .num { color: var(--brand); font-weight: 600; }
+  .toc ul { list-style: none; padding-left: 18px; }
+  .toc ul li { font-size: 9.5pt; margin: 2px 0; }
+  /* Utilidades */
+  .note {
+    border-left: 4px solid var(--brand);
+    background: var(--light);
+    padding: 7px 10px;
+    margin: 10px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 9.5pt;
+  }
+  .warn {
+    border-left: 4px solid #d97706;
+    background: #fffbeb;
+    padding: 7px 10px;
+    margin: 10px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 9.5pt;
+  }
+  .section { page-break-before: always; }
+  .page-break { page-break-before: always; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<div class="cover">
+  <div class="brand">AIKEN</div>
+  <h1>Documentación del Proyecto — Blanqueria</h1>
+  <div class="subtitle">E-commerce de blanquería y textil para el hogar</div>
+  <div class="meta">
+    <div><strong>Frontend:</strong> https://aikenblanco.com.ar</div>
+    <div><strong>API (Worker Cloudflare):</strong> https://api.aikenblanco.com.ar</div>
+    <div><strong>Repositorio:</strong> https://github.com/JuanHernandezFeser/blanqueria.git</div>
+    <div><strong>Fecha:</strong> 30/07/2026</div>
+  </div>
+  <div class="badges">
+    <span class="badge">React 18</span>
+    <span class="badge">Vite 5</span>
+    <span class="badge">TypeScript</span>
+    <span class="badge">Tailwind CSS</span>
+    <span class="badge">shadcn/ui</span>
+    <span class="badge">Zustand</span>
+    <span class="badge">Bun</span>
+    <span class="badge">Hono</span>
+    <span class="badge">SQLite</span>
+    <span class="badge">Cloudflare Workers</span>
+    <span class="badge">Cloudflare D1</span>
+    <span class="badge">Mercado Pago</span>
+  </div>
+</div>
+
+<!-- ===================== ÍNDICE ===================== -->
+<div class="toc">
+  <h2>Índice</h2>
+  <ol>
+    <li><span class="num">1.</span> <a href="#sec1">Visión General y Arquitectura</a></li>
+    <li><span class="num">2.</span> <a href="#sec2">Stack Tecnológico</a></li>
+    <li><span class="num">3.</span> <a href="#sec3">Estructura de Carpetas</a></li>
+    <li><span class="num">4.</span> <a href="#sec4">Rutas del Frontend</a></li>
+    <li><span class="num">5.</span> <a href="#sec5">API — Endpoints</a></li>
+    <li><span class="num">6.</span> <a href="#sec6">Base de Datos</a></li>
+    <li><span class="num">7.</span> <a href="#sec7">Variables de Entorno y Secrets</a></li>
+    <li><span class="num">8.</span> <a href="#sec8">Comandos de Desarrollo</a></li>
+    <li><span class="num">9.</span> <a href="#sec9">Flujo Git y Ramas</a></li>
+    <li><span class="num">10.</span> <a href="#sec10">Deploy a Producción</a></li>
+    <li><span class="num">11.</span> <a href="#sec11">Notas, Problemas Conocidos y Seguridad</a></li>
+    <li><span class="num">12.</span> <a href="#sec12">Historial Reciente</a></li>
+  </ol>
+</div>
+
+<!-- ===================== 1. VISIÓN GENERAL ===================== -->
+<div class="section" id="sec1">
+  <h2>1. Visión General y Arquitectura</h2>
+
+  <p><strong>AIKEN / Blanqueria</strong> es una tienda online de artículos de blanquería y textil para el hogar (sábanas, toallas, almohadas, acolchados, manteles). Cuenta con catálogo, carrito de compras, checkout con <strong>Mercado Pago</strong> o <strong>transferencia bancaria</strong>, registro de usuarios, historial de pedidos y un panel de administración completo (productos, categorías, slides, pedidos y medios de pago).</p>
+
+  <h3>1.1 Componentes del sistema</h3>
+  <table>
+    <tr><th>Componente</th><th>Tecnología</th><th>Rol</th></tr>
+    <tr><td>Frontend (SPA)</td><td>React + Vite + TypeScript</td><td>Tienda, panel admin y experiencia de usuario. Se compila a estáticos (<code>dist/</code>) y se sirve en Cloudflare Pages.</td></tr>
+    <tr><td>Backend local</td><td>Bun + Hono + SQLite</td><td>API de desarrollo local (<code>server/</code>). Usa <code>bun:sqlite</code> con archivo <code>server/data/blanqueria.db</code>.</td></tr>
+    <tr><td>Worker Cloudflare</td><td>Cloudflare Workers + D1</td><td>API de producción (<code>workers/api</code>). Se sirve en <code>api.aikenblanco.com.ar</code> y persiste en D1 (<code>blanqueria-db</code>).</td></tr>
+    <tr><td>Functions de Pages</td><td>Cloudflare Pages Functions</td><td>Proxy <code>/api/*</code> hacia el Worker (<code>functions/api/[[route]].ts</code>).</td></tr>
+  </table>
+
+  <h3>1.2 Arquitectura</h3>
+  <pre>
++---------------------+          +----------------------------+
+|  Frontend React SPA |          |  Cloudflare Pages (CDN)    |
+|  (aikenblanco.com)  |  ------> |  dist/ + functions proxy   |
++---------------------+          +-------------+--------------+
+                                              |  /api/*  (Pages Functions)
+                                              v
+                             +----------------------------+
+                             |  Worker: blanqueria-api    |
+                             |  (api.aikenblanco.com.ar)  |
+                             +-------------+--------------+
+                                           | D1 binding (DB)
+                                           v
+                              +-------------------------+
+                              |  D1: blanqueria-db      |
+                              |  (SQLite en Cloudflare) |
+                              +-------------------------+
+  </pre>
+
+  <div class="note">
+    <strong>Nota importante:</strong> el cliente de la API en producción (<code>src/services/api.ts</code>) apunta fijo a <code>https://api.aikenblanco.com.ar/api</code>. En desarrollo, el proxy de Vite reenvía <code>/api</code> a <code>http://localhost:3001</code> (usado por <code>shippingService.ts</code>).
+  </div>
+</div>
+
+<!-- ===================== 2. STACK ===================== -->
+<div class="section" id="sec2">
+  <h2>2. Stack Tecnológico</h2>
+
+  <h3>2.1 Frontend (<code>package.json</code> raíz)</h3>
+  <table>
+    <tr><th>Tecnología</th><th>Versión</th><th>Uso</th></tr>
+    <tr><td>React</td><td>^18.3.1</td><td>UI</td></tr>
+    <tr><td>Vite</td><td>^5.4.19</td><td>Build / dev server (puerto 8080)</td></tr>
+    <tr><td>TypeScript</td><td>^5.8.3</td><td>Lenguaje</td></tr>
+    <tr><td>react-router-dom</td><td>^6.30.1</td><td>Ruteo</td></tr>
+    <tr><td>Zustand</td><td>^5.0.11</td><td>Estado global (carrito con TTL 72h, auth, stores de catálogo)</td></tr>
+    <tr><td>@tanstack/react-query</td><td>^5.83.0</td><td>Fetch y cache</td></tr>
+    <tr><td>Tailwind CSS</td><td>^3.4.17</td><td>Estilos</td></tr>
+    <tr><td>shadcn/ui</td><td>Radix primitives</td><td>Componentes (50+ primitives)</td></tr>
+    <tr><td>framer-motion</td><td>^12.36.0</td><td>Animaciones</td></tr>
+    <tr><td>react-hook-form + Zod</td><td>^7.61.1 / ^3.25.76</td><td>Formularios y validación</td></tr>
+    <tr><td>Recharts</td><td>^2.15.4</td><td>Gráficos</td></tr>
+    <tr><td>sonner</td><td>^1.7.4</td><td>Toasts</td></tr>
+    <tr><td>lucide-react</td><td>^0.462.0</td><td>Iconos</td></tr>
+    <tr><td>Vitest</td><td>^3.2.4</td><td>Tests unitarios</td></tr>
+    <tr><td>Playwright</td><td>^1.57.0</td><td>Tests E2E</td></tr>
+    <tr><td>embla-carousel-react</td><td>^8.6.0</td><td>Carruseles</td></tr>
+  </table>
+
+  <h3>2.2 Backend local (<code>server/package.json</code>)</h3>
+  <table>
+    <tr><th>Tecnología</th><th>Versión</th><th>Uso</th></tr>
+    <tr><td>Bun</td><td>runtime</td><td>Runtime + <code>bun:sqlite</code></td></tr>
+    <tr><td>Hono</td><td>^4.7.0</td><td>Framework HTTP</td></tr>
+    <tr><td>SQLite</td><td>bun:sqlite nativo</td><td>Base de datos local</td></tr>
+    <tr><td>Resend</td><td>API externa</td><td>Emails transaccionales</td></tr>
+    <tr><td>bcrypt (Web Crypto)</td><td>nativo</td><td>Hash de contraseñas</td></tr>
+  </table>
+
+  <h3>2.3 Worker Cloudflare (<code>workers/api/package.json</code>)</h3>
+  <table>
+    <tr><th>Tecnología</th><th>Versión</th><th>Uso</th></tr>
+    <tr><td>Wrangler</td><td>^4.0.0</td><td>CLI de deploy / dev</td></tr>
+    <tr><td>Cloudflare Workers</td><td>runtime</td><td>API serverless</td></tr>
+    <tr><td>Cloudflare D1</td><td>SQLite serverless</td><td>Persistencia (binding <code>DB</code>)</td></tr>
+    <tr><td>@cloudflare/workers-types</td><td>^4.20250301.0</td><td>Tipos</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 3. ESTRUCTURA ===================== -->
+<div class="section" id="sec3">
+  <h2>3. Estructura de Carpetas</h2>
+
+  <pre>
+blanqueria/
+├── src/                      # Frontend React (Vite)
+│   ├── components/           # Componentes
+│   │   ├── shared/           # Reutilizables (carruseles, breadcrumbs, autocomplete…)
+│   │   └── ui/               # Primitivas shadcn/ui (50+)
+│   ├── data/                 # Tipos y datos (Product, categories, initialProducts)
+│   ├── hooks/                # Hooks personalizados (use-mobile…)
+│   ├── lib/                  # Utilidades (cn, helpers)
+│   ├── pages/                # Páginas de la app
+│   │   └── admin/            # Sub-páginas del panel admin
+│   ├── services/             # Cliente de API y servicios (api, shippingService)
+│   ├── stores/               # Stores Zustand (cart, auth, product, category…)
+│   └── test/                 # Tests (Vitest + E2E Playwright)
+├── server/                   # Backend Bun + Hono (dev local)
+│   ├── data/                 # Base SQLite (gitignored: blanqueria.db)
+│   ├── dist/                 # Compilado
+│   ├── src/
+│   │   ├── routes/           # Rutas Hono (auth, products, orders…)
+│   │   ├── db.ts             # Schema + migraciones idempotentes (runSilent)
+│   │   └── index.ts          # Bootstrap + CORS + /uploads
+│   └── uploads/              # Archivos subidos (gitignored)
+├── workers/
+│   └── api/                  # Cloudflare Worker (API de producción)
+│       ├── migrations/       # Migraciones D1 (0001_add_product_dimensions.sql)
+│       ├── schema.sql        # Esquema base D1
+│       ├── seed.sql          # Seed D1
+│       ├── wrangler.toml     # Config worker + binding D1
+│       └── src/
+│           ├── index.ts      # Router
+│           └── routes/       # Rutas del worker
+├── functions/
+│   └── api/[[route]].ts      # Pages Functions: proxy /api/* → worker
+├── public/                   # Estáticos (logos, favicon)
+├── imagenes-productos/       # Imágenes de productos
+├── docs/                     # Guías y documentación
+├── package.json              # Scripts del frontend
+├── vite.config.ts            # Dev server (8080) + proxy /api → 3001
+└── migration.sql             # Datos/migración SQLite local
+  </pre>
+
+  <h3>3.1 Stores Zustand</h3>
+  <table>
+    <tr><th>Store</th><th>Archivo</th><th>Contenido</th></tr>
+    <tr><td>cartStore</td><td><code>src/stores/cartStore.ts</code></td><td>Items del carrito (persistido, TTL 72h)</td></tr>
+    <tr><td>authStore</td><td><code>src/stores/authStore.ts</code></td><td>Sesión JWT y perfil</td></tr>
+    <tr><td>productStore</td><td><code>src/stores/productStore.ts</code></td><td>Catálogo de productos</td></tr>
+    <tr><td>categoryStore</td><td><code>src/stores/categoryStore.ts</code></td><td>Categorías y subcategorías</td></tr>
+    <tr><td>ambienteStore</td><td><code>src/stores/ambienteStore.ts</code></td><td>Ambientes</td></tr>
+    <tr><td>heroStore</td><td><code>src/stores/heroStore.ts</code></td><td>Slides del hero</td></tr>
+    <tr><td>orderStore</td><td><code>src/stores/orderStore.ts</code></td><td>Pedidos del usuario</td></tr>
+    <tr><td>bankConfigStore</td><td><code>src/stores/bankConfigStore.ts</code></td><td>Config de transferencia</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 4. RUTAS FRONTEND ===================== -->
+<div class="section" id="sec4">
+  <h2>4. Rutas del Frontend</h2>
+
+  <p>Definidas en <code>src/App.tsx</code> (React Router v6).</p>
+
+  <table>
+    <tr><th>Ruta</th><th>Componente</th><th>Descripción</th></tr>
+    <tr><td><code>/</code></td><td>Home</td><td>Landing: hero carousel, categorías destacadas, carruseles de productos nuevos/destacados</td></tr>
+    <tr><td><code>/catalogo</code></td><td>Catalog</td><td>Búsqueda, filtros (categoría/subcategoría/marca/precio/stock), ordenamiento, panel lateral de producto</td></tr>
+    <tr><td><code>/producto/:id</code></td><td>ProductDetail</td><td>Detalle de producto (galería, variantes, colores, stock)</td></tr>
+    <tr><td><code>/carrito</code></td><td>Cart</td><td>Carrito + calculadora de envío + resumen</td></tr>
+    <tr><td><code>/checkout</code></td><td>Checkout</td><td>3 pasos: envío → pago (MP/transferencia) → confirmación</td></tr>
+    <tr><td><code>/pago/retorno</code></td><td>PaymentReturn</td><td>Retorno post-MercadoPago (crea la orden y muestra resultado)</td></tr>
+    <tr><td><code>/login</code></td><td>Login</td><td>Inicio de sesión</td></tr>
+    <tr><td><code>/registro</code></td><td>Register</td><td>Registro de usuario</td></tr>
+    <tr><td><code>/mi-cuenta</code></td><td>MyAccount</td><td>Perfil + historial de pedidos</td></tr>
+    <tr><td><code>/completar-perfil</code></td><td>CompleteProfile</td><td>Completar datos de usuario</td></tr>
+    <tr><td><code>/verificar-email/:token</code></td><td>VerifyEmail</td><td>Verificación de email</td></tr>
+    <tr><td><code>/admin</code></td><td>Admin</td><td>Panel de administración (tabs: Productos, Categorías, Hero, Pedidos, Pagos, Ambientes)</td></tr>
+    <tr><td><code>/faq</code></td><td>FAQ</td><td>Preguntas frecuentes</td></tr>
+    <tr><td><code>*</code></td><td>NotFound</td><td>404</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 5. API ===================== -->
+<div class="section" id="sec5">
+  <h2>5. API — Endpoints</h2>
+
+  <p>Existen <strong>dos implementaciones</strong> del backend con la misma interfaz. La de producción es el Worker de Cloudflare (<code>workers/api</code>); la local (<code>server/</code>, Bun + Hono) se usa para desarrollo.</p>
+
+  <table>
+    <tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Admin</th><th>Descripción</th></tr>
+    <tr><td>GET</td><td><code>/api/health</code></td><td>-</td><td>-</td><td>Health check</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/register</code></td><td>-</td><td>-</td><td>Registrar usuario</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/login</code></td><td>-</td><td>-</td><td>Login → JWT</td></tr>
+    <tr><td>GET</td><td><code>/api/auth/me</code></td><td>Sí</td><td>-</td><td>Perfil actual</td></tr>
+    <tr><td>PUT</td><td><code>/api/auth/profile</code></td><td>Sí</td><td>-</td><td>Actualizar perfil</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/verify-email</code> / <code>/resend-verification</code></td><td>-</td><td>-</td><td>Verificación de email</td></tr>
+    <tr><td>GET</td><td><code>/api/products</code></td><td>-</td><td>-</td><td>Listar productos</td></tr>
+    <tr><td>GET</td><td><code>/api/products/:id</code></td><td>-</td><td>-</td><td>Producto por ID</td></tr>
+    <tr><td>POST</td><td><code>/api/products</code></td><td>Sí</td><td>Sí</td><td>Crear producto</td></tr>
+    <tr><td>PUT</td><td><code>/api/products/:id</code></td><td>Sí</td><td>Sí</td><td>Actualizar producto (incluye weight/width/height/length)</td></tr>
+    <tr><td>DELETE</td><td><code>/api/products/:id</code></td><td>Sí</td><td>Sí</td><td>Eliminar producto</td></tr>
+    <tr><td>GET/POST/PUT/DELETE</td><td><code>/api/categories</code>…</td><td>Sí*</td><td>Sí</td><td>CRUD categorías (subcategorías en JSON)</td></tr>
+    <tr><td>GET/POST/PUT/DELETE</td><td><code>/api/ambientes</code>…</td><td>Sí*</td><td>Sí</td><td>CRUD ambientes</td></tr>
+    <tr><td>GET/POST/PUT/DELETE</td><td><code>/api/hero-slides</code>…</td><td>Sí*</td><td>Sí</td><td>CRUD slides del hero</td></tr>
+    <tr><td>POST</td><td><code>/api/hero-slides/reorder</code></td><td>Sí</td><td>Sí</td><td>Reordenar slides (batch)</td></tr>
+    <tr><td>GET</td><td><code>/api/orders</code></td><td>Sí</td><td>-</td><td>Listar órdenes (propias, o todas si admin)</td></tr>
+    <tr><td>POST</td><td><code>/api/orders</code></td><td>-</td><td>-</td><td>Crear orden (guest)</td></tr>
+    <tr><td>PATCH</td><td><code>/api/orders/:id/status</code></td><td>Sí</td><td>Sí</td><td>Cambiar estado de pedido</td></tr>
+    <tr><td>GET/PUT</td><td><code>/api/bank-config</code></td><td>Sí*</td><td>Sí</td><td>Config transferencia bancaria (GET público)</td></tr>
+    <tr><td>POST</td><td><code>/api/create-preference</code></td><td>-</td><td>-</td><td>Crear preferencia Mercado Pago</td></tr>
+    <tr><td>POST</td><td><code>/api/webhooks/mercadopago</code></td><td>-</td><td>-</td><td>Webhook MP</td></tr>
+    <tr><td>POST</td><td><code>/api/upload</code></td><td>Sí</td><td>Sí</td><td>Subir imágenes (max 10MB, admin)</td></tr>
+    <tr><td>POST</td><td><code>/api/shipping/quote</code></td><td>-</td><td>-</td><td>Cotizar envío (paquetes con weight/width/height/length)</td></tr>
+    <tr><td>GET</td><td><code>/uploads/:file</code></td><td>-</td><td>-</td><td>Servir archivos (solo backend local)</td></tr>
+    <tr><td>POST</td><td><code>/api/testing/reset</code></td><td>-</td><td>-</td><td>Reset de datos de prueba (solo dev, backend local)</td></tr>
+  </table>
+  <p class="small muted">* Los métodos de escritura requieren rol admin; los GET de lectura son públicos. La autenticación se envía como header <code>Authorization: Bearer &lt;JWT&gt;</code>.</p>
+
+  <h3>5.1 Campos del producto relevantes para envío</h3>
+  <p>El producto soporta <strong>peso, alto, ancho y largo</strong> (<code>weight</code>, <code>height</code>, <code>width</code>, <code>length</code>), editables desde el panel admin. Se usan en <code>buildShipmentPackages()</code> (<code>src/services/shippingService.ts</code>) con valores por defecto 1 kg y 20×20×20 cm.</p>
+</div>
+
+<!-- ===================== 6. BASE DE DATOS ===================== -->
+<div class="section" id="sec6">
+  <h2>6. Base de Datos</h2>
+
+  <h3>6.1 Dos motores</h3>
+  <table>
+    <tr><th></th><th>Local (dev)</th><th>Producción</th></tr>
+    <tr><td>Motor</td><td>SQLite vía <code>bun:sqlite</code></td><td>Cloudflare D1</td></tr>
+    <tr><td>Ubicación</td><td><code>server/data/blanqueria.db</code></td><td>D1 <code>blanqueria-db</code> (id <code>f0b2dc3d-a6b2-4174-ae9c-1750eef96eee</code>)</td></tr>
+    <tr><td>Schema</td><td><code>server/src/db.ts</code> (migraciones idempotentes con <code>runSilent</code>)</td><td><code>workers/api/schema.sql</code> (base) + <code>workers/api/migrations/</code></td></tr>
+    <tr><td>Seed</td><td><code>server/src/seed.ts</code></td><td><code>workers/api/seed.sql</code></td></tr>
+  </table>
+
+  <h3>6.2 Tabla <code>products</code></h3>
+  <table>
+    <tr><th>Columna</th><th>Tipo</th><th>Descripción</th></tr>
+    <tr><td>id</td><td>TEXT PK</td><td>Identificador (timestamp)</td></tr>
+    <tr><td>name</td><td>TEXT</td><td>Nombre</td></tr>
+    <tr><td>description</td><td>TEXT</td><td>Descripción</td></tr>
+    <tr><td>brand</td><td>TEXT</td><td>Marca</td></tr>
+    <tr><td>category</td><td>TEXT</td><td>Categoría</td></tr>
+    <tr><td>subcategory</td><td>TEXT</td><td>Subcategoría</td></tr>
+    <tr><td>price</td><td>REAL</td><td>Precio</td></tr>
+    <tr><td>stock</td><td>INTEGER</td><td>Stock simple</td></tr>
+    <tr><td>image</td><td>TEXT</td><td>Imagen principal</td></tr>
+    <tr><td>images_json</td><td>TEXT</td><td>Galería (array JSON)</td></tr>
+    <tr><td>variants_json</td><td>TEXT</td><td>Variantes/talles (array JSON)</td></tr>
+    <tr><td>colors_json</td><td>TEXT</td><td>Colores (array JSON)</td></tr>
+    <tr><td>variant_stock_json</td><td>TEXT</td><td>Stock por variante/color (objeto JSON)</td></tr>
+    <tr><td>ambientes_json</td><td>TEXT</td><td>Ambientes (array JSON)</td></tr>
+    <tr><td><strong>weight</strong></td><td>REAL</td><td>Peso (kg) — para envío</td></tr>
+    <tr><td><strong>width</strong></td><td>REAL</td><td>Ancho (cm) — para envío</td></tr>
+    <tr><td><strong>height</strong></td><td>REAL</td><td>Alto (cm) — para envío</td></tr>
+    <tr><td><strong>length</strong></td><td>REAL</td><td>Largo (cm) — para envío</td></tr>
+    <tr><td>featured</td><td>INTEGER</td><td>Destacado (0/1)</td></tr>
+    <tr><td>is_new</td><td>INTEGER</td><td>Nuevo (0/1)</td></tr>
+    <tr><td>created_at / updated_at</td><td>TEXT</td><td>Fechas</td></tr>
+  </table>
+
+  <h3>6.3 Otras tablas</h3>
+  <table>
+    <tr><th>Tabla</th><th>Columnas principales</th></tr>
+    <tr><td>users</td><td>email, password_hash, name, is_admin, phone, address, locality, province, postal_code, email_verified, verification_token</td></tr>
+    <tr><td>categories</td><td>name, image, description, subcategories_json, icon</td></tr>
+    <tr><td>ambientes</td><td>name, image, description</td></tr>
+    <tr><td>hero_slides</td><td>type, image, product_id, title, subtitle, link, order, video_url</td></tr>
+    <tr><td>orders</td><td>customer_name/email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source</td></tr>
+    <tr><td>bank_config</td><td>bank_name, cbu, alias, account_holder, discount_percentage</td></tr>
+    <tr><td>d1_migrations</td><td>Solo en D1: control de migraciones aplicadas (name, applied_at)</td></tr>
+  </table>
+
+  <h3>6.4 Sistema de migraciones D1</h3>
+  <p>Configurado en <code>workers/api/wrangler.toml</code> con <code>migrations_dir = "migrations"</code>. Cada cambio de schema se agrega como un archivo numerado:</p>
+  <table>
+    <tr><th>Migración</th><th>Contenido</th></tr>
+    <tr><td><code>0001_add_product_dimensions.sql</code></td><td>Agrega <code>weight</code>, <code>width</code>, <code>height</code>, <code>length</code> a <code>products</code></td></tr>
+  </table>
+  <div class="warn">
+    <strong>Atención:</strong> en la D1 de producción la migración 0001 ya está aplicada manualmente y registrada en <code>d1_migrations</code>. <code>schema.sql</code> es la línea base sin esas columnas; no incluye <code>ALTER TABLE</code> porque D1 no los agrega a tablas existentes.
+  </div>
+</div>
+
+<!-- ===================== 7. ENV / SECRETS ===================== -->
+<div class="section" id="sec7">
+  <h2>7. Variables de Entorno y Secrets</h2>
+
+  <h3>7.1 Backend local — <code>server/.env</code></h3>
+  <table>
+    <tr><th>Variable</th><th>Ejemplo</th><th>Descripción</th></tr>
+    <tr><td>PORT</td><td>3001</td><td>Puerto del server Hono</td></tr>
+    <tr><td>JWT_SECRET</td><td>blanqueria-secret-key-change-in-production</td><td>Secreto JWT (HS256)</td></tr>
+    <tr><td>DB_PATH</td><td>./data/blanqueria.db</td><td>Ruta de la SQLite local</td></tr>
+    <tr><td>MERCADOPAGO_ACCESS_TOKEN</td><td></td><td>Access token de Mercado Pago</td></tr>
+    <tr><td>MERCADOPAGO_PUBLIC_KEY</td><td></td><td>Public key de Mercado Pago</td></tr>
+    <tr><td>MERCADOPAGO_WEBHOOK_SECRET</td><td></td><td>Secreto del webhook</td></tr>
+    <tr><td>SITE_URL</td><td>http://localhost:8080</td><td>URL del sitio (links en emails)</td></tr>
+    <tr><td>RESEND_API_KEY</td><td></td><td>Key de Resend para emails</td></tr>
+    <tr><td>EMAIL_FROM</td><td>onboarding@resend.dev</td><td>Remitente de emails</td></tr>
+    <tr><td>TEST_RESET_KEY</td><td>dev-reset-key</td><td>Key del endpoint de reset (solo dev)</td></tr>
+  </table>
+
+  <h3>7.2 Secrets del Worker — <code>wrangler secret put &lt;NOMBRE&gt;</code></h3>
+  <p>Se setean desde el dashboard de Cloudflare o con wrangler (carpeta <code>workers/api</code>):</p>
+  <pre>
+wrangler secret put JWT_SECRET
+wrangler secret put RESEND_API_KEY
+wrangler secret put MERCADOPAGO_ACCESS_TOKEN
+wrangler secret put MERCADOPAGO_PUBLIC_KEY
+wrangler secret put MERCADOPAGO_WEBHOOK_SECRET
+wrangler secret put IMGBB_API_KEY
+wrangler secret put MICORREO_CUSTOMER_ID
+wrangler secret put MICORREO_EMAIL
+wrangler secret put MICORREO_PASSWORD
+  </pre>
+
+  <h3>7.3 Vars del Worker — <code>wrangler.toml</code> [vars]</h3>
+  <table>
+    <tr><th>Variable</th><th>Valor</th></tr>
+    <tr><td>SITE_URL</td><td>https://aikenblanco.com.ar</td></tr>
+    <tr><td>EMAIL_FROM</td><td>tienda@aikenblanco.com.ar</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 8. COMANDOS DEV ===================== -->
+<div class="section" id="sec8">
+  <h2>8. Comandos de Desarrollo</h2>
+
+  <h3>8.1 Instalación</h3>
+  <pre>
+npm install          # dependencias del frontend (raíz)
+cd server &amp;&amp; bun install
+cd workers/api &amp;&amp; npm install
+  </pre>
+
+  <h3>8.2 Frontend (raíz)</h3>
+  <table>
+    <tr><th>Comando</th><th>Qué hace</th></tr>
+    <tr><td><code>npm run dev</code></td><td>Dev server Vite en http://localhost:8080 (proxy <code>/api</code> → :3001)</td></tr>
+    <tr><td><code>npm run dev:server</code></td><td>Backend Bun con watch (<code>server/src/index.ts</code>)</td></tr>
+    <tr><td><code>npm run dev:all</code></td><td>Frontend + backend juntos (concurrently)</td></tr>
+    <tr><td><code>npm run build</code></td><td>Build de producción a <code>dist/</code></td></tr>
+    <tr><td><code>npm run build:dev</code></td><td>Build en modo development</td></tr>
+    <tr><td><code>npm run lint</code></td><td>ESLint sobre todo el proyecto</td></tr>
+    <tr><td><code>npm run preview</code></td><td>Previsualiza el build local</td></tr>
+    <tr><td><code>npm run test</code> / <code>test:watch</code></td><td>Tests Vitest</td></tr>
+  </table>
+
+  <h3>8.3 Backend local</h3>
+  <pre>
+cd server
+bun dev          # bun --watch src/index.ts  (puerto 3001)
+bun start        # bun src/index.ts
+  </pre>
+
+  <h3>8.4 Worker Cloudflare</h3>
+  <pre>
+cd workers/api
+npm run dev            # wrangler dev (worker local con D1 local)
+npm run deploy         # wrangler deploy (producción)
+npm run db:init        # wrangler d1 execute --remote --file=schema.sql
+npm run db:seed        # wrangler d1 execute --remote --file=seed.sql
+  </pre>
+
+  <h3>8.5 Tests</h3>
+  <ul>
+    <li><strong>Unitarios (Vitest):</strong> <code>npm run test</code> — <code>src/test/</code></li>
+    <li><strong>E2E (Playwright):</strong> <code>npx playwright test</code> — <code>src/test/e2e/checkout-transferencia.spec.ts</code> (config en <code>playwright.config.ts</code>)</li>
+  </ul>
+</div>
+
+<!-- ===================== 9. GIT ===================== -->
+<div class="section" id="sec9">
+  <h2>9. Flujo Git y Ramas</h2>
+
+  <p>Hay dos ramas principales:</p>
+  <table>
+    <tr><th>Rama</th><th>Rol</th></tr>
+    <tr><td><code>local</code></td><td>Rama de trabajo/desarrollo (activa por defecto)</td></tr>
+    <tr><td><code>main</code></td><td>Rama de producción</td></tr>
+  </table>
+  <p class="muted">Remote: <code>origin</code> → https://github.com/JuanHernandezFeser/blanqueria.git</p>
+
+  <h3>9.1 Comandos habituales</h3>
+  <pre>
+# Estado y log
+git branch --show-current
+git status
+git log --oneline -10
+
+# Trabajar en local
+git add &lt;archivos&gt;
+git commit -m "Descripcion clara del cambio"
+git push origin local
+
+# Pasar a producción
+git checkout main
+git merge local
+git push origin main
+git checkout local
+  </pre>
+</div>
+
+<!-- ===================== 10. DEPLOY ===================== -->
+<div class="section" id="sec10">
+  <h2>10. Deploy a Producción</h2>
+
+  <h3>10.1 Frontend — Cloudflare Pages</h3>
+  <p>El frontend se compila con Vite y se sube a Cloudflare Pages (dominio <code>aikenblanco.com.ar</code>). La carpeta <code>functions/</code> incluye un proxy que reenvía <code>/api/*</code> al Worker.</p>
+  <pre>
+# 1. Compilar el frontend (genera dist/)
+npm run build
+
+# 2. Subir a Cloudflare Pages
+npx wrangler pages deploy dist
+  </pre>
+  <div class="note">Si Pages está conectado al repo por integración de GitHub, el deploy puede ser automático al pushear a <code>main</code>. El comando anterior es la vía manual.</div>
+
+  <h3>10.2 Worker — Cloudflare Workers</h3>
+  <pre>
+cd workers/api
+npx wrangler deploy
+  </pre>
+  <p>Publica el worker <code>blanqueria-api</code> en <code>https://api.aikenblanco.com.ar</code>. Verificar que aparezca <code>Uploaded</code> y <code>Deployed</code> sin errores.</p>
+
+  <h3>10.3 Base de datos — D1</h3>
+  <pre>
+cd workers/api
+
+# Aplicar migraciones pendientes (producción)
+npx wrangler d1 migrations apply blanqueria-db --remote
+
+# Inicializar schema base (solo DB nueva)
+npm run db:init
+
+# Sembrar datos iniciales (solo DB nueva)
+npm run db:seed
+
+# Inspección rápida
+npx wrangler d1 execute blanqueria-db --remote --command "SELECT name FROM pragma_table_info('products');"
+  </pre>
+
+  <h3>10.4 Secrets (si cambiaron)</h3>
+  <pre>
+cd workers/api
+wrangler secret put NOMBRE_DEL_SECRET
+  </pre>
+
+  <h3>10.5 Deploy completo (copy-paste)</h3>
+  <pre>
+# 1. Verificar rama de trabajo
+git branch --show-current        # debe decir: local
+
+# 2. Commit y push de la rama local
+git add .
+git commit -m "Descripcion clara del cambio"
+git push origin local
+
+# 3. Merge a main y push
+git checkout main
+git merge local
+git push origin main
+git checkout local
+
+# 4. Deploy frontend (Pages)
+npm run build
+npx wrangler pages deploy dist
+
+# 5. Deploy worker
+cd workers/api
+npx wrangler deploy
+
+# 6. Aplicar migraciones D1 (si corresponde)
+npx wrangler d1 migrations apply blanqueria-db --remote
+  </pre>
+</div>
+
+<!-- ===================== 11. NOTAS ===================== -->
+<div class="section" id="sec11">
+  <h2>11. Notas, Problemas Conocidos y Seguridad</h2>
+
+  <table>
+    <tr><th>Tema</th><th>Estado</th></tr>
+    <tr><td>JWT_SECRET hardcodeado en <code>.env.example</code> (local)</td><td>Pendiente: usar un valor fuerte en producción</td></tr>
+    <tr><td>Mercado Pago en dev</td><td>En desarrollo simula pago aprobado (intencional)</td></tr>
+    <tr><td>Mercado Pago en producción</td><td>Requiere credenciales reales probadas</td></tr>
+    <tr><td>API client hardcodeado</td><td><code>src/services/api.ts</code> apunta fijo a producción; en dev no se puede apuntar a local sin editarlo</td></tr>
+    <tr><td>Base de datos</td><td>SQLite local no escala a múltiples instancias; en producción se usa D1 (serverless)</td></tr>
+    <tr><td>Secrets</td><td>Nunca commitear <code>.env</code> ni keys al repo (ya cubierto por <code>.gitignore</code>)</td></tr>
+    <tr><td>Migraciones D1</td><td>Los cambios de schema se hacen con migraciones (0001 ya aplicada en producción)</td></tr>
+    <tr><td>Tests</td><td>Solo hay unit tests de ejemplo y una suite E2E de checkout</td></tr>
+  </table>
+
+  <div class="warn">
+    <strong>Advertencia de seguridad:</strong> no subir <code>.env</code>, keys de Resend/MercadoPago ni secrets al repositorio o a repos públicos.
+  </div>
+</div>
+
+<!-- ===================== 12. HISTORIAL ===================== -->
+<div class="section" id="sec12">
+  <h2>12. Historial Reciente</h2>
+
+  <pre>
+ea9a980 Mail de aviso interno al recibir pedido nuevo + FAQ en navbar
+76a54b9 commit all local changes
+2fc4d48 Agregar guia de deploy en markdown y PDF
+02d5cfb Fix upload: chunked base64 encoding para evitar 502 en archivos grandes
+df26f68 Quitar accesos demo, logo MP oficial, fix pedidos en produccion, actualizar dominios
+9048a26 Completar suite E2E de checkout: 28 tests, fixes de validacion
+f738f0e Agregar tests E2E de checkout, validación de email/telefono
+11c036c Agregar backend Hono, workers Cloudflare y nuevas features de frontend
+d6da991 Agregar .env al gitignore
+  </pre>
+
+  <h3>12.1 Cambios recientes de infraestructura</h3>
+  <ul>
+    <li><strong>2026-07-30</strong> — Configurado sistema de migraciones D1 (<code>migrations_dir</code>) y migración <code>0001_add_product_dimensions.sql</code>. Agregadas las columnas <code>weight</code>, <code>width</code>, <code>height</code>, <code>length</code> a la tabla <code>products</code> de la D1 de producción.</li>
+  </ul>
+</div>
+
+</body>
+</html>
