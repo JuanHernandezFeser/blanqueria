@@ -21,6 +21,7 @@ interface AuthState {
   logout: () => void;
   restoreSession: () => Promise<void>;
   updateProfile: (data: { name: string; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -57,6 +58,11 @@ export const useAuthStore = create<AuthState>()(
         if (currentUser) {
           set({ user: { ...currentUser, ...data } });
         }
+      },
+      deleteAccount: async () => {
+        await api.deleteAccount();
+        setToken(null);
+        set({ user: null });
       },
     }),
     { name: 'auth-storage' }

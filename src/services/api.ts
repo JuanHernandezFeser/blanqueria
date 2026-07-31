@@ -53,6 +53,9 @@ export const api = {
   updateProfile(data: { name: string; phone?: string; address?: string; locality?: string; province?: string; postalCode?: string }): Promise<{ message: string }> {
     return request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
   },
+  deleteAccount(): Promise<{ message: string }> {
+    return request('/auth/account', { method: 'DELETE' });
+  },
   getMe(): Promise<User> { return request('/auth/me'); },
 
   getProducts<T = any>(): Promise<T> { return request('/products'); },
