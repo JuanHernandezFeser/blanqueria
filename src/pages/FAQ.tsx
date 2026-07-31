@@ -20,8 +20,8 @@ const FAQ_SECTIONS = [
         a: 'El pedido queda en "Pendiente" hasta que se acredite el pago. Una vez acreditado, lo ponemos en preparación y te avisamos por email.',
       },
       {
-        q: '¿Cómo hago un cambio o devolución?',
-        a: 'Escribinos y lo resolvemos. Podés contactarnos por email a compras@aikenblanco.com.ar o por WhatsApp y coordinamos el cambio o devolución.',
+        q: '¿Cómo hago un cambio?',
+        a: 'Escribinos y lo resolvemos. Podés contactarnos por email a compras@aikenblanco.com.ar o por WhatsApp y coordinamos el cambio.',
       },
     ],
   },
@@ -34,7 +34,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: '¿Cuánto tarda y cuánto cuesta el envío?',
-        a: 'Depende de tu código postal. Ingresalo en el carrito o en el checkout y el costo se calcula en el momento con la tarifa de Correo Argentino. Los plazos aproximados son de 3 a 5 días hábiles según el destino.',
+        a: 'Depende de tu código postal. Ingresalo en el carrito o en el checkout y el costo se calcula en el momento con la tarifa de Correo Argentino. Nosotros hacemos el envío dentro de las 24hs hábiles de recibido el pedido. Los plazos de entrega corresponden a Correo Argentino.',
       },
       {
         q: '¿Puedo retirar mi pedido?',
@@ -47,15 +47,11 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: '¿Qué medios de pago aceptan?',
-        a: 'Aceptamos Mercado Pago (débito, crédito, transferencia y efectivo) y transferencia bancaria directa.',
-      },
-      {
-        q: '¿Hay descuento pagando por transferencia?',
-        a: 'Sí, tenés un 8% de descuento abonando por transferencia bancaria. Los datos (Banco Provincia, CBU y alias AIKEN.BLANCO) se muestran al confirmar el pedido.',
+        a: 'Aceptamos Mercado Pago (débito, crédito y transferencia), transferencia bancaria directa y efectivo.',
       },
       {
         q: '¿Se puede pagar en cuotas?',
-        a: 'Las cuotas dependen de la tarjeta al pagar con Mercado Pago. Al elegir ese medio vas a ver las opciones disponibles.',
+        a: 'Las cuotas dependen de las opciones que te ofrezca Mercado Pago. Al elegir ese medio vas a ver las opciones disponibles.',
       },
     ],
   },
@@ -71,8 +67,8 @@ const FAQ_SECTIONS = [
         a: 'Al crear la cuenta te llega un mail con un botón de verificación. Si no lo recibís, podés reenviarlo desde el ingreso.',
       },
       {
-        q: '¿Qué talles y colores tienen?',
-        a: 'Cada producto indica sus variantes (talle y color) con el stock disponible en tiempo real.',
+        q: '¿Qué medidas y colores tienen?',
+        a: 'Cada producto indica sus variantes (medidas y color) con el stock disponible en tiempo real.',
       },
     ],
   },
