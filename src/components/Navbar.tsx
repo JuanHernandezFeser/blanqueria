@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import CartDrawer from '@/components/CartDrawer';
 import SearchAutocomplete from '@/components/shared/SearchAutocomplete';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 const Navbar = () => {
   const totalItems = useCartStore((s) => s.totalItems());
@@ -99,7 +100,7 @@ const Navbar = () => {
               <span className="font-body">Ingresar</span>
             </Link>
           )}
-          <Link to="/login" className="md:hidden p-2">
+          <Link to={user ? '/mi-cuenta' : '/login'} className="md:hidden p-2">
             <User className="h-5 w-5 text-foreground" />
           </Link>
           <button onClick={() => setCartOpen(true)} className="relative p-2 -mr-2" data-testid="cart-button">
@@ -121,6 +122,8 @@ const Navbar = () => {
       )}
 
       <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+
+      <MobileBottomNav onCartOpen={() => setCartOpen(true)} />
     </header>
   );
 };
