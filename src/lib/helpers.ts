@@ -1,3 +1,9 @@
+import type { Product } from '@/data/products';
+
+export function compareByName(a: Product, b: Product): number {
+  return a.name.trim().localeCompare(b.name.trim(), 'es', { sensitivity: 'base' });
+}
+
 export function statusColor(status: string): string {
   switch (status) {
     case 'Entregado': return 'bg-green-100 text-green-800';

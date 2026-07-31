@@ -6,7 +6,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
 });
 
-export async function handleAmbientes(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleAmbientes(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   // GET /api/ambientes
   if (method === 'GET' && path === '/api/ambientes') {
     const { results } = await env.DB.prepare('SELECT * FROM ambientes ORDER BY name').all();

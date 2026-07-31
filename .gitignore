@@ -25,6 +25,10 @@ dist-ssr
 server/data/
 server/uploads/
 
+# Wrangler local state
+.wrangler/
+workers/api/.wrangler/
+
 # Environment variables
 .env
 .env.local

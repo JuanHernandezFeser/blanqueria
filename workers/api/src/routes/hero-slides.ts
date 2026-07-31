@@ -15,7 +15,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
 });
 
-export async function handleHeroSlides(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleHeroSlides(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   // GET /api/hero-slides
   if (method === 'GET' && path === '/api/hero-slides') {
     const { results } = await env.DB.prepare('SELECT * FROM hero_slides ORDER BY "order"').all<SlideRow>();

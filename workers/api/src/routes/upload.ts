@@ -32,7 +32,7 @@ async function uploadToImgbb(file: File, apiKey: string): Promise<string> {
   return data.data.url;
 }
 
-export async function handleUpload(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleUpload(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   if (method === 'POST' && path === '/api/upload') {
     await requireAdmin(request, env);
 

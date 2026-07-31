@@ -41,12 +41,12 @@ const Footer = () => (
           <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
           <ul className="space-y-2 font-body text-sm text-foreground">
             <li>
-              <a href="mailto:hola@aike.com.ar" className="hover:text-muted-foreground transition-colors">hola@aike.com.ar</a>
+              <a href="mailto:compras@aikenblanco.com.ar" className="hover:text-muted-foreground transition-colors">compras@aikenblanco.com.ar</a>
             </li>
             <li>
-              <a href="https://wa.me/541145678900" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">+54 11 4567-8900</a>
+              <a href="https://wa.me/542914316639" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">+54 291 4316-639</a>
             </li>
-            <li>Buenos Aires, Argentina</li>
+            <li>Bahía Blanca, Buenos Aires, Argentina</li>
           </ul>
         </div>
         <div>
@@ -67,9 +67,14 @@ const Footer = () => (
         <p className="font-body text-xs text-muted-foreground">
           © 2026 AIKEN. Todos los derechos reservados.
         </p>
-        <p className="font-body text-[10px] text-muted-foreground/60">
-          Diseñado con dedicación en Argentina
-        </p>
+        <a
+          href="https://www.kodasystems.com.ar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-body text-sm font-medium text-foreground hover:text-primary underline underline-offset-4 transition-colors"
+        >
+          Creado por Koda Systems
+        </a>
       </div>
     </div>
   </footer>

@@ -14,7 +14,7 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
 });
 
-export async function handleBankConfig(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleBankConfig(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   // GET /api/bank-config
   if (method === 'GET' && path === '/api/bank-config') {
     const row = await env.DB.prepare('SELECT * FROM bank_config WHERE id = 1').first<BankConfigRow>();

@@ -17,7 +17,7 @@ function calculateFallback(postalCode: string) {
   return { method: 'Correo Argentino', days: '3-5 días hábiles', cost: 1400, source: 'fallback' };
 }
 
-export async function handleShipping(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleShipping(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   if (method === 'POST' && path === '/api/shipping/quote') {
     const { postalCode, packages } = await request.json() as { postalCode: string; packages: PackageInfo[] };
     if (!postalCode || postalCode.length < 4) return json({ error: 'Código postal inválido' }, 400);

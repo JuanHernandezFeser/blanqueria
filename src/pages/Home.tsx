@@ -6,8 +6,11 @@ import ProductSkeleton from '@/components/shared/ProductSkeleton';
 import ProductCarousel from '@/components/shared/ProductCarousel';
 import PaymentMethodsBar from '@/components/shared/PaymentMethodsBar';
 import ShippingBanner from '@/components/shared/ShippingBanner';
-import AllProductsSection from '@/components/shared/AllProductsSection';
+import ProductPhotoMarquee from '@/components/shared/ProductPhotoMarquee';
+import StaticBanner from '@/components/shared/StaticBanner';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { compareByName } from '@/lib/helpers';
+import { compareByName } from '@/lib/helpers';
 
 const Home = () => {
   const products = useProductStore((s) => s.products);
@@ -41,8 +44,8 @@ const Home = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const newArrivals = products.filter((p) => p.isNew).slice(0, 6);
-  const featured = products.filter((p) => p.featured);
+  const newArrivals = products.filter((p) => p.isNew).sort(compareByName).slice(0, 6);
+  const featured = products.filter((p) => p.featured).sort(compareByName);
 
   return (
     <div className="min-h-screen">
@@ -81,13 +84,7 @@ const Home = () => {
         </div>
       </section>
 
-      <ProductCarousel
-        title="Novedades"
-        products={newArrivals}
-        loading={loading}
-        viewAllLink="/catalogo"
-        badgeContext="novedades"
-      />
+      <ProductPhotoMarquee />
 
       <ShippingBanner />
 
@@ -101,7 +98,15 @@ const Home = () => {
         />
       )}
 
-      <AllProductsSection products={products} loading={loading} />
+      <StaticBanner>Envíos dentro de Argentina, a cargo de Correo Argentino</StaticBanner>
+
+      <ProductCarousel
+        title="Novedades"
+        products={newArrivals}
+        loading={loading}
+        viewAllLink="/catalogo"
+        badgeContext="novedades"
+      />
 
     </div>
   );

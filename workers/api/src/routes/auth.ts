@@ -2,7 +2,7 @@ import type { Env } from '../types';
 import { signToken, requireAuth, hashPassword, verifyPassword } from '../auth';
 import { sendVerificationEmail } from '../mail';
 
-export async function handleAuth(request: Request, env: Env, path: string, method: string): Promise<Response> {
+export async function handleAuth(request: Request, env: Env, ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -27,7 +27,7 @@ export async function handleAuth(request: Request, env: Env, path: string, metho
     ).bind(id, email, hash, name, verificationToken).run();
 
     const token = await signToken({ id, email, name, isAdmin: false }, env.JWT_SECRET);
-    sendVerificationEmail(env, email, name, verificationToken);
+    ctx.waitUntil(sendVerificationEmail(env, email, name, verificationToken));
     return json({ token, user: { email, name, isAdmin: false } }, 201);
   }
 

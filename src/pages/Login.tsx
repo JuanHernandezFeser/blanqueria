@@ -12,7 +12,9 @@ const Login = () => {
       await login(email, password);
       toast.success('¡Bienvenido!');
       const user = useAuthStore.getState().user;
-      if (user && !user.address) {
+      if (user?.isAdmin) {
+        navigate('/admin');
+      } else if (user && !user.address) {
         navigate('/completar-perfil');
       } else {
         navigate('/');
