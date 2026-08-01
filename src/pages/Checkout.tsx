@@ -175,7 +175,7 @@ const Checkout = () => {
       });
       clearCart();
       window.location.href = initPoint;
-    } catch { toast.error('Error al conectar con Mercado Pago. Intentalo de nuevo.'); setSubmitting(false); submittingRef.current = false; }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al conectar con Mercado Pago. Intentalo de nuevo.'); setSubmitting(false); submittingRef.current = false; }
   };
 
   const handleSimulatePayment = async () => {
@@ -183,7 +183,7 @@ const Checkout = () => {
       const id = await createOrderViaApi('aprobado');
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('🧪 Pago simulado — pedido creado como aprobado');
-    } catch { toast.error('Error al crear pedido'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }
   };
 
   const handleTransferConfirm = async () => {
@@ -194,7 +194,7 @@ const Checkout = () => {
       const id = await createOrderViaApi('pendiente');
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('Pedido creado con éxito');
-    } catch { toast.error('Error al crear pedido'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }
     setSubmitting(false);
     submittingRef.current = false;
   };
@@ -204,7 +204,7 @@ const Checkout = () => {
       const id = await createOrderViaApi('pendiente');
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('Pedido registrado. Te contactaremos para coordinar el pago.');
-    } catch { toast.error('Error al crear pedido'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }
   };
 
   return (
@@ -279,10 +279,7 @@ const Checkout = () => {
             <div className="space-y-4">
               <h2 className="font-display text-2xl text-foreground mb-4">Método de pago</h2>
               <button onClick={() => setPaymentMethod('mercadopago')} className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'mercadopago' ? 'border-[#009ee3] bg-[#009ee3]/5' : 'border-accent hover:border-[#009ee3]/50'}`}>
-                <svg viewBox="0 0 36 36" className="h-6 w-6 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="36" height="36" rx="6" fill="#009ee3"/>
-                  <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="14">MP</text>
-                </svg>
+                <img src="/logo-mercado-pago.png" alt="Mercado Pago" className="h-8 w-auto flex-shrink-0" />
                 <div>
                   <p className="font-body text-sm font-medium text-foreground">Mercado Pago</p>
                   <p className="font-body text-xs text-muted-foreground">Débito, crédito, transferencia o efectivo</p>

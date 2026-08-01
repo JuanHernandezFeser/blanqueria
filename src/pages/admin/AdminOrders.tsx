@@ -97,6 +97,7 @@ const AdminOrders = () => {
                   <option value="En preparación">En preparación</option>
                   <option value="Enviado">Enviado</option>
                   <option value="Entregado">Entregado</option>
+                  <option value="Cancelado">Cancelado</option>
                 </select>
                 <span className="text-xs text-muted-foreground font-body">
                   Pago: {o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'} · {o.paymentStatus === 'aprobado' ? 'Aprobado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}

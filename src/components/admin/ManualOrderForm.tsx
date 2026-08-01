@@ -21,7 +21,6 @@ const emptyRow = (): ProductRow => ({ productId: '', variant: '', color: '', qua
 const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const products = useProductStore((s) => s.products);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
-  const updateProduct = useProductStore((s) => s.updateProduct);
   const addOrder = useOrderStore((s) => s.addOrder);
 
   const [customerName, setCustomerName] = useState('');
@@ -102,18 +101,6 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
         source: 'manual',
       });
 
-      for (const r of rows) {
-        const p = selectedProduct(r.productId);
-        if (!p) continue;
-        const key = variantStockKey(r.variant, r.color);
-        if (p.variantStock && Object.keys(p.variantStock).length > 0) {
-          const current = p.variantStock[key] ?? 0;
-          await updateProduct(p.id, { variantStock: { ...p.variantStock, [key]: Math.max(0, current - r.quantity) } });
-        } else {
-          await updateProduct(p.id, { stock: Math.max(0, p.stock - r.quantity) });
-        }
-      }
-
       addOrder({
         id,
         customerName,
@@ -133,8 +120,8 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
       toast.success('Pedido manual creado');
       onClose();
       resetForm();
-    } catch {
-      toast.error('Error al crear el pedido');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al crear el pedido');
     } finally {
       setSaving(false);
     }

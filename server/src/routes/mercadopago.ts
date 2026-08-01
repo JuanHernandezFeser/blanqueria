@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { getDb } from '../db';
+import { restoreStockForItems, parseOrderItems } from './orders';
 import crypto from 'node:crypto';
 
 const mercadopago = new Hono();
@@ -124,27 +125,37 @@ mercadopago.post('/webhooks/mercadopago', async (c) => {
       const newStatus = mapMpStatus(payment.status);
       const db = getDb();
 
+      const applyStatus = (order: { id: string; payment_status: string; items_json: string }): boolean => {
+        if (order.payment_status === newStatus) return false;
+        const update = db.transaction(() => {
+          db.run('UPDATE orders SET payment_status = ? WHERE id = ?', newStatus, order.id);
+          if (newStatus === 'rechazado') {
+            restoreStockForItems(db, parseOrderItems(order.items_json));
+          }
+        });
+        update();
+        return true;
+      };
+
       let updated = false;
 
       if (payment.external_reference) {
-        const existing = db.query('SELECT id, payment_status FROM orders WHERE id = ?').get(payment.external_reference) as { id: string; payment_status: string } | undefined;
-        if (existing && existing.payment_status !== newStatus) {
-          db.run('UPDATE orders SET payment_status = ? WHERE id = ?', newStatus, existing.id);
-          updated = true;
+        const existing = db.query('SELECT id, payment_status, items_json FROM orders WHERE id = ?').get(payment.external_reference) as { id: string; payment_status: string; items_json: string } | undefined;
+        if (existing) {
+          updated = applyStatus(existing);
         }
       }
 
       if (!updated && payment.payer?.email) {
         const orders = db.query(
-          `SELECT id, payment_status, total FROM orders
+          `SELECT id, payment_status, total, items_json FROM orders
            WHERE customer_email = ? AND payment_method = 'mercadopago' AND payment_status = 'pendiente'
            ORDER BY date DESC LIMIT 5`
-        ).all(payment.payer.email) as { id: string; payment_status: string; total: number }[];
+        ).all(payment.payer.email) as { id: string; payment_status: string; total: number; items_json: string }[];
 
         for (const order of orders) {
           if (Math.abs(order.total - payment.transaction_amount) < 1) {
-            db.run('UPDATE orders SET payment_status = ? WHERE id = ?', newStatus, order.id);
-            updated = true;
+            updated = applyStatus(order);
             break;
           }
         }
