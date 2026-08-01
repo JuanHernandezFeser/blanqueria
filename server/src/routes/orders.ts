@@ -24,6 +24,29 @@ function formatOrder(row: OrderRow) {
   };
 }
 
+export function restoreStockForItems(db: ReturnType<typeof getDb>, items: { productId: string; variant?: string; quantity: number }[]) {
+  const escJsonKey = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  for (const item of items || []) {
+    const qty = item.quantity || 1;
+    if (item.variant) {
+      const path = `$."${escJsonKey(String(item.variant))}"`;
+      db.query(
+        `UPDATE products SET variant_stock_json = json_set(variant_stock_json, ?, COALESCE(json_extract(variant_stock_json, ?), 0) + ?) WHERE id = ?`
+      ).run(path, path, qty, item.productId);
+    } else {
+      db.query('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, item.productId);
+    }
+  }
+}
+
+export function parseOrderItems(itemsJson: string): { productId: string; variant?: string; quantity: number }[] {
+  try {
+    return JSON.parse(itemsJson || '[]') as { productId: string; variant?: string; quantity: number }[];
+  } catch {
+    return [];
+  }
+}
+
 orders.get('/', authMiddleware, (c) => {
   const db = getDb();
   const user = c.get('user');
@@ -36,38 +59,63 @@ orders.get('/', authMiddleware, (c) => {
   return c.json(rows.map(formatOrder));
 });
 
+class InsufficientStockError extends Error {
+  constructor(productName: string) {
+    super(`Stock insuficiente para ${productName}`);
+  }
+}
+
+const escJsonKey = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
 orders.post('/', async (c) => {
   const body = await c.req.json();
   const db = getDb();
-  const id = `ORD-${String(Date.now()).slice(-6)}`;
-  const date = new Date().toISOString();
 
-  db.run(
-    'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, body.customerName, body.customerEmail, date, body.subtotal, body.shippingCost || 0,
-    body.total, 'Pendiente', body.paymentMethod, body.paymentStatus || 'pendiente',
-    JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web'
-  );
+  const createOrder = db.transaction((b) => {
+    const id = `ORD-${String(Date.now()).slice(-6)}`;
+    const date = new Date().toISOString();
 
-  for (const item of body.items || []) {
-    const product = db.query('SELECT stock, variant_stock_json FROM products WHERE id = ?').get(item.productId) as { stock: number; variant_stock_json: string } | undefined;
-    if (!product) continue;
-    const qty = item.quantity || 1;
-    if (item.variant) {
-      const variantStock = JSON.parse(product.variant_stock_json || '{}');
-      const current = variantStock[item.variant] ?? 0;
-      variantStock[item.variant] = Math.max(0, current - qty);
-      db.run('UPDATE products SET variant_stock_json = ? WHERE id = ?', JSON.stringify(variantStock), item.productId);
-    } else {
-      db.run('UPDATE products SET stock = ? WHERE id = ?', Math.max(0, product.stock - qty), item.productId);
+    db.run(
+      'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      id, b.customerName, b.customerEmail, date, b.subtotal, b.shippingCost || 0,
+      b.total, 'Pendiente', b.paymentMethod, b.paymentStatus || 'pendiente',
+      JSON.stringify(b.items || []), JSON.stringify(b.shippingAddress || {}), b.source || 'web'
+    );
+
+    for (const item of b.items || []) {
+      const qty = item.quantity || 1;
+      let info: { changes: number };
+      if (item.variant) {
+        const path = `$."${escJsonKey(String(item.variant))}"`;
+        info = db.query(
+          `UPDATE products SET variant_stock_json = json_set(variant_stock_json, ?, json_extract(variant_stock_json, ?) - ?)
+           WHERE id = ? AND json_extract(variant_stock_json, ?) >= ?`
+        ).run(path, path, qty, item.productId, path, qty);
+      } else {
+        info = db.query('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?').run(qty, item.productId, qty);
+      }
+      if (info.changes === 0) throw new InsufficientStockError(item.productName || item.productId);
     }
+
+    return { id, date };
+  });
+
+  let created: { id: string; date: string };
+  try {
+    created = createOrder(body);
+  } catch (err) {
+    if (err instanceof InsufficientStockError) {
+      c.status(409);
+      return c.json({ error: err.message });
+    }
+    throw err;
   }
 
-  const row = db.query('SELECT * FROM orders WHERE id = ?').get(id) as OrderRow;
+  const row = db.query('SELECT * FROM orders WHERE id = ?').get(created.id) as OrderRow;
 
-  await sendOrderConfirmation({ ...body, id });
+  await sendOrderConfirmation({ ...body, id: created.id });
 
-  sendInternalOrderNotification({ ...body, id }).catch((err) => console.error('[orders] Internal notification failed:', err));
+  sendInternalOrderNotification({ ...body, id: created.id }).catch((err) => console.error('[orders] Internal notification failed:', err));
 
   return c.json(formatOrder(row), 201);
 });
@@ -75,9 +123,19 @@ orders.post('/', async (c) => {
 orders.patch('/:id/status', authMiddleware, adminMiddleware, async (c) => {
   const body = await c.req.json();
   const db = getDb();
-  const existing = db.query('SELECT id FROM orders WHERE id = ?').get(c.req.param('id'));
+  const existing = db.query('SELECT id, order_status, items_json FROM orders WHERE id = ?').get(c.req.param('id')) as { id: string; order_status: string; items_json: string } | undefined;
   if (!existing) { c.status(404); return c.json({ error: 'Pedido no encontrado' }); }
-  db.run('UPDATE orders SET order_status = ? WHERE id = ?', body.orderStatus, c.req.param('id'));
+
+  const update = db.transaction(() => {
+    db.run('UPDATE orders SET order_status = ? WHERE id = ?', body.orderStatus, c.req.param('id'));
+    if (body.orderStatus === 'Cancelado' && existing.order_status !== 'Cancelado') {
+      restoreStockForItems(db, parseOrderItems(existing.items_json));
+    } else if (existing.order_status === 'Cancelado' && body.orderStatus !== 'Cancelado') {
+      console.warn(`[orders] Orden ${c.req.param('id')} pasó de Cancelado a ${body.orderStatus}; no se re-descuenta stock (decisión manual)`);
+    }
+  });
+  update();
+
   if (body.orderStatus !== 'Pendiente') {
     const row = db.query('SELECT * FROM orders WHERE id = ?').get(c.req.param('id')) as OrderRow;
     if (row) {

@@ -1,6 +1,7 @@
 import type { Env } from '../types';
 import { requireAuth, requireAdmin } from '../auth';
 import { sendOrderConfirmation, sendOrderStatusUpdateEmail, sendInternalOrderNotification } from '../mail';
+import { buildRestoreStockStatements, parseOrderItems } from '../services/stock';
 
 interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
@@ -50,28 +51,54 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
     const id = `ORD-${String(Date.now()).slice(-6)}`;
     const date = new Date().toISOString();
 
-    await env.DB.prepare(
-      `INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(
-      id, body.customerName, body.customerEmail, date, body.subtotal, body.shippingCost || 0,
-      body.total, 'Pendiente', body.paymentMethod, body.paymentStatus || 'pendiente',
-      JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web'
-    ).run();
+    const escJsonKey = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
-    // Decrement stock
+    const stmts: D1PreparedStatement[] = [
+      env.DB.prepare(
+        `INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        id, body.customerName, body.customerEmail, date, body.subtotal, body.shippingCost || 0,
+        body.total, 'Pendiente', body.paymentMethod, body.paymentStatus || 'pendiente',
+        JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web'
+      ),
+    ];
+
+    const itemInfos: { productId: string; variant?: string; qty: number; productName: string }[] = [];
     for (const item of body.items || []) {
-      const product = await env.DB.prepare('SELECT stock, variant_stock_json FROM products WHERE id = ?').bind(item.productId).first<{ stock: number; variant_stock_json: string }>();
-      if (!product) continue;
       const qty = item.quantity || 1;
+      itemInfos.push({ productId: item.productId, variant: item.variant, qty, productName: item.productName || item.productId });
       if (item.variant) {
-        const variantStock = JSON.parse(product.variant_stock_json || '{}');
-        const current = variantStock[item.variant] ?? 0;
-        variantStock[item.variant] = Math.max(0, current - qty);
-        await env.DB.prepare('UPDATE products SET variant_stock_json = ? WHERE id = ?').bind(JSON.stringify(variantStock), item.productId).run();
+        const path = `$."${escJsonKey(String(item.variant))}"`;
+        stmts.push(env.DB.prepare(
+          `UPDATE products SET variant_stock_json = json_set(variant_stock_json, ?, json_extract(variant_stock_json, ?) - ?)
+           WHERE id = ? AND json_extract(variant_stock_json, ?) >= ?`
+        ).bind(path, path, qty, item.productId, path, qty));
       } else {
-        await env.DB.prepare('UPDATE products SET stock = ? WHERE id = ?').bind(Math.max(0, product.stock - qty), item.productId).run();
+        stmts.push(env.DB.prepare(
+          'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?'
+        ).bind(qty, item.productId, qty));
       }
+    }
+
+    const results = await env.DB.batch(stmts);
+
+    const applied: { productId: string; variant?: string; qty: number }[] = [];
+    const outOfStock: string[] = [];
+    for (let i = 0; i < itemInfos.length; i++) {
+      const res = results[i + 1];
+      if (res.meta.changes === 0) outOfStock.push(itemInfos[i].productName);
+      else applied.push(itemInfos[i]);
+    }
+
+    if (outOfStock.length > 0) {
+      const rollback: D1PreparedStatement[] = [env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(id)];
+      rollback.push(...buildRestoreStockStatements(
+        env.DB,
+        applied.map((a) => ({ productId: a.productId, variant: a.variant, quantity: a.qty }))
+      ));
+      await env.DB.batch(rollback);
+      return json({ error: `Stock insuficiente para ${outOfStock[0]}` }, 409);
     }
 
     const row = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first<OrderRow>();
@@ -85,9 +112,18 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
   if (method === 'PATCH' && orderMatch) {
     await requireAdmin(request, env);
     const body = await request.json() as { orderStatus: string };
-    const existing = await env.DB.prepare('SELECT id FROM orders WHERE id = ?').bind(orderMatch[1]).first();
+    const existing = await env.DB.prepare('SELECT id, order_status, items_json FROM orders WHERE id = ?')
+      .bind(orderMatch[1]).first<{ id: string; order_status: string; items_json: string }>();
     if (!existing) return json({ error: 'Pedido no encontrado' }, 404);
-    await env.DB.prepare('UPDATE orders SET order_status = ? WHERE id = ?').bind(body.orderStatus, orderMatch[1]).run();
+
+    const stmts: D1PreparedStatement[] = [env.DB.prepare('UPDATE orders SET order_status = ? WHERE id = ?').bind(body.orderStatus, orderMatch[1])];
+    if (body.orderStatus === 'Cancelado' && existing.order_status !== 'Cancelado') {
+      stmts.push(...buildRestoreStockStatements(env.DB, parseOrderItems(existing.items_json)));
+    } else if (existing.order_status === 'Cancelado' && body.orderStatus !== 'Cancelado') {
+      console.warn(`[orders] Orden ${orderMatch[1]} pasó de Cancelado a ${body.orderStatus}; no se re-descuenta stock (decisión manual)`);
+    }
+    await env.DB.batch(stmts);
+
     if (body.orderStatus !== 'Pendiente') {
       const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderMatch[1]).first<OrderRow>();
       if (updated) {

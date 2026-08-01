@@ -155,6 +155,7 @@ const STATUS_SUBJECTS: Record<string, string> = {
   'En preparación': 'está en preparación',
   'Enviado': 'fue enviado',
   'Entregado': 'fue entregado',
+  'Cancelado': 'fue cancelado',
 };
 
 const STATUS_BODIES: Record<string, { title: string; body: (name: string, address?: string) => string }> = {
@@ -169,6 +170,10 @@ const STATUS_BODIES: Record<string, { title: string; body: (name: string, addres
   'Entregado': {
     title: '¡Pedido entregado!',
     body: (name) => `¡Listo, ${name}! Tu pedido fue entregado. Esperamos que lo disfrutes — ¡gracias por elegirnos!`,
+  },
+  'Cancelado': {
+    title: 'Tu pedido fue cancelado',
+    body: (name) => `Hola, ${name}. Tu pedido fue cancelado. Si abonaste con Mercado Pago, el reintegro se procesa automáticamente. Cualquier duda, respondenos este correo.`,
   },
 };
 

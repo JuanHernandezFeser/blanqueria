@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { buildRestoreStockStatements, parseOrderItems } from '../services/stock';
 
 const MP_API = 'https://api.mercadopago.com';
 
@@ -80,30 +81,42 @@ async function fetchPayment(paymentId: number, accessToken: string): Promise<MpP
   return res.json() as Promise<MpPayment>;
 }
 
+interface PendingOrderRow {
+  id: string; payment_status: string; total: number; items_json: string;
+}
+
 async function updateOrderPayment(env: Env, payment: MpPayment): Promise<boolean> {
   const newStatus = mapMpStatus(payment.status, payment.status_detail);
 
+  const apply = async (order: PendingOrderRow): Promise<boolean> => {
+    if (order.payment_status === newStatus) return false;
+    const stmts: D1PreparedStatement[] = [env.DB.prepare('UPDATE orders SET payment_status = ? WHERE id = ?').bind(newStatus, order.id)];
+    if (newStatus === 'rechazado') {
+      stmts.push(...buildRestoreStockStatements(env.DB, parseOrderItems(order.items_json)));
+    }
+    await env.DB.batch(stmts);
+    return true;
+  };
+
   if (payment.external_reference) {
-    const byRef = await env.DB.prepare('SELECT id, payment_status FROM orders WHERE id = ?')
-      .bind(payment.external_reference).first<{ id: string; payment_status: string }>();
-    if (byRef && byRef.payment_status !== newStatus) {
-      await env.DB.prepare('UPDATE orders SET payment_status = ? WHERE id = ?').bind(newStatus, byRef.id).run();
-      return true;
+    const byRef = await env.DB.prepare('SELECT id, payment_status, total, items_json FROM orders WHERE id = ?')
+      .bind(payment.external_reference).first<PendingOrderRow>();
+    if (byRef) {
+      if (await apply(byRef)) return true;
     }
   }
 
   const payerEmail = payment.payer?.email;
   if (payerEmail) {
     const { results } = await env.DB.prepare(
-      `SELECT id, payment_status, total FROM orders
+      `SELECT id, payment_status, total, items_json FROM orders
        WHERE customer_email = ? AND payment_method = 'mercadopago' AND payment_status = 'pendiente'
        ORDER BY date DESC LIMIT 5`
-    ).bind(payerEmail).all<{ id: string; payment_status: string; total: number }>();
+    ).bind(payerEmail).all<PendingOrderRow>();
 
     for (const order of results) {
       if (Math.abs(order.total - payment.transaction_amount) < 1) {
-        await env.DB.prepare('UPDATE orders SET payment_status = ? WHERE id = ?').bind(newStatus, order.id).run();
-        return true;
+        return apply(order);
       }
     }
   }
