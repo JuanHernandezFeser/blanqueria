@@ -4,11 +4,12 @@ import { Truck, Loader2 } from 'lucide-react';
 
 interface ShippingCalculatorProps {
   onShippingChange?: (cost: number) => void;
+  onQuoteResult?: (res: ShippingResult | null) => void;
   cartItems?: CartItemInput[];
   cartSubtotal?: number;
 }
 
-const ShippingCalculator = ({ onShippingChange, cartItems = [], cartSubtotal = 0 }: ShippingCalculatorProps) => {
+const ShippingCalculator = ({ onShippingChange, onQuoteResult, cartItems = [], cartSubtotal = 0 }: ShippingCalculatorProps) => {
   const [postalCode, setPostalCode] = useState('');
   const [result, setResult] = useState<ShippingResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,7 @@ const ShippingCalculator = ({ onShippingChange, cartItems = [], cartSubtotal = 0
       setResult(null);
       setError(false);
       onShippingChange?.(0);
+      onQuoteResult?.(null);
       return;
     }
 
@@ -33,17 +35,19 @@ const ShippingCalculator = ({ onShippingChange, cartItems = [], cartSubtotal = 0
         const res = await quoteShipping(postalCode, cartItems, cartSubtotal);
         setResult(res);
         onShippingChange?.(res.cost);
+        onQuoteResult?.(res);
       } catch {
         setError(true);
         setResult(null);
         onShippingChange?.(0);
+        onQuoteResult?.(null);
       } finally {
         setLoading(false);
       }
     }, 500);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [postalCode, cartItems, cartSubtotal, onShippingChange]);
+  }, [postalCode, cartItems, cartSubtotal, onShippingChange, onQuoteResult]);
 
   return (
     <div className="space-y-3 p-4 rounded-lg bg-secondary/50">

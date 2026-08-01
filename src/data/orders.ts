@@ -22,8 +22,8 @@ export interface Order {
   subtotal: number;
   shippingCost: number;
   total: number;
-  orderStatus: 'Pendiente' | 'En preparación' | 'Enviado' | 'Entregado';
-  paymentMethod: 'mercadopago' | 'transferencia';
+  orderStatus: 'Pendiente' | 'En preparación' | 'Enviado' | 'Entregado' | 'Cancelado';
+  paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo';
   paymentStatus: 'pendiente' | 'aprobado' | 'rechazado';
   source: 'web' | 'manual';
   items: OrderItem[];

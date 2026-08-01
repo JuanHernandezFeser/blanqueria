@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProductStore } from '@/stores/productStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
-import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
+import { formatPrice, getDiscountedPrice, type CartItemInput, type ShippingResult } from '@/services/shippingService';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
-import { Banknote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight, Wallet } from 'lucide-react';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import OrderSummary from '@/components/shared/OrderSummary';
@@ -36,7 +36,8 @@ const Checkout = () => {
     city: user?.locality || '', province: user?.province || '', postalCode: user?.postalCode || '', phone: user?.phone || '',
   });
   const [shippingCost, setShippingCost] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | 'efectivo' | null>(null);
+  const [isPersonalDelivery, setIsPersonalDelivery] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [orderDone, setOrderDone] = useState(false);
@@ -44,9 +45,15 @@ const Checkout = () => {
   const [formErrors, setFormErrors] = useState<{ email?: string; phone?: string }>({});
 
   const hasDiscount = bankConfig.discountPercentage > 0;
-  const applyDiscount = hasDiscount && paymentMethod === 'transferencia';
+  const applyDiscount = hasDiscount && (paymentMethod === 'transferencia' || paymentMethod === 'efectivo');
   const effectiveSubtotal = applyDiscount ? getDiscountedPrice(subtotal(), bankConfig.discountPercentage) : subtotal();
   const cartItemsForShipping: CartItemInput[] = items.map((i) => ({ product: i.product, quantity: i.quantity }));
+
+  const handleQuoteResult = useCallback((res: ShippingResult | null) => {
+    const personal = res?.source === 'manual_override';
+    setIsPersonalDelivery(personal);
+    if (!personal) setPaymentMethod((prev) => (prev === 'efectivo' ? null : prev));
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -104,6 +111,12 @@ const Checkout = () => {
             <p className="font-body text-sm text-foreground">CBU: {bankConfig.cbu}</p>
             <p className="font-body text-sm text-foreground">Alias: {bankConfig.alias}</p>
             <p className="font-body text-sm text-foreground">Titular: {bankConfig.accountHolder}</p>
+          </div>
+        )}
+        {paymentMethod === 'efectivo' && (
+          <div className="rounded-lg bg-secondary/50 p-6 text-left space-y-2 mb-6">
+            <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Pago en efectivo</p>
+            <p className="font-body text-sm text-foreground">Aboná en efectivo al recibir tu entrega personal. Te contactaremos para coordinar la entrega.</p>
           </div>
         )}
         <p className="font-body text-sm text-muted-foreground mb-8">Te enviaremos un email con los detalles del pedido.</p>
@@ -268,7 +281,7 @@ const Checkout = () => {
                   {formErrors.phone && <p data-testid="error-phone" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
                 </div>
               </div>
-              <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
+              <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
               <button type="submit" data-testid="continue-to-payment" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>
@@ -292,6 +305,15 @@ const Checkout = () => {
                   <p className="font-body text-xs text-muted-foreground">CBU / Alias - Pago manual</p>
                 </div>
               </button>
+              {isPersonalDelivery && (
+                <button onClick={() => setPaymentMethod('efectivo')} data-testid="payment-efectivo" className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'efectivo' ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
+                  <Wallet className="h-6 w-6 text-foreground flex-shrink-0" />
+                  <div>
+                    <p className="font-body text-sm font-medium text-foreground">Efectivo</p>
+                    <p className="font-body text-xs text-muted-foreground">Abonás al recibir tu entrega personal</p>
+                  </div>
+                </button>
+              )}
               <div className="flex gap-3 pt-4">
                 <button onClick={() => setStep(1)} className="flex items-center gap-2 rounded-md border border-accent px-6 py-3 text-xs font-body text-foreground hover:bg-accent transition-colors">
                   <ChevronLeft className="h-4 w-4" /> Volver
@@ -316,8 +338,8 @@ const Checkout = () => {
               <div className="rounded-lg bg-secondary/50 p-5 space-y-2">
                 <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Método de pago</p>
                 <div className="flex items-center gap-2">
-                  {paymentMethod === 'mercadopago' ? <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><rect width="20" height="20" rx="3" fill="#009ee3"/><text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="8">MP</text></svg> : <Banknote className="h-4 w-4" />}
-                  <p className="font-body text-sm text-foreground">{paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia bancaria'}</p>
+                  {paymentMethod === 'mercadopago' ? <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none"><rect width="20" height="20" rx="3" fill="#009ee3"/><text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="8">MP</text></svg> : paymentMethod === 'efectivo' ? <Wallet className="h-4 w-4" /> : <Banknote className="h-4 w-4" />}
+                  <p className="font-body text-sm text-foreground">{paymentMethod === 'mercadopago' ? 'Mercado Pago' : paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia bancaria'}</p>
                 </div>
               </div>
 
@@ -346,7 +368,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {paymentMethod === 'transferencia' && (
+              {(paymentMethod === 'transferencia' || paymentMethod === 'efectivo') && (
                 <PrimaryButton onClick={handleTransferConfirm} loading={submitting} data-testid="confirm-order">
                   Confirmar pedido
                 </PrimaryButton>
