@@ -9,6 +9,7 @@ import { handleBankConfig } from './routes/bank-config';
 import { handleMercadoPago } from './routes/mercadopago';
 import { handleUpload } from './routes/upload';
 import { handleShipping } from './routes/shipping';
+import { releaseAbandonedMpOrders } from './jobs/releaseAbandonedOrders';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,6 +56,14 @@ export default {
       if (err instanceof Response) return err;
       const message = err instanceof Error ? err.message : 'Internal error';
       return json({ error: message }, 500);
+    }
+  },
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    try {
+      const result = await releaseAbandonedMpOrders(env);
+      console.log(`[cron] releaseAbandonedMpOrders: ${JSON.stringify(result)}`);
+    } catch (err) {
+      console.error('[cron] releaseAbandonedMpOrders failed:', err);
     }
   },
 };
