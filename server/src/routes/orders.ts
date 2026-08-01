@@ -158,4 +158,19 @@ orders.patch('/:id/status', authMiddleware, adminMiddleware, async (c) => {
   return c.json({ ok: true });
 });
 
+orders.patch('/:id/payment-status', authMiddleware, adminMiddleware, async (c) => {
+  const body = await c.req.json();
+  if (body.paymentStatus !== 'aprobado') {
+    c.status(400);
+    return c.json({ error: 'Solo se admite confirmar el pago como aprobado' });
+  }
+  const db = getDb();
+  const existing = db.query('SELECT id, payment_status FROM orders WHERE id = ?').get(c.req.param('id')) as { id: string; payment_status: string } | undefined;
+  if (!existing) { c.status(404); return c.json({ error: 'Pedido no encontrado' }); }
+  if (existing.payment_status !== 'aprobado') {
+    db.run('UPDATE orders SET payment_status = ? WHERE id = ?', 'aprobado', c.req.param('id'));
+  }
+  return c.json({ ok: true });
+});
+
 export default orders;

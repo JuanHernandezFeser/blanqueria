@@ -8,6 +8,7 @@ interface OrderState {
   fetchOrders: (email?: string) => Promise<void>;
   addOrder: (order: Order) => void;
   updateStatus: (id: string, status: Order['orderStatus']) => Promise<void>;
+  confirmPayment: (id: string) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -32,6 +33,10 @@ export const useOrderStore = create<OrderState>()(
     updateStatus: async (id, orderStatus) => {
       await api.updateOrderStatus(id, orderStatus);
       set({ orders: get().orders.map((o) => (o.id === id ? { ...o, orderStatus } : o)) });
+    },
+    confirmPayment: async (id) => {
+      await api.confirmOrderPayment(id);
+      set({ orders: get().orders.map((o) => (o.id === id ? { ...o, paymentStatus: 'aprobado' } : o)) });
     },
   })
 );

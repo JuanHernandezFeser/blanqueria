@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import ManualOrderForm from '@/components/admin/ManualOrderForm';
 
 const AdminOrders = () => {
-  const { orders, loading, fetchOrders, updateStatus } = useOrderStore();
+  const { orders, loading, fetchOrders, updateStatus, confirmPayment } = useOrderStore();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -102,6 +102,14 @@ const AdminOrders = () => {
                 <span className="text-xs text-muted-foreground font-body">
                   Pago: {o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : o.paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia'} · {o.paymentStatus === 'aprobado' ? 'Aprobado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}
                 </span>
+                {o.paymentStatus === 'pendiente' && (
+                  <button
+                    onClick={async () => { try { await confirmPayment(o.id); toast.success('Pago confirmado'); } catch { toast.error('Error al confirmar el pago'); } }}
+                    className="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-body font-medium text-background hover:opacity-90 transition-opacity"
+                  >
+                    Confirmar pago
+                  </button>
+                )}
               </div>
             </div>
           )}
