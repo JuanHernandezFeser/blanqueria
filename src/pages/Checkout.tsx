@@ -268,7 +268,7 @@ const Checkout = () => {
                   {formErrors.phone && <p data-testid="error-phone" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
                 </div>
               </div>
-              <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} /></div>
+              <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
               <button type="submit" data-testid="continue-to-payment" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>

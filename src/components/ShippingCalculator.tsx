@@ -5,9 +5,10 @@ import { Truck, Loader2 } from 'lucide-react';
 interface ShippingCalculatorProps {
   onShippingChange?: (cost: number) => void;
   cartItems?: CartItemInput[];
+  cartSubtotal?: number;
 }
 
-const ShippingCalculator = ({ onShippingChange, cartItems = [] }: ShippingCalculatorProps) => {
+const ShippingCalculator = ({ onShippingChange, cartItems = [], cartSubtotal = 0 }: ShippingCalculatorProps) => {
   const [postalCode, setPostalCode] = useState('');
   const [result, setResult] = useState<ShippingResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const ShippingCalculator = ({ onShippingChange, cartItems = [] }: ShippingCalcul
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await quoteShipping(postalCode, cartItems);
+        const res = await quoteShipping(postalCode, cartItems, cartSubtotal);
         setResult(res);
         onShippingChange?.(res.cost);
       } catch {
@@ -42,7 +43,7 @@ const ShippingCalculator = ({ onShippingChange, cartItems = [] }: ShippingCalcul
     }, 500);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [postalCode, cartItems, onShippingChange]);
+  }, [postalCode, cartItems, cartSubtotal, onShippingChange]);
 
   return (
     <div className="space-y-3 p-4 rounded-lg bg-secondary/50">
