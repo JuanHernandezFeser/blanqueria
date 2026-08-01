@@ -6,6 +6,16 @@ function formatPrice(amount: number): string {
   return '$' + amount.toLocaleString('es-AR');
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  mercadopago: 'Mercado Pago',
+  transferencia: 'Transferencia bancaria',
+  efectivo: 'Efectivo',
+};
+
+function paymentMethodLabel(method: string | undefined): string {
+  return PAYMENT_METHOD_LABELS[method ?? ''] ?? 'Transferencia bancaria';
+}
+
 function orderEmailHtml(order: any, bankConfig?: any): string {
   const itemsHtml = (order.items || []).map((item: any) => `
     <tr>
@@ -66,7 +76,7 @@ function orderEmailHtml(order: any, bankConfig?: any): string {
         </div>
         <div style="margin-top:12px;padding:16px;background:#f9fafb;border-radius:8px">
           <p style="margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">Método de pago</p>
-          <p style="margin:0;font-size:14px;color:#1f2937">${order.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia bancaria'}</p>
+          <p style="margin:0;font-size:14px;color:#1f2937">${paymentMethodLabel(order.paymentMethod)}</p>
           <p style="margin:2px 0 0;font-size:13px;color:#6b7280">Estado: ${order.paymentStatus === 'aprobado' ? 'Aprobado' : order.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}</p>
         </div>
         ${bankHtml}
@@ -158,22 +168,22 @@ const STATUS_SUBJECTS: Record<string, string> = {
   'Cancelado': 'fue cancelado',
 };
 
-const STATUS_BODIES: Record<string, { title: string; body: (name: string, address?: string) => string }> = {
+const STATUS_BODIES: Record<string, { title: string; body: (address?: string) => string }> = {
   'En preparación': {
     title: '¡Ya estamos preparando tu pedido!',
-    body: (name) => `¡Buenas noticias, ${name}! Ya estamos preparando tu pedido. Te avisaremos en cuanto salga hacia tu domicilio.`,
+    body: () => `¡Buenas noticias! Ya estamos preparando tu pedido. Te avisaremos en cuanto salga hacia tu domicilio.`,
   },
   'Enviado': {
     title: '¡Tu pedido está en camino!',
-    body: (name, address) => `¡Tu pedido está en camino, ${name}! Pronto vas a recibirlo en ${address}.`,
+    body: (address) => `¡Tu pedido está en camino! Pronto vas a recibirlo en ${address}.`,
   },
   'Entregado': {
     title: '¡Pedido entregado!',
-    body: (name) => `¡Listo, ${name}! Tu pedido fue entregado. Esperamos que lo disfrutes — ¡gracias por elegirnos!`,
+    body: () => `¡Listo! Tu pedido fue entregado. Esperamos que lo disfrutes — ¡gracias por elegirnos!`,
   },
   'Cancelado': {
     title: 'Tu pedido fue cancelado',
-    body: (name) => `Hola, ${name}. Tu pedido fue cancelado. Si abonaste con Mercado Pago, el reintegro se procesa automáticamente. Cualquier duda, respondenos este correo.`,
+    body: () => `Tu pedido fue cancelado. Si abonaste con Mercado Pago, el reintegro se procesa automáticamente. Cualquier duda, respondenos este correo.`,
   },
 };
 
@@ -206,7 +216,7 @@ function orderStatusUpdateEmailHtml(order: any, newStatus: string): string {
       </td></tr>
       <tr><td style="padding:24px 32px">
         <p style="margin:0;font-size:14px;color:#374151">Hola <strong>${order.customerName}</strong>,</p>
-        <p style="margin:8px 0 0;font-size:14px;color:#6b7280;line-height:1.5">${info.body(order.customerName, addressStr)}</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#6b7280;line-height:1.5">${info.body(addressStr)}</p>
       </td></tr>
       <tr><td style="padding:0 32px">
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -243,7 +253,7 @@ function internalOrderNotificationHtml(order: any, siteUrl: string): string {
     </tr>
   `).join('');
 
-  const paymentLabel = order.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia bancaria';
+  const paymentLabel = paymentMethodLabel(order.paymentMethod);
   const paymentStatusLabel = order.paymentStatus === 'aprobado' ? 'Aprobado' : order.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente';
   const adminUrl = siteUrl + '/admin';
 
