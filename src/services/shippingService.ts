@@ -2,7 +2,7 @@ export interface ShippingResult {
   method: string;
   days: string;
   cost: number;
-  source: 'correo_argentino_api' | 'fallback';
+  source: 'correo_argentino_api' | 'fallback' | 'manual_override';
 }
 
 export interface ShipmentPackage {
@@ -39,14 +39,15 @@ const API_BASE = typeof window !== 'undefined' ? '' : 'http://localhost:3001';
 
 export async function quoteShipping(
   postalCode: string,
-  cartItems: CartItemInput[]
+  cartItems: CartItemInput[],
+  cartSubtotal = 0
 ): Promise<ShippingResult> {
   const packages = buildShipmentPackages(cartItems);
   try {
     const res = await fetch(`${API_BASE}/api/shipping/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postalCode, packages }),
+      body: JSON.stringify({ postalCode, packages, cartSubtotal }),
     });
     if (!res.ok) throw new Error(`Shipping API error: ${res.status}`);
     return await res.json();

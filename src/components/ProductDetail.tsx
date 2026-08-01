@@ -289,7 +289,7 @@ const ProductDetail = () => {
             )}
 
             <div className="pt-2">
-              <ShippingCalculator />
+              <ShippingCalculator cartSubtotal={0} />
             </div>
 
             <div className="pt-2 space-y-2">

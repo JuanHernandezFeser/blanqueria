@@ -98,7 +98,7 @@ const Cart = () => {
                 <span className="tabular-nums text-gold font-bold">{formatPrice(discountedSub + shippingCost)}</span>
               </div>
             )}
-            <ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} />
+            <ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} cartSubtotal={sub} />
             <button onClick={handleCheckout} className="w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               Finalizar Compra
             </button>
