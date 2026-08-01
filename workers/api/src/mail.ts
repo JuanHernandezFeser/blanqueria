@@ -347,3 +347,52 @@ export async function sendOrderStatusUpdateEmail(env: Pick<Env, 'RESEND_API_KEY'
     console.error('[mail] Error sending status update email:', err);
   }
 }
+
+function orderAutoCancelledEmailHtml(order: { id: string; customerName: string }): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:system-ui,-apple-system,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+      <tr><td style="padding:32px 32px 0;text-align:center">
+        <h1 style="margin:0;font-size:24px;color:#1f2937;font-weight:600">Tu pedido fue cancelado</h1>
+        <p style="margin:8px 0 0;font-size:14px;color:#6b7280">Pedido <strong style="color:#1f2937">${order.id}</strong></p>
+      </td></tr>
+      <tr><td style="padding:24px 32px">
+        <p style="margin:0;font-size:14px;color:#374151">Hola <strong>${order.customerName}</strong>,</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#6b7280;line-height:1.5">
+          Tu pedido fue cancelado automáticamente porque no se confirmó el pago dentro de las 2 horas.
+          No se realizó ningún cargo. Si todavía querés estos productos, podés volver a hacer el pedido desde nuestra tienda.
+        </p>
+      </td></tr>
+      <tr><td style="padding:0 32px 32px;text-align:center">
+        <p style="margin:0;font-size:13px;color:#9ca3af">Ante cualquier duda, respondé este correo.</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body>
+</html>`;
+}
+
+export async function sendOrderAutoCancelledEmail(env: Pick<Env, 'RESEND_API_KEY' | 'EMAIL_FROM'>, order: { id: string; customerName: string; customerEmail: string }) {
+  if (!env.RESEND_API_KEY) return;
+  try {
+    const res = await fetch(RESEND_API, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: env.EMAIL_FROM,
+        to: order.customerEmail,
+        subject: `Tu pedido ${order.id} fue cancelado`,
+        html: orderAutoCancelledEmailHtml(order),
+      }),
+    });
+    const text = await res.text();
+    if (!res.ok) console.error(`[mail] Auto-cancel email to ${order.customerEmail} rejected (${res.status}): ${text}`);
+    else console.log(`[mail] Auto-cancel email sent to ${order.customerEmail}: ${text}`);
+  } catch (err) {
+    console.error('[mail] Error sending auto-cancel email:', err);
+  }
+}
