@@ -144,5 +144,22 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
     return json({ ok: true });
   }
 
+  // PATCH /api/orders/:id/payment-status
+  const paymentMatch = path.match(/^\/api\/orders\/([^/]+)\/payment-status$/);
+  if (method === 'PATCH' && paymentMatch) {
+    await requireAdmin(request, env);
+    const body = await request.json() as { paymentStatus: string };
+    if (body.paymentStatus !== 'aprobado') {
+      return json({ error: 'Solo se admite confirmar el pago como aprobado' }, 400);
+    }
+    const existing = await env.DB.prepare('SELECT id, payment_status FROM orders WHERE id = ?')
+      .bind(paymentMatch[1]).first<{ id: string; payment_status: string }>();
+    if (!existing) return json({ error: 'Pedido no encontrado' }, 404);
+    if (existing.payment_status !== 'aprobado') {
+      await env.DB.prepare('UPDATE orders SET payment_status = ? WHERE id = ?').bind('aprobado', paymentMatch[1]).run();
+    }
+    return json({ ok: true });
+  }
+
   return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
 }

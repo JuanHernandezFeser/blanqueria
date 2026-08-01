@@ -120,6 +120,9 @@ export const api = {
   updateOrderStatus(id: string, orderStatus: string): Promise<void> {
     return request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ orderStatus }) });
   },
+  confirmOrderPayment(id: string): Promise<void> {
+    return request(`/orders/${id}/payment-status`, { method: 'PATCH', body: JSON.stringify({ paymentStatus: 'aprobado' }) });
+  },
 
   getBankConfig<T = any>(): Promise<T> { return request('/bank-config'); },
   updateBankConfig<T = any>(config: any): Promise<T> {
