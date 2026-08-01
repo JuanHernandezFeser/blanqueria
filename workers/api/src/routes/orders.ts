@@ -2,6 +2,9 @@ import type { Env } from '../types';
 import { requireAuth, requireAdmin } from '../auth';
 import { sendOrderConfirmation, sendOrderStatusUpdateEmail, sendInternalOrderNotification } from '../mail';
 import { buildRestoreStockStatements, parseOrderItems } from '../services/stock';
+import { SHIPPING_OVERRIDES } from '../config/shippingOverrides';
+
+const PAYMENT_METHODS = ['mercadopago', 'transferencia', 'efectivo'] as const;
 
 interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
@@ -48,6 +51,14 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
   // POST /api/orders
   if (method === 'POST' && path === '/api/orders') {
     const body = await request.json() as any;
+    const paymentMethod = body.paymentMethod;
+    if (!PAYMENT_METHODS.includes(paymentMethod)) {
+      return json({ error: 'Método de pago inválido' }, 400);
+    }
+    const postalCode = body.shippingAddress?.postalCode;
+    if (paymentMethod === 'efectivo' && !SHIPPING_OVERRIDES[String(postalCode)]) {
+      return json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal' }, 400);
+    }
     const id = `ORD-${String(Date.now()).slice(-6)}`;
     const date = new Date().toISOString();
 

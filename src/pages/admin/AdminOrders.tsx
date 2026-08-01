@@ -50,7 +50,7 @@ const AdminOrders = () => {
             <div className="text-right flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground font-body">
                 {o.paymentMethod === 'mercadopago' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
-                <span>{o.paymentMethod === 'mercadopago' ? 'MP' : 'Transf.'}</span>
+                <span>{o.paymentMethod === 'mercadopago' ? 'MP' : o.paymentMethod === 'efectivo' ? 'Efectivo' : 'Transf.'}</span>
               </div>
               <StatusBadge status={o.orderStatus} />
               <p className="font-body text-sm tabular-nums font-medium text-foreground">{formatPrice(o.total)}</p>
@@ -100,7 +100,7 @@ const AdminOrders = () => {
                   <option value="Cancelado">Cancelado</option>
                 </select>
                 <span className="text-xs text-muted-foreground font-body">
-                  Pago: {o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'} · {o.paymentStatus === 'aprobado' ? 'Aprobado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                  Pago: {o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : o.paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia'} · {o.paymentStatus === 'aprobado' ? 'Aprobado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}
                 </span>
               </div>
             </div>

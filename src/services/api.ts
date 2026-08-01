@@ -33,7 +33,7 @@ export interface CreateOrderPayload {
   shippingAddress: { address: string; city: string; province: string; postalCode: string; phone: string };
   items: { productId: string; productName: string; quantity: number; price: number; variant?: string }[];
   subtotal: number; shippingCost: number; total: number;
-  paymentMethod: 'mercadopago' | 'transferencia'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';
+  paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';
   source?: 'web' | 'manual';
 }
 

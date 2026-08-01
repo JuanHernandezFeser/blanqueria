@@ -45,7 +45,7 @@ export interface Order {
   shippingCost: number;
   total: number;
   orderStatus: 'Pendiente' | 'En preparación' | 'Enviado' | 'Entregado';
-  paymentMethod: 'mercadopago' | 'transferencia';
+  paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo';
   paymentStatus: 'pendiente' | 'aprobado' | 'rechazado';
   source: 'web' | 'manual';
   items: OrderItem[];

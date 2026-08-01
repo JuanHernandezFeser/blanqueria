@@ -233,7 +233,7 @@ const MyAccount = () => {
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-body">
                           <div className="flex items-center gap-1">
                             {o.paymentMethod === 'mercadopago' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
-                            <span>{o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}</span>
+                            <span>{o.paymentMethod === 'mercadopago' ? 'Mercado Pago' : o.paymentMethod === 'efectivo' ? 'Efectivo' : 'Transferencia'}</span>
                           </div>
                           <span className={`${o.paymentStatus === 'aprobado' ? 'text-green-600' : o.paymentStatus === 'rechazado' ? 'text-red-600' : 'text-yellow-600'}`}>
                             {o.paymentStatus === 'aprobado' ? 'Pagado' : o.paymentStatus === 'rechazado' ? 'Rechazado' : 'Pendiente'}

@@ -2,6 +2,9 @@ import { Hono } from 'hono';
 import { getDb } from '../db';
 import { authMiddleware, adminMiddleware } from '../auth';
 import { sendOrderConfirmation, sendOrderStatusUpdateEmail, sendInternalOrderNotification } from '../mail';
+import { SHIPPING_OVERRIDES } from '../config/shippingOverrides';
+
+const PAYMENT_METHODS = ['mercadopago', 'transferencia', 'efectivo'] as const;
 
 const orders = new Hono();
 
@@ -69,6 +72,16 @@ const escJsonKey = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
 orders.post('/', async (c) => {
   const body = await c.req.json();
+  const paymentMethod = body.paymentMethod;
+  if (!PAYMENT_METHODS.includes(paymentMethod)) {
+    c.status(400);
+    return c.json({ error: 'Método de pago inválido' });
+  }
+  const postalCode = body.shippingAddress?.postalCode;
+  if (paymentMethod === 'efectivo' && !SHIPPING_OVERRIDES[String(postalCode)]) {
+    c.status(400);
+    return c.json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal' });
+  }
   const db = getDb();
 
   const createOrder = db.transaction((b) => {
