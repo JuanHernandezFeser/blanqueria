@@ -3,7 +3,6 @@ import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
-import ShippingCalculator from '@/components/ShippingCalculator';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -287,10 +286,6 @@ const ProductDetail = () => {
                 Ir al carrito
               </button>
             )}
-
-            <div className="pt-2">
-              <ShippingCalculator cartSubtotal={0} />
-            </div>
 
             <div className="pt-2 space-y-2">
               <p data-testid="stock-info" className="font-body text-xs text-muted-foreground">

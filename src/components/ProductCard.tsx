@@ -5,7 +5,6 @@ import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
 import { ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
@@ -15,7 +14,6 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductCardProps) => {
-  const addItem = useCartStore((s) => s.addItem);
   const items = useCartStore((s) => s.items);
   const navigate = useNavigate();
   const discountPercentage = useBankConfigStore((s) => s.config.discountPercentage);
@@ -57,12 +55,6 @@ const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductC
   const inCart = items.some((i) => i.product.id === product.id);
   const hasDiscount = discountPercentage > 0;
   const discountedPrice = getDiscountedPrice(product.price, discountPercentage);
-
-  const handleAdd = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (outOfStock) return;
-    addItem(product);
-  };
 
   const badge = (() => {
     if (outOfStock) return { text: 'Sin stock', className: 'bg-destructive text-destructive-foreground', icon: null };
@@ -160,17 +152,9 @@ const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductC
         </div>
       </div>
       <button
-        onClick={handleAdd}
-        disabled={outOfStock}
-        className={`mt-3 w-full rounded-md border py-2.5 text-xs font-medium uppercase tracking-wider transition-all duration-200 font-body ${
-          outOfStock
-            ? 'border-accent text-muted-foreground cursor-not-allowed opacity-50'
-            : inCart
-            ? 'border-gold bg-gold text-gold-foreground hover:opacity-90'
-            : 'border-gold text-gold hover:bg-gold hover:text-gold-foreground'
-        }`}
+        className="mt-3 w-full rounded-md border border-gold py-2.5 text-xs font-medium uppercase tracking-wider font-body text-gold"
       >
-        {outOfStock ? 'Sin stock' : inCart ? 'Agregar otra unidad' : 'Agregar al carrito'}
+        Ver producto
       </button>
     </motion.div>
   );

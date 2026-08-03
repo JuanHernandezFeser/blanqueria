@@ -1,6 +1,7 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
+import { getTotalStock, getVariantStock } from '@/data/products';
 import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
@@ -60,6 +61,7 @@ const Cart = () => {
                       quantity={item.quantity}
                       onDecrease={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}
                       onIncrease={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}
+                      increaseDisabled={item.quantity >= (item.variant ? getVariantStock(item.product, item.variant) : getTotalStock(item.product))}
                     />
                     <button onClick={() => { removeItem(item.product.id, item.variant); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
