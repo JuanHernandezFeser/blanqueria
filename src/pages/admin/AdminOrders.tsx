@@ -65,9 +65,10 @@ const AdminOrders = () => {
                   <p className="text-muted-foreground">{o.customerEmail}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Envío</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{o.shippingAddress?.deliveryMethod === 'retiro' ? 'Retiro en local' : 'Envío'}</p>
                   <p className="text-foreground">{o.shippingAddress.address}</p>
                   <p className="text-muted-foreground">{o.shippingAddress.city}, {o.shippingAddress.province}</p>
+                  <p className="text-muted-foreground">Tel: {o.shippingAddress.phone}</p>
                 </div>
               </div>
               <div>

@@ -51,7 +51,7 @@ const Navbar = () => {
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="AIKEN" className="h-8 md:h-10 w-auto" />
+          <img src="/logo-nav.png" alt="AIKEN" className="h-8 md:h-10 w-auto" />
           <span className="font-display text-2xl text-foreground tracking-tight">AIKEN</span>
         </Link>
 

@@ -56,8 +56,9 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
       return json({ error: 'Método de pago inválido' }, 400);
     }
     const postalCode = body.shippingAddress?.postalCode;
-    if (paymentMethod === 'efectivo' && !SHIPPING_OVERRIDES[String(postalCode)]) {
-      return json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal' }, 400);
+    const isPickup = body.shippingAddress?.deliveryMethod === 'retiro';
+    if (paymentMethod === 'efectivo' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
+      return json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal o retiro en local' }, 400);
     }
     const id = `ORD-${String(Date.now()).slice(-6)}`;
     const date = new Date().toISOString();
