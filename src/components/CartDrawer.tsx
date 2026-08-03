@@ -1,5 +1,6 @@
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
+import { getTotalStock, getVariantStock } from '@/data/products';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import QuantitySelector from '@/components/shared/QuantitySelector';
@@ -74,6 +75,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                         quantity={item.quantity}
                         onDecrease={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}
                         onIncrease={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}
+                        increaseDisabled={item.quantity >= (item.variant ? getVariantStock(item.product, item.variant) : getTotalStock(item.product))}
                       />
                       <button onClick={() => { removeItem(item.product.id, item.variant); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
