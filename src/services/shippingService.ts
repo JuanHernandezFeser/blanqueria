@@ -2,7 +2,7 @@ export interface ShippingResult {
   method: string;
   days: string;
   cost: number;
-  source: 'correo_argentino_api' | 'fallback' | 'manual_override';
+  source: 'correo_argentino_api' | 'oca' | 'fallback' | 'manual_override';
 }
 
 export interface ShipmentPackage {
