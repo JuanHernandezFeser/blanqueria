@@ -11,6 +11,10 @@ export interface Env {
   MICORREO_CUSTOMER_ID: string;
   MICORREO_EMAIL: string;
   MICORREO_PASSWORD: string;
+  OCA_API_URL: string;
+  OCA_CUIT: string;
+  OCA_OPERATIVA: string;
+  OCA_ORIGEN_CP: string;
 }
 
 export interface JwtPayload {
