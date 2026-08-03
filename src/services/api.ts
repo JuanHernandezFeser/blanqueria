@@ -30,7 +30,7 @@ export interface User { email: string; name: string; isAdmin: boolean; phone?: s
 export interface MpPreferenceResponse { initPoint: string; preferenceId: string; }
 export interface CreateOrderPayload {
   customerName: string; customerEmail: string;
-  shippingAddress: { address: string; city: string; province: string; postalCode: string; phone: string };
+  shippingAddress: { address: string; city: string; province: string; postalCode: string; phone: string; deliveryMethod?: 'envio' | 'retiro' };
   items: { productId: string; productName: string; quantity: number; price: number; variant?: string }[];
   subtotal: number; shippingCost: number; total: number;
   paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';

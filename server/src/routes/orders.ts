@@ -78,9 +78,10 @@ orders.post('/', async (c) => {
     return c.json({ error: 'Método de pago inválido' });
   }
   const postalCode = body.shippingAddress?.postalCode;
-  if (paymentMethod === 'efectivo' && !SHIPPING_OVERRIDES[String(postalCode)]) {
+  const isPickup = body.shippingAddress?.deliveryMethod === 'retiro';
+  if (paymentMethod === 'efectivo' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
     c.status(400);
-    return c.json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal' });
+    return c.json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal o retiro en local' });
   }
   const db = getDb();
 

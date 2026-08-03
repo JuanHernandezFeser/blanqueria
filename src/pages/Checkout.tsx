@@ -8,7 +8,7 @@ import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice, type CartItemInput, type ShippingResult } from '@/services/shippingService';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
-import { Banknote, ChevronLeft, ChevronRight, Wallet } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight, Store, Truck, Wallet } from 'lucide-react';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import OrderSummary from '@/components/shared/OrderSummary';
@@ -38,6 +38,7 @@ const Checkout = () => {
   const [shippingCost, setShippingCost] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | 'efectivo' | null>(null);
   const [isPersonalDelivery, setIsPersonalDelivery] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<'envio' | 'retiro'>('envio');
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [orderDone, setOrderDone] = useState(false);
@@ -48,12 +49,22 @@ const Checkout = () => {
   const applyDiscount = hasDiscount && (paymentMethod === 'transferencia' || paymentMethod === 'efectivo');
   const effectiveSubtotal = applyDiscount ? getDiscountedPrice(subtotal(), bankConfig.discountPercentage) : subtotal();
   const cartItemsForShipping: CartItemInput[] = items.map((i) => ({ product: i.product, quantity: i.quantity }));
+  const isPickup = deliveryMethod === 'retiro';
 
   const handleQuoteResult = useCallback((res: ShippingResult | null) => {
     const personal = res?.source === 'manual_override';
     setIsPersonalDelivery(personal);
-    if (!personal) setPaymentMethod((prev) => (prev === 'efectivo' ? null : prev));
-  }, []);
+    if (!personal && !isPickup) setPaymentMethod((prev) => (prev === 'efectivo' ? null : prev));
+  }, [isPickup]);
+
+  const selectDelivery = (method: 'envio' | 'retiro') => {
+    setDeliveryMethod(method);
+    if (method === 'retiro') {
+      setShippingCost(0);
+    } else if (paymentMethod === 'efectivo' && !isPersonalDelivery) {
+      setPaymentMethod(null);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -116,7 +127,7 @@ const Checkout = () => {
         {paymentMethod === 'efectivo' && (
           <div className="rounded-lg bg-secondary/50 p-6 text-left space-y-2 mb-6">
             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Pago en efectivo</p>
-            <p className="font-body text-sm text-foreground">Aboná en efectivo al recibir tu entrega personal. Te contactaremos para coordinar la entrega.</p>
+            <p className="font-body text-sm text-foreground">{isPickup ? 'Aboná en efectivo al retirar por el local. Te avisaremos cuando tu pedido esté listo.' : 'Aboná en efectivo al recibir tu entrega personal. Te contactaremos para coordinar la entrega.'}</p>
           </div>
         )}
         <p className="font-body text-sm text-muted-foreground mb-8">Te enviaremos un email con los detalles del pedido.</p>
@@ -167,7 +178,7 @@ const Checkout = () => {
     }));
     const created = await api.createOrder({
       customerName: shipping.name, customerEmail: user?.email ?? shipping.email,
-      shippingAddress: { address: shipping.address, city: shipping.city, province: shipping.province, postalCode: shipping.postalCode, phone: shipping.phone },
+      shippingAddress: { address: shipping.address, city: shipping.city, province: shipping.province, postalCode: shipping.postalCode, phone: shipping.phone, deliveryMethod },
       items: orderItems,
       subtotal: effectiveSubtotal, shippingCost, total, paymentMethod: paymentMethod!, paymentStatus, source: 'web',
     });
@@ -241,7 +252,25 @@ const Checkout = () => {
         <div className="lg:col-span-2">
           {step === 1 && (
             <form onSubmit={handleShippingSubmit} noValidate className="space-y-4">
-              <h2 className="font-display text-2xl text-foreground mb-4">Datos de envío</h2>
+              <h2 className="font-display text-2xl text-foreground mb-4">Entrega</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <button type="button" onClick={() => selectDelivery('envio')} data-testid="delivery-envio" className={`rounded-lg border-2 p-4 text-left transition-all ${!isPickup ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
+                  <Truck className="h-5 w-5 text-foreground mb-1" />
+                  <p className="font-body text-sm font-medium text-foreground">Envío a domicilio</p>
+                  <p className="font-body text-xs text-muted-foreground">Calculamos el costo con tu código postal</p>
+                </button>
+                <button type="button" onClick={() => selectDelivery('retiro')} data-testid="delivery-retiro" className={`rounded-lg border-2 p-4 text-left transition-all ${isPickup ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
+                  <Store className="h-5 w-5 text-foreground mb-1" />
+                  <p className="font-body text-sm font-medium text-foreground">Retiro en local</p>
+                  <p className="font-body text-xs text-muted-foreground">Sin costo de envío</p>
+                </button>
+              </div>
+              {isPickup && (
+                <div className="rounded-lg bg-secondary/50 p-4">
+                  <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1">Retiro en local</p>
+                  <p className="font-body text-sm text-foreground">Retirá tu pedido por nuestro local. Te avisaremos cuando esté listo.</p>
+                </div>
+              )}
               <div>
                 <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Nombre completo</label>
                 <input data-testid="checkout-name" value={shipping.name} onChange={(e) => setShipping({ ...shipping, name: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
@@ -281,7 +310,9 @@ const Checkout = () => {
                   {formErrors.phone && <p data-testid="error-phone" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
                 </div>
               </div>
-              <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
+              {!isPickup && (
+                <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
+              )}
               <button type="submit" data-testid="continue-to-payment" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>
@@ -305,12 +336,12 @@ const Checkout = () => {
                   <p className="font-body text-xs text-muted-foreground">CBU / Alias - Pago manual</p>
                 </div>
               </button>
-              {isPersonalDelivery && (
+              {(isPersonalDelivery || isPickup) && (
                 <button onClick={() => setPaymentMethod('efectivo')} data-testid="payment-efectivo" className={`w-full flex items-center gap-4 rounded-lg border-2 p-5 text-left transition-all ${paymentMethod === 'efectivo' ? 'border-foreground bg-secondary/30' : 'border-accent hover:border-foreground/50'}`}>
                   <Wallet className="h-6 w-6 text-foreground flex-shrink-0" />
                   <div>
                     <p className="font-body text-sm font-medium text-foreground">Efectivo</p>
-                    <p className="font-body text-xs text-muted-foreground">Abonás al recibir tu entrega personal</p>
+                    <p className="font-body text-xs text-muted-foreground">{isPickup ? 'Abonás en efectivo al retirar por el local' : 'Abonás al recibir tu entrega personal'}</p>
                   </div>
                 </button>
               )}
@@ -329,7 +360,7 @@ const Checkout = () => {
             <div className="space-y-4">
               <h2 className="font-display text-2xl text-foreground mb-4">Confirmar pedido</h2>
               <div className="rounded-lg bg-secondary/50 p-5 space-y-2">
-                <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Envío a</p>
+                <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">{isPickup ? 'Retiro en local' : 'Envío a'}</p>
                 <p className="font-body text-sm text-foreground">{shipping.name}</p>
                 <p className="font-body text-sm text-foreground">{shipping.address}</p>
                 <p className="font-body text-sm text-foreground">{shipping.city}, {shipping.province} - CP {shipping.postalCode}</p>

@@ -35,6 +35,15 @@ function orderEmailHtml(order: any, bankConfig?: any): string {
     </div>
   ` : '';
 
+  const deliveryHtml = `
+    <div style="padding:16px;background:#f9fafb;border-radius:8px">
+      <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">${order.shippingAddress?.deliveryMethod === 'retiro' ? 'Retiro en local' : 'Envío a'}</p>
+      <p style="margin:2px 0;font-size:14px;color:#1f2937">${order.customerName}</p>
+      <p style="margin:2px 0;font-size:14px;color:#1f2937">${order.shippingAddress?.address || '—'}</p>
+      <p style="margin:2px 0;font-size:14px;color:#6b7280">${order.shippingAddress?.city || ''}${order.shippingAddress?.province ? ', ' + order.shippingAddress.province : ''}${order.shippingAddress?.postalCode ? ' - CP ' + order.shippingAddress.postalCode : ''}</p>
+      <p style="margin:2px 0;font-size:14px;color:#6b7280">Tel: ${order.shippingAddress?.phone || '—'}</p>
+    </div>`;
+
   return `
 <!DOCTYPE html>
 <html>
@@ -68,12 +77,7 @@ function orderEmailHtml(order: any, bankConfig?: any): string {
         </table>
       </td></tr>
       <tr><td style="padding:24px 32px">
-        <div style="padding:16px;background:#f9fafb;border-radius:8px">
-          <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">Envío a</p>
-          <p style="margin:2px 0;font-size:14px;color:#1f2937">${order.shippingAddress?.address}</p>
-          <p style="margin:2px 0;font-size:14px;color:#6b7280">${order.shippingAddress?.city}, ${order.shippingAddress?.province} - CP ${order.shippingAddress?.postalCode}</p>
-          <p style="margin:2px 0;font-size:14px;color:#6b7280">Tel: ${order.shippingAddress?.phone}</p>
-        </div>
+        ${deliveryHtml}
         <div style="margin-top:12px;padding:16px;background:#f9fafb;border-radius:8px">
           <p style="margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">Método de pago</p>
           <p style="margin:0;font-size:14px;color:#1f2937">${paymentMethodLabel(order.paymentMethod)}</p>
@@ -275,7 +279,8 @@ function internalOrderNotificationHtml(order: any, siteUrl: string): string {
           <p style="margin:2px 0;font-size:14px;color:#6b7280">${order.customerEmail}</p>
         </div>
         <div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:16px">
-          <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">Envío a</p>
+          <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;font-weight:600">${order.shippingAddress?.deliveryMethod === 'retiro' ? 'Retiro en local' : 'Envío a'}</p>
+          <p style="margin:2px 0;font-size:14px;color:#1f2937">${order.customerName}</p>
           <p style="margin:2px 0;font-size:14px;color:#1f2937">${order.shippingAddress?.address || '—'}</p>
           <p style="margin:2px 0;font-size:14px;color:#6b7280">${order.shippingAddress?.city || ''}${order.shippingAddress?.province ? ', ' + order.shippingAddress.province : ''}${order.shippingAddress?.postalCode ? ' - CP ' + order.shippingAddress.postalCode : ''}</p>
           <p style="margin:2px 0;font-size:14px;color:#6b7280">Tel: ${order.shippingAddress?.phone || '—'}</p>
