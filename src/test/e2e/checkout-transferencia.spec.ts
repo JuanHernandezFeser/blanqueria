@@ -6,15 +6,19 @@ const BASE_URL = 'http://localhost:8080';
 // ── Helpers compartidas ─────────────────────────────────
 
 async function login(page: Page) {
-  await page.goto(`${BASE_URL}/`);
-  await page.getByRole('button', { name: 'Cliente' }).click();
-  await expect(page.getByRole('button', { name: 'Cliente' })).not.toBeVisible({ timeout: 10000 });
+  await page.goto(`${BASE_URL}/login`);
+  await page.locator('input[type="email"]').fill('user@tienda.com');
+  await page.locator('input[type="password"]').fill('user123');
+  await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
+  await page.waitForURL(/\/completar-perfil/);
 }
 
 async function addSimpleProduct(page: Page) {
   await page.goto(`${BASE_URL}/catalogo`);
   const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Toalla de Mano Bordada' });
-  await card.getByRole('button', { name: /agregar al carrito/i }).click();
+  await card.locator('h3').click();
+  await page.waitForURL(/\/producto\//);
+  await page.locator('[data-testid="add-to-cart-detail"]').click();
 }
 
 async function addVariantProduct(page: Page) {
@@ -146,7 +150,9 @@ test.describe('Compra como invitado', () => {
   async function addProduct(page: Page) {
     await page.goto(`${BASE_URL}/catalogo`);
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Toalla de Mano Bordada' });
-    await card.getByRole('button', { name: /agregar al carrito/i }).click();
+    await card.locator('h3').click();
+    await page.waitForURL(/\/producto\//);
+    await page.locator('[data-testid="add-to-cart-detail"]').click();
   }
 
   async function fillGuestForm(page: Page) {
@@ -245,7 +251,9 @@ test.describe('Validaciones de formulario', () => {
   test('muestra error si el email tiene formato inválido y no avanza al pago', async ({ page }) => {
     await page.goto(`${BASE_URL}/catalogo`);
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Toalla de Mano Bordada' });
-    await card.getByRole('button', { name: /agregar al carrito/i }).click();
+    await card.locator('h3').click();
+    await page.waitForURL(/\/producto\//);
+    await page.locator('[data-testid="add-to-cart-detail"]').click();
     await page.goto(`${BASE_URL}/checkout`);
     await page.locator('[data-testid="guest-checkout"]').click();
     await expect(page.locator('[data-testid="checkout-email"]')).toBeVisible({ timeout: 10000 });
@@ -303,7 +311,7 @@ test.describe('Validaciones de producto y stock', () => {
     await page.goto(`${BASE_URL}/catalogo`);
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Algodón Egipcio 400 Hilos' });
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
     await expect(page.locator('[data-testid="add-to-cart-detail"]')).toBeDisabled();
     await expect(page.locator('[data-testid="add-to-cart-detail"]')).toHaveText('Seleccioná las opciones');
     await expect(page.locator('[data-testid="variant-error"]')).toBeVisible();
@@ -314,18 +322,17 @@ test.describe('Validaciones de producto y stock', () => {
     await page.goto(`${BASE_URL}/catalogo`);
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Algodón Egipcio 400 Hilos' });
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
 
     // Solo talle seleccionado, sin color
     await page.getByRole('button', { name: '1 Plaza', exact: true }).click();
     await expect(page.locator('[data-testid="add-to-cart-detail"]')).toBeDisabled();
     await expect(page.locator('[data-testid="variant-error"]')).toHaveText('Seleccioná un color para continuar');
 
-    // Cerrar y reabrir para resetear selecciones
-    await page.locator('body').press('Escape');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+    // Volver al catálogo y reabrir para resetear selecciones
+    await page.goto(`${BASE_URL}/catalogo`);
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
 
     // Solo color seleccionado, sin talle
     await page.getByRole('button', { name: 'Blanco', exact: true }).click();
@@ -338,9 +345,9 @@ test.describe('Validaciones de producto y stock', () => {
     // Quilt de Algodón Orgánico — stock: 9, sin variantes
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Quilt de Algodón Orgánico' });
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
 
-    const plusBtn = page.getByRole('dialog').getByRole('button').filter({ has: page.locator('.lucide-plus') });
+    const plusBtn = page.locator('[data-testid="quantity-increase"]');
 
     // Subir de 1 a 9 (máximo)
     for (let i = 1; i < 9; i++) {
@@ -350,8 +357,8 @@ test.describe('Validaciones de producto y stock', () => {
     await expect(page.locator('[data-testid="stock-limit-error"]')).toBeVisible();
     await expect(page.locator('[data-testid="stock-limit-error"]')).toHaveText('Solo hay 9 disponibles. No podés agregar más unidades.');
 
-    // Un click más no debe aumentar (se mantiene en 9)
-    await plusBtn.click();
+    // El botón + queda deshabilitado en el máximo (se mantiene en 9)
+    await expect(plusBtn).toBeDisabled();
     await expect(page.locator('[data-testid="stock-limit-error"]')).toBeVisible();
 
     // Se puede agregar al carrito con la cantidad máxima
@@ -366,11 +373,11 @@ test.describe('Validaciones de producto y stock', () => {
     // el stock es compartido entre todas las variantes del mismo producto.
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Acolchado de Duvet Premium' });
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
 
     await page.getByRole('button', { name: '2 Plazas', exact: true }).click();
 
-    const plusBtn = page.getByRole('dialog').getByRole('button').filter({ has: page.locator('.lucide-plus') });
+    const plusBtn = page.locator('[data-testid="quantity-increase"]');
 
     // Subir de 1 a 6 (máximo)
     for (let i = 1; i < 6; i++) {
@@ -380,8 +387,8 @@ test.describe('Validaciones de producto y stock', () => {
     await expect(page.locator('[data-testid="stock-limit-error"]')).toBeVisible();
     await expect(page.locator('[data-testid="stock-limit-error"]')).toHaveText('Solo hay 6 disponibles. No podés agregar más unidades.');
 
-    // Un click más no debe aumentar (se mantiene en 6)
-    await plusBtn.click();
+    // El botón + queda deshabilitado en el máximo (se mantiene en 6)
+    await expect(plusBtn).toBeDisabled();
     await expect(page.locator('[data-testid="stock-limit-error"]')).toBeVisible();
 
     // Se puede agregar al carrito con la cantidad máxima
@@ -394,9 +401,9 @@ test.describe('Validaciones de producto y stock', () => {
     // Quilt de Algodón Orgánico — stock: 9
     const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Quilt de Algodón Orgánico' });
     await card.locator('h3').click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.waitForURL(/\/producto\//);
 
-    const plusBtn = page.getByRole('dialog').getByRole('button').filter({ has: page.locator('.lucide-plus') });
+    const plusBtn = page.locator('[data-testid="quantity-increase"]');
 
     // Subir a 3 (dentro del stock)
     await plusBtn.click();
@@ -406,6 +413,33 @@ test.describe('Validaciones de producto y stock', () => {
 
     await page.locator('[data-testid="add-to-cart-detail"]').click();
     await expect(page.locator('[data-testid="cart-button"] span')).toHaveText('3');
+  });
+
+  test('no permite agregar más unidades cuando ya está todo el stock en el carrito', async ({ page }) => {
+    await page.goto(`${BASE_URL}/catalogo`);
+    // Quilt de Algodón Orgánico — stock: 9, sin variantes
+    const card = page.locator('[data-testid="product-card"]').filter({ hasText: 'Quilt de Algodón Orgánico' });
+    await card.locator('h3').click();
+    await page.waitForURL(/\/producto\//);
+    const productUrl = page.url();
+    await expect(page.locator('[data-testid="add-to-cart-detail"]')).toBeVisible();
+
+    // Subir de 1 a 9 (stock completo)
+    const plusBtn = page.locator('[data-testid="quantity-increase"]');
+    for (let i = 1; i < 9; i++) {
+      await plusBtn.click();
+    }
+    await expect(page.locator('[data-testid="stock-limit-error"]')).toHaveText('Solo hay 9 disponibles. No podés agregar más unidades.');
+    await page.locator('[data-testid="add-to-cart-detail"]').click();
+    await expect(page.locator('[data-testid="cart-button"] span')).toHaveText('9');
+
+    // Volver a la página del producto: ya no debe dejar agregar más
+    await page.goto(productUrl);
+    await expect(page.locator('[data-testid="add-to-cart-detail"]')).toBeVisible();
+    await expect(page.locator('[data-testid="quantity-increase"]')).toBeDisabled();
+    await expect(page.locator('[data-testid="all-stock-in-cart-error"]')).toHaveText('Ya tenés todo el stock disponible en tu carrito');
+    await expect(page.locator('[data-testid="add-to-cart-detail"]')).toBeDisabled();
+    await expect(page.locator('[data-testid="add-to-cart-detail"]')).toHaveText('Stock máximo en carrito');
   });
 });
 
@@ -437,7 +471,7 @@ test.describe('Persistencia y estados intermedios', () => {
 
     // Volver al paso 1
     await page.getByRole('button', { name: 'Volver' }).click();
-    await expect(page.getByText('Datos de envío')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Entrega' })).toBeVisible();
 
     // Los datos completados deben conservarse
     await expect(page.locator('[data-testid="checkout-address"]')).toHaveValue('Av. Siempre Viva 123');
@@ -463,7 +497,7 @@ test.describe('Persistencia y estados intermedios', () => {
     await page.reload();
 
     // Vuelve al paso 1 con el formulario sin los datos ingresados
-    await expect(page.getByText('Datos de envío')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Entrega' })).toBeVisible();
     await expect(page.locator('[data-testid="checkout-address"]')).toHaveValue('');
     await expect(page.locator('[data-testid="checkout-city"]')).toHaveValue('');
     await expect(page.locator('[data-testid="checkout-province"]')).toHaveValue('');

@@ -42,6 +42,33 @@ export function getTotalStock(product: Product): number {
   return Object.values(product.variantStock).reduce((sum, s) => sum + s, 0);
 }
 
+/** Parse a stored cart/order variant key back into variant + color parts */
+export function parseVariantKey(key?: string): { variant?: string; color?: string } {
+  if (!key) return {};
+  const idx = key.indexOf('|||');
+  if (idx === -1) return { variant: key };
+  return { variant: key.slice(0, idx) || undefined, color: key.slice(idx + 3) || undefined };
+}
+
+/** Human-readable label for a stored variant key (e.g. "1 Plaza · Blanco") */
+export function formatVariantLabel(key?: string): string {
+  const { variant, color } = parseVariantKey(key);
+  return [variant, color].filter(Boolean).join(' · ');
+}
+
+/**
+ * Available stock for a product/combo, subtracting what's already in the cart.
+ * Falls back to total stock when no specific variant/color combo is selected.
+ * Never returns a negative value.
+ */
+export function getAvailableStock(product: Product, variant?: string, color?: string, cartQuantity = 0): number {
+  const hasVariantStockEntries = !!product.variantStock && Object.keys(product.variantStock).length > 0;
+  const stock = hasVariantStockEntries && (variant || color)
+    ? getVariantStock(product, variant, color)
+    : getTotalStock(product);
+  return Math.max(0, stock - cartQuantity);
+}
+
 export type Category = 'Sábanas' | 'Toallas' | 'Almohadas' | 'Acolchados' | 'Manteles';
 
 export const categories: { name: Category; image: string; description: string }[] = [

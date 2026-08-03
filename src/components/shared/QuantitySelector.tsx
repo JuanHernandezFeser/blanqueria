@@ -15,11 +15,11 @@ const QuantitySelector = ({ quantity, onDecrease, onIncrease, size = 'sm', incre
   if (size === 'md') {
     return (
       <div className="flex items-center border border-accent rounded-md">
-        <button onClick={onDecrease} className="p-2 hover:bg-accent transition-colors rounded-l-md">
+        <button onClick={onDecrease} data-testid="quantity-decrease" className="p-2 hover:bg-accent transition-colors rounded-l-md">
           <Minus className="h-3 w-3" />
         </button>
         <span className="font-body text-sm tabular-nums w-8 text-center text-foreground">{quantity}</span>
-        <button onClick={onIncrease} disabled={increaseDisabled} className={`p-2 hover:bg-accent transition-colors rounded-r-md disabled:hover:bg-transparent disabled:opacity-40 disabled:cursor-not-allowed`}>
+        <button onClick={onIncrease} disabled={increaseDisabled} data-testid="quantity-increase" className={`p-2 hover:bg-accent transition-colors rounded-r-md disabled:hover:bg-transparent disabled:opacity-40 disabled:cursor-not-allowed`}>
           <Plus className="h-3 w-3" />
         </button>
       </div>
