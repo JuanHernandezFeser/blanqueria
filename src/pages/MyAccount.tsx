@@ -3,6 +3,7 @@ import { useOrderStore } from '@/stores/orderStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { formatPrice } from '@/services/shippingService';
+import { formatVariantLabel } from '@/data/products';
 import StatusBadge from '@/components/shared/StatusBadge';
 import PageLayout from '@/components/shared/PageLayout';
 import { formatDate, provinces } from '@/lib/helpers';
@@ -217,7 +218,7 @@ const MyAccount = () => {
                               <div key={idx} className="flex justify-between text-sm font-body gap-4">
                                 <span className="text-foreground">
                                   {item.productName}
-                                  {item.variant && <span className="text-muted-foreground"> · {item.variant}</span>}
+                                  {item.variant && <span className="text-muted-foreground"> · {formatVariantLabel(item.variant)}</span>}
                                   <span className="text-muted-foreground"> x{item.quantity}</span>
                                 </span>
                                 <span className="tabular-nums text-foreground whitespace-nowrap">{formatPrice(item.price * item.quantity)}</span>

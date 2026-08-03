@@ -1,7 +1,7 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
-import { getTotalStock, getVariantStock } from '@/data/products';
+import { getAvailableStock, formatVariantLabel, parseVariantKey } from '@/data/products';
 import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
@@ -41,6 +41,7 @@ const Cart = () => {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => {
             const itemDiscountedPrice = getDiscountedPrice(item.product.price, discountPercentage);
+            const { variant: itemVariant, color: itemColor } = parseVariantKey(item.variant);
             return (
               <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-4 rounded-lg shadow-card p-4" data-testid="cart-item">
                 <div onClick={() => handleProductClick(item.product.id)} className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
@@ -49,7 +50,7 @@ const Cart = () => {
                 <div className="flex-1 min-w-0">
                   <p className="font-body text-[10px] uppercase tracking-widest text-muted-foreground">{item.product.brand}</p>
                   <p onClick={() => handleProductClick(item.product.id)} className="font-body text-sm font-medium text-foreground truncate cursor-pointer hover:underline">{item.product.name}</p>
-                  {item.variant && <p className="font-body text-xs text-muted-foreground">{item.variant}</p>}
+                  {item.variant && <p className="font-body text-xs text-muted-foreground">{formatVariantLabel(item.variant)}</p>}
                   <div className="space-y-0.5 mt-1">
                     <p className="font-body text-sm tabular-nums text-foreground">{formatPrice(item.product.price)}</p>
                     {hasDiscount && (
@@ -61,7 +62,7 @@ const Cart = () => {
                       quantity={item.quantity}
                       onDecrease={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}
                       onIncrease={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}
-                      increaseDisabled={item.quantity >= (item.variant ? getVariantStock(item.product, item.variant) : getTotalStock(item.product))}
+                      increaseDisabled={getAvailableStock(item.product, itemVariant, itemColor, item.quantity) <= 0}
                     />
                     <button onClick={() => { removeItem(item.product.id, item.variant); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>

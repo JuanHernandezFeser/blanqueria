@@ -1,4 +1,4 @@
-import { type Product, getTotalStock, getVariantStock } from '@/data/products';
+import { type Product, getTotalStock, getVariantStock, getAvailableStock, variantStockKey } from '@/data/products';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
@@ -34,8 +34,6 @@ const ProductDetail = () => {
   const allImages = product.images && product.images.length > 0 ? product.images : [product.image];
   const totalStock = getTotalStock(product);
   const outOfStock = totalStock <= 0;
-  const cartItem = items.find((i) => i.product.id === product.id);
-  const inCart = !!cartItem;
 
   const hasVariants = product.variants && product.variants.length > 0;
   const variantRequired = hasVariants && !selectedVariant;
@@ -47,10 +45,17 @@ const ProductDetail = () => {
   const selectedComboStock = getVariantStock(product, selectedVariant, selectedColor);
   const selectedComboOutOfStock = hasVariantStockEntries && !variantRequired && !colorRequired && selectedComboStock <= 0;
 
-  const maxQuantity = hasVariantStockEntries && (selectedVariant || selectedColor)
-    ? selectedComboStock
-    : totalStock;
+  const cartVariantKey = variantStockKey(selectedVariant, selectedColor);
+  const cartVariant = cartVariantKey === '__default__' ? undefined : cartVariantKey;
+  const cartLines = items.filter((i) => i.product.id === product.id && (hasVariantStockEntries ? (i.variant ?? '__default__') === cartVariantKey : true));
+  const inCart = cartLines.length > 0;
+  const cartQuantity = cartLines.reduce((sum, i) => sum + i.quantity, 0);
+
+  const maxQuantity = getAvailableStock(product, selectedVariant, selectedColor, cartQuantity);
   const atStockLimit = maxQuantity > 0 && quantity >= maxQuantity;
+  const allStockInCart = inCart && maxQuantity <= 0;
+
+  const canAdd = !outOfStock && !variantRequired && !colorRequired && !selectedComboOutOfStock && maxQuantity > 0 && quantity <= maxQuantity;
 
   const isVariantAvailable = (variant: string): boolean => {
     if (!hasVariantStockEntries) return product.stock > 0;
@@ -72,9 +77,9 @@ const ProductDetail = () => {
   };
 
   const handleAdd = () => {
-    if (outOfStock || variantRequired || colorRequired || selectedComboOutOfStock) return;
+    if (!canAdd) return;
     for (let i = 0; i < quantity; i++) {
-      addItem(product, selectedVariant);
+      addItem(product, cartVariant);
     }
     toast.success(`${product.name} agregado al carrito`);
     setQuantity(1);
@@ -82,8 +87,6 @@ const ProductDetail = () => {
 
   const nextImage = () => setCurrentImageIndex((i) => (i + 1) % allImages.length);
   const prevImage = () => setCurrentImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
-
-  const canAdd = !outOfStock && !variantRequired && !colorRequired && !selectedComboOutOfStock && !(inCart && atStockLimit);
 
   return (
     <div className="min-h-screen">
@@ -160,7 +163,7 @@ const ProductDetail = () => {
               <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5">
                 <ShoppingBag className="h-4 w-4 text-foreground" />
                 <p className="font-body text-sm text-foreground">
-                  Ya tenés <span className="font-medium">{cartItem.quantity}</span> en tu carrito
+                  Ya tenés <span className="font-medium">{cartQuantity}</span> en tu carrito
                 </p>
               </div>
             )}
@@ -227,6 +230,7 @@ const ProductDetail = () => {
                 quantity={quantity}
                 onDecrease={() => setQuantity(Math.max(1, quantity - 1))}
                 onIncrease={() => setQuantity(q => Math.min(q + 1, Math.max(maxQuantity, 1)))}
+                increaseDisabled={quantity >= maxQuantity}
                 size="md"
               />
             </div>
@@ -238,6 +242,12 @@ const ProductDetail = () => {
                   : variantRequired
                   ? 'Seleccioná un tamaño para continuar'
                   : 'Seleccioná un color para continuar'}
+              </p>
+            )}
+
+            {allStockInCart && !variantRequired && !colorRequired && !selectedComboOutOfStock && (
+              <p data-testid="all-stock-in-cart-error" className="font-body text-xs text-destructive">
+                Ya tenés todo el stock disponible en tu carrito
               </p>
             )}
 
@@ -271,7 +281,7 @@ const ProductDetail = () => {
                 ? 'Sin stock en esta combinación'
                 : variantRequired || colorRequired
                 ? 'Seleccioná las opciones'
-                : inCart && atStockLimit
+                : allStockInCart
                 ? 'Stock máximo en carrito'
                 : inCart
                 ? 'Agregar más al carrito'

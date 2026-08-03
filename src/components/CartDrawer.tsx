@@ -1,6 +1,6 @@
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
-import { getTotalStock, getVariantStock } from '@/data/products';
+import { getAvailableStock, formatVariantLabel, parseVariantKey } from '@/data/products';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import QuantitySelector from '@/components/shared/QuantitySelector';
@@ -60,7 +60,9 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
         ) : (
           <>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-              {items.map((item) => (
+              {items.map((item) => {
+                const { variant: itemVariant, color: itemColor } = parseVariantKey(item.variant);
+                return (
                 <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-3 rounded-lg bg-secondary/30 p-3">
                   <Link to={`/producto/${item.product.id}`} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
@@ -68,20 +70,21 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[10px] uppercase tracking-widest text-muted-foreground">{item.product.brand}</p>
                     <p className="font-body text-sm font-medium text-foreground truncate">{item.product.name}</p>
-                    {item.variant && <p className="font-body text-xs text-muted-foreground">{item.variant}</p>}
+                    {item.variant && <p className="font-body text-xs text-muted-foreground">{formatVariantLabel(item.variant)}</p>}
                     <p className="font-body text-sm tabular-nums text-foreground mt-0.5">{formatPrice(item.product.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <QuantitySelector
                         quantity={item.quantity}
                         onDecrease={() => updateQuantity(item.product.id, item.quantity - 1, item.variant)}
                         onIncrease={() => updateQuantity(item.product.id, item.quantity + 1, item.variant)}
-                        increaseDisabled={item.quantity >= (item.variant ? getVariantStock(item.product, item.variant) : getTotalStock(item.product))}
+                        increaseDisabled={getAvailableStock(item.product, itemVariant, itemColor, item.quantity) <= 0}
                       />
                       <button onClick={() => { removeItem(item.product.id, item.variant); toast.info('Producto eliminado'); }} className="ml-auto p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="border-t border-accent px-5 py-4 space-y-3">

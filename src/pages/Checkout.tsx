@@ -6,6 +6,7 @@ import { useProductStore } from '@/stores/productStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice, type CartItemInput, type ShippingResult } from '@/services/shippingService';
+import { formatVariantLabel } from '@/data/products';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import { Banknote, ChevronLeft, ChevronRight, Store, Truck, Wallet } from 'lucide-react';
@@ -423,7 +424,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-xs font-medium text-foreground truncate">{item.product.name}</p>
-                    {item.variant && <p className="font-body text-[10px] text-muted-foreground">{item.variant}</p>}
+                    {item.variant && <p className="font-body text-[10px] text-muted-foreground">{formatVariantLabel(item.variant)}</p>}
                     <p className="font-body text-xs text-muted-foreground">x{item.quantity}</p>
                   </div>
                   <p className="font-body text-xs tabular-nums text-foreground font-medium">{formatPrice((applyDiscount ? getDiscountedPrice(item.product.price, bankConfig.discountPercentage) : item.product.price) * item.quantity)}</p>
