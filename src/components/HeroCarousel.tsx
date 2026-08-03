@@ -73,9 +73,9 @@ const HeroCarousel = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Logo - visible on desktop only */}
-      <div className="hidden md:block absolute top-1/2 -translate-y-1/2 left-1/4 -translate-x-1/2 z-20">
-        <img src="/logo.png" alt="AIKEN" className="h-80 w-auto" />
+      {/* Logo */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-1/4 -translate-x-1/2 z-20">
+        <img src="/logo.png" alt="AIKEN" className="h-24 md:h-80 w-auto" />
       </div>
 
       <AnimatePresence mode="wait">
