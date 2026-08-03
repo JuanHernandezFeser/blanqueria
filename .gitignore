@@ -25,6 +25,10 @@ dist-ssr
 server/data/
 server/uploads/
 
+# Playwright artifacts
+playwright-report/
+test-results/
+
 # Wrangler local state
 .wrangler/
 workers/api/.wrangler/
