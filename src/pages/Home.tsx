@@ -97,7 +97,7 @@ const Home = () => {
         />
       )}
 
-      <StaticBanner>Envíos dentro de Argentina, a cargo de Correo Argentino</StaticBanner>
+      <StaticBanner>Envíos dentro de Argentina, a cargo de OCA</StaticBanner>
 
       <ProductCarousel
         title="Novedades"
