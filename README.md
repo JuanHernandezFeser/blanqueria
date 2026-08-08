@@ -1,87 +1,121 @@
 # AIKEN / Blanqueria
 
-E-commerce de blanquería y textil para el hogar (sábanas, toallas, almohadas, acolchados, manteles).
+E-commerce de blanquería y textil para el hogar: sábanas, toallas, almohadas, acolchados y manteles. Incluye catálogo, carrito, checkout con **Mercado Pago** o **transferencia bancaria**, registro de usuarios, historial de pedidos y panel de administración completo (productos, categorías, slides, pedidos, medios de pago y envíos).
 
 **Frontend:** https://aikenblanco.com.ar · **API:** https://api.aikenblanco.com.ar
 
-## Documentación
+## Stack
 
-📄 [Documentación completa del proyecto (Markdown)](docs/DOCUMENTACION.md) — stack, arquitectura, endpoints, base de datos, migraciones D1, comandos de desarrollo, flujo Git y deploy a producción.
+| Capa | Tecnología |
+|---|---|
+| Frontend (SPA) | React 18 · Vite · TypeScript · Tailwind CSS · shadcn/ui · Zustand · React Router · TanStack Query |
+| Backend local | Bun · Hono · SQLite (`bun:sqlite`) |
+| API de producción | Cloudflare Workers + D1 (`blanqueria-api` / `blanqueria-db`) |
+| Deploy | Cloudflare Pages (frontend) + Cloudflare Workers (API) |
+| Pagos | Mercado Pago · Transferencia bancaria |
+| Emails | Resend |
+| Tests | Vitest · Playwright |
 
-📕 [Versión PDF](docs/DOCUMENTACION.pdf) · 📘 [Guía de deploy (resumen)](docs/deploy-guide.md)
+## Estructura
 
----
-
-## Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+blanqueria/
+├── src/               # Frontend React (Vite)
+├── server/            # Backend Bun + Hono + SQLite (desarrollo local)
+├── workers/api/       # Cloudflare Worker: API de producción + migraciones D1
+├── functions/         # Pages Functions: proxy /api/* → Worker
+├── public/            # Estáticos (logos, favicon)
+├── docs/              # Documentación y guías de deploy
+└── package.json       # Scripts del frontend
 ```
 
-**Edit a file directly in GitHub**
+## Empezar
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Requisitos: Node.js, npm y [Bun](https://bun.sh).
 
-**Use GitHub Codespaces**
+```sh
+# Dependencias
+npm install
+cd server && bun install
+cd workers/api && npm install
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Frontend + backend local juntos (proxy /api → :3001)
+npm run dev:all
+```
 
-## What technologies are used for this project?
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Dev server Vite en http://localhost:8080 |
+| `npm run dev:server` | Backend Bun con watch (puerto 3001) |
+| `npm run dev:all` | Frontend + backend juntos |
+| `npm run build` | Build de producción a `dist/` |
+| `npm run lint` | ESLint |
+| `npm run test` | Tests Vitest |
 
-This project is built with:
+### Worker (producción)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```sh
+cd workers/api
+npm run dev        # wrangler dev (worker + D1 local)
+npm run deploy     # wrangler deploy (producción)
+npm run db:init    # wrangler d1 execute --remote --file=schema.sql
+npm run db:seed    # wrangler d1 execute --remote --file=seed.sql
+```
 
-## How can I deploy this project?
+## API
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+La interfaz de API es la misma en local y producción (definida en `server/` y `workers/api/`). Incluye auth con JWT, CRUD de productos/categorías/ambientes/slides, pedidos, cotización de envío (OCA), preferencias y webhooks de Mercado Pago, y subida de imágenes.
 
-## Can I connect a custom domain to my Lovable project?
+Endpoints completos en [docs/DOCUMENTACION.md](docs/DOCUMENTACION.md#5-api--endpoints).
 
-Yes, you can!
+## Base de datos
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Local:** SQLite (`server/data/blanqueria.db`), schema en `server/src/db.ts`.
+- **Producción:** Cloudflare D1 (`blanqueria-db`), schema base en `workers/api/schema.sql` + migraciones en `workers/api/migrations/`.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```sh
+cd workers/api
+npx wrangler d1 migrations apply blanqueria-db --remote
+```
+
+## Deploy
+
+El flujo usa dos ramas: `local` (desarrollo) y `main` (producción).
+
+```sh
+# 1. Commit y push de la rama de trabajo
+git add .
+git commit -m "Descripcion del cambio"
+git push origin local
+
+# 2. Merge a main y push
+git checkout main
+git merge local
+git push origin main
+git checkout local
+
+# 3. Deploy frontend (Cloudflare Pages)
+npm run build
+npx wrangler pages deploy dist
+
+# 4. Deploy worker
+cd workers/api
+npx wrangler deploy
+
+# 5. Migraciones D1 (si corresponde)
+npx wrangler d1 migrations apply blanqueria-db --remote
+```
+
+Secrets del worker (`JWT_SECRET`, `RESEND_API_KEY`, `MERCADOPAGO_*`, `IMGBB_API_KEY`, etc.) se manejan con `wrangler secret put <NOMBRE>` o desde el dashboard de Cloudflare.
+
+## Documentación
+
+- [Documentación completa (Markdown)](docs/DOCUMENTACION.md) — arquitectura, endpoints, base de datos, migraciones, comandos y flujo Git.
+- [Guía de deploy](docs/deploy-guide.md)
+- [Documentación (PDF)](docs/DOCUMENTACION.pdf)
+
+## Seguridad
+
+- Nunca subir archivos `.env` ni secrets al repositorio (cubierto por `.gitignore`).
+- El `JWT_SECRET` local del `.env.example` es solo para desarrollo; usar un valor fuerte en producción.
+- La API de producción (`src/services/api.ts`) apunta fijo a `https://api.aikenblanco.com.ar/api`.
