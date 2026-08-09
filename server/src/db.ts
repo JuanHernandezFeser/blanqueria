@@ -93,6 +93,7 @@ function initSchema(db: Database) {
   runSilent(db, "ALTER TABLE products ADD COLUMN length REAL DEFAULT 0");
   runSilent(db, "ALTER TABLE hero_slides ADD COLUMN video_url TEXT DEFAULT ''");
   runSilent(db, "ALTER TABLE orders ADD COLUMN source TEXT DEFAULT 'web'");
+  runSilent(db, "ALTER TABLE orders ADD COLUMN note TEXT DEFAULT ''");
 
   db.run(`
     CREATE TABLE IF NOT EXISTS hero_slides (
@@ -121,7 +122,8 @@ function initSchema(db: Database) {
       payment_status TEXT DEFAULT 'pendiente',
       items_json TEXT DEFAULT '[]',
       shipping_address_json TEXT DEFAULT '{}',
-      source TEXT DEFAULT 'web'
+      source TEXT DEFAULT 'web',
+      note TEXT DEFAULT ''
     )
   `);
 
@@ -137,6 +139,17 @@ function initSchema(db: Database) {
   `);
 
   runSilent(db, 'ALTER TABLE bank_config ADD COLUMN discount_percentage REAL DEFAULT 0');
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS specials (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      product_ids_json TEXT DEFAULT '[]',
+      active INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
 
   seed(db);
 }

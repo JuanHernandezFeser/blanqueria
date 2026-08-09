@@ -18,7 +18,7 @@ const AdminOrders = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="font-body text-sm text-muted-foreground">{orders.length} pedidos</p>
         <button onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-body font-medium text-background hover:opacity-90 transition-opacity">
@@ -34,20 +34,20 @@ const AdminOrders = () => {
         <div key={o.id} className="rounded-lg shadow-card overflow-hidden">
           <div
             onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}
-            className="p-4 flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
+            className="p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-secondary/20 transition-colors"
           >
-            <div className="flex items-center gap-4">
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-body font-medium uppercase tracking-wider ${
+            <div className="flex items-center gap-3 min-w-0">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-body font-medium uppercase tracking-wider shrink-0 ${
                 o.source === 'manual' ? 'bg-sky-100 text-sky-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
                 {o.source === 'manual' ? 'Manual' : 'Web'}
               </span>
-              <div>
-                <p className="font-body text-sm font-medium text-foreground">{o.id}</p>
-                <p className="font-body text-xs text-muted-foreground">{o.customerName} · {formatDate(o.date)}</p>
+              <div className="min-w-0">
+                <p className="font-body text-sm font-medium text-foreground truncate">{o.id}</p>
+                <p className="font-body text-xs text-muted-foreground truncate">{o.customerName} · {formatDate(o.date)}</p>
               </div>
             </div>
-            <div className="text-right flex items-center gap-3">
+            <div className="text-right flex items-center gap-3 shrink-0">
               <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground font-body">
                 {o.paymentMethod === 'mercadopago' ? <CreditCard className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
                 <span>{o.paymentMethod === 'mercadopago' ? 'MP' : o.paymentMethod === 'efectivo' ? 'Efectivo' : 'Transf.'}</span>
@@ -58,7 +58,7 @@ const AdminOrders = () => {
           </div>
           {expandedOrder === o.id && (
             <div className="border-t border-accent p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm font-body">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-body">
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Cliente</p>
                   <p className="text-foreground">{o.customerName}</p>
@@ -72,7 +72,7 @@ const AdminOrders = () => {
                 </div>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-body">Productos</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Productos</p>
                 <div className="space-y-1">
                   {o.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-sm font-body">
@@ -82,12 +82,18 @@ const AdminOrders = () => {
                   ))}
                 </div>
               </div>
+              {o.note && (
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm font-body">
+                  <p className="text-[10px] uppercase tracking-wider text-amber-700 mb-1">Nota</p>
+                  <p className="text-amber-900 whitespace-pre-wrap">{o.note}</p>
+                </div>
+              )}
               <div className="flex justify-between text-sm font-body border-t border-accent pt-2">
                 <span>Subtotal: {formatPrice(o.subtotal)}</span>
                 {o.shippingCost > 0 && <span>Envío: {formatPrice(o.shippingCost)}</span>}
                 <span className="font-medium">Total: {formatPrice(o.total)}</span>
               </div>
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <span className="text-xs uppercase tracking-wider text-muted-foreground font-body">Estado:</span>
                 <select
                   value={o.orderStatus}

@@ -285,6 +285,11 @@ function internalOrderNotificationHtml(order: any, siteUrl: string): string {
           <p style="margin:2px 0;font-size:14px;color:#6b7280">${order.shippingAddress?.city || ''}${order.shippingAddress?.province ? ', ' + order.shippingAddress.province : ''}${order.shippingAddress?.postalCode ? ' - CP ' + order.shippingAddress.postalCode : ''}</p>
           <p style="margin:2px 0;font-size:14px;color:#6b7280">Tel: ${order.shippingAddress?.phone || '—'}</p>
         </div>
+        ${order.note ? `
+        <div style="padding:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:16px">
+          <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#b45309;font-weight:600">Nota / Anotación</p>
+          <p style="margin:0;font-size:14px;color:#78350f;white-space:pre-wrap">${order.note}</p>
+        </div>` : ''}
       </td></tr>
       <tr><td style="padding:0 32px">
         <table width="100%" cellpadding="0" cellspacing="0">

@@ -4,6 +4,7 @@ import { handleProducts } from './routes/products';
 import { handleCategories } from './routes/categories';
 import { handleAmbientes } from './routes/ambientes';
 import { handleHeroSlides } from './routes/hero-slides';
+import { handleSpecials } from './routes/specials';
 import { handleOrders } from './routes/orders';
 import { handleBankConfig } from './routes/bank-config';
 import { handleMercadoPago } from './routes/mercadopago';
@@ -30,6 +31,7 @@ async function handleRoute(request: Request, env: Env, ctx: ExecutionContext, pa
   if (path.startsWith('/api/categories')) return handleCategories(request, env, ctx, path, method);
   if (path.startsWith('/api/ambientes')) return handleAmbientes(request, env, ctx, path, method);
   if (path.startsWith('/api/hero-slides')) return handleHeroSlides(request, env, ctx, path, method);
+  if (path.startsWith('/api/specials')) return handleSpecials(request, env, ctx, path, method);
   if (path.startsWith('/api/orders')) return handleOrders(request, env, ctx, path, method);
   if (path.startsWith('/api/bank-config')) return handleBankConfig(request, env, ctx, path, method);
   if (path === '/api/create-preference' || path === '/api/webhooks/mercadopago') return handleMercadoPago(request, env, ctx, path, method);

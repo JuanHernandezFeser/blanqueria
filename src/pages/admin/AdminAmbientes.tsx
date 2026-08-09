@@ -44,7 +44,7 @@ const AdminAmbientes = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center gap-2 flex-wrap mb-4">
         <p className="font-body text-sm text-muted-foreground">{ambientes.length} ambientes</p>
         <button onClick={openNew} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
           <Plus className="h-3.5 w-3.5" /> Nuevo Ambiente
@@ -72,7 +72,7 @@ const AdminAmbientes = () => {
       </div>
 
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
-        <DialogContent className="bg-background max-w-md">
+        <DialogContent className="bg-background max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{editing ? 'Editar Ambiente' : 'Nuevo Ambiente'}</DialogTitle>
           </DialogHeader>

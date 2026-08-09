@@ -246,7 +246,7 @@ const AdminProducts = () => {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="bg-background max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-background max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{editProduct ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
           </DialogHeader>
@@ -337,7 +337,7 @@ const AdminProducts = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
