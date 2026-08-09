@@ -134,7 +134,7 @@ const AdminHero = () => {
             <button onClick={() => { setAddType('image'); setAddOpen(true); }} className="flex items-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
               <Plus className="h-3.5 w-3.5" /> Agregar
             </button>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden">
               <DialogHeader>
                 <DialogTitle>Agregar slide al Hero</DialogTitle>
               </DialogHeader>
@@ -277,7 +277,7 @@ const AdminHero = () => {
       </div>
 
       <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) { resetForm(); setEditingSlide(null); } }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>Editar slide</DialogTitle>
           </DialogHeader>

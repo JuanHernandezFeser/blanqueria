@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_status TEXT DEFAULT 'pendiente',
   items_json TEXT DEFAULT '[]',
   shipping_address_json TEXT DEFAULT '{}',
-  source TEXT DEFAULT 'web'
+  source TEXT DEFAULT 'web',
+  note TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS bank_config (
@@ -83,4 +84,13 @@ CREATE TABLE IF NOT EXISTS bank_config (
   alias TEXT DEFAULT '',
   account_holder TEXT DEFAULT '',
   discount_percentage REAL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS specials (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  product_ids_json TEXT DEFAULT '[]',
+  active INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
 );

@@ -12,7 +12,7 @@ interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
   subtotal: number; shipping_cost: number; total: number;
   order_status: string; payment_method: string; payment_status: string;
-  items_json: string; shipping_address_json: string; source: string;
+  items_json: string; shipping_address_json: string; source: string; note: string;
 }
 
 function formatOrder(row: OrderRow) {
@@ -24,6 +24,7 @@ function formatOrder(row: OrderRow) {
     items: JSON.parse(row.items_json || '[]'),
     shippingAddress: JSON.parse(row.shipping_address_json || '{}'),
     source: row.source,
+    note: row.note || undefined,
   };
 }
 
@@ -79,7 +80,7 @@ orders.post('/', async (c) => {
   }
   const postalCode = body.shippingAddress?.postalCode;
   const isPickup = body.shippingAddress?.deliveryMethod === 'retiro';
-  if (paymentMethod === 'efectivo' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
+  if (paymentMethod === 'efectivo' && body.source !== 'manual' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
     c.status(400);
     return c.json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal o retiro en local' });
   }
@@ -90,10 +91,10 @@ orders.post('/', async (c) => {
     const date = new Date().toISOString();
 
     db.run(
-      'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       id, b.customerName, b.customerEmail, date, b.subtotal, b.shippingCost || 0,
       b.total, 'Pendiente', b.paymentMethod, b.paymentStatus || 'pendiente',
-      JSON.stringify(b.items || []), JSON.stringify(b.shippingAddress || {}), b.source || 'web'
+      JSON.stringify(b.items || []), JSON.stringify(b.shippingAddress || {}), b.source || 'web', b.note || ''
     );
 
     for (const item of b.items || []) {

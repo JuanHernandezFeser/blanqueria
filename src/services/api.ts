@@ -35,6 +35,7 @@ export interface CreateOrderPayload {
   subtotal: number; shippingCost: number; total: number;
   paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';
   source?: 'web' | 'manual';
+  note?: string;
 }
 
 export const api = {
@@ -104,6 +105,17 @@ export const api = {
   },
   reorderHeroSlides(data: { id: string; order: number }[]): Promise<void> {
     return request('/hero-slides/reorder', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  getSpecials<T = any>(): Promise<T> { return request('/specials'); },
+  createSpecial<T = any>(data: { title: string; productIds: string[] }): Promise<T> {
+    return request('/specials', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateSpecial<T = any>(id: string, data: { title?: string; productIds?: string[]; active?: boolean }): Promise<T> {
+    return request(`/specials/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteSpecial(id: string): Promise<void> {
+    return request('/specials/' + id, { method: 'DELETE' });
   },
 
   createMpPreference(payload: { items: { title: string; quantity: number; unitPrice: number }[]; customerEmail: string; orderId?: string }): Promise<MpPreferenceResponse> {

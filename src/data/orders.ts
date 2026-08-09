@@ -12,6 +12,7 @@ export interface ShippingAddress {
   province: string;
   postalCode: string;
   phone: string;
+  deliveryMethod?: 'envio' | 'retiro';
 }
 
 export interface Order {
@@ -28,6 +29,7 @@ export interface Order {
   source: 'web' | 'manual';
   items: OrderItem[];
   shippingAddress: ShippingAddress;
+  note?: string;
 }
 
 export const mockOrders: Order[] = [

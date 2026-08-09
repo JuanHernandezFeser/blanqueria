@@ -1,5 +1,6 @@
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
+import { useSpecialStore } from '@/stores/specialStore';
 import HeroCarousel from '@/components/HeroCarousel';
 import CategoryCard from '@/components/CategoryCard';
 import ProductSkeleton from '@/components/shared/ProductSkeleton';
@@ -14,9 +15,12 @@ import { compareByName } from '@/lib/helpers';
 const Home = () => {
   const products = useProductStore((s) => s.products);
   const categories = useCategoryStore((s) => s.categories);
+  const specials = useSpecialStore((s) => s.specials);
+  const fetchSpecials = useSpecialStore((s) => s.fetchSpecials);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetchSpecials();
     const timeout = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timeout);
   }, []);
@@ -45,6 +49,13 @@ const Home = () => {
 
   const newArrivals = products.filter((p) => p.isNew).sort(compareByName).slice(0, 6);
   const featured = products.filter((p) => p.featured).sort(compareByName);
+
+  const activeSpecial = specials.find((s) => s.active);
+  const specialProducts = activeSpecial
+    ? activeSpecial.productIds
+        .map((id) => products.find((p) => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    : [];
 
   return (
     <div className="min-h-screen">
@@ -84,6 +95,15 @@ const Home = () => {
       </section>
 
       <ProductPhotoMarquee />
+
+      {activeSpecial && specialProducts.length > 0 && (
+        <ProductCarousel
+          title={activeSpecial.title}
+          products={specialProducts}
+          loading={loading}
+          badgeContext="destacados"
+        />
+      )}
 
       <ShippingBanner />
 

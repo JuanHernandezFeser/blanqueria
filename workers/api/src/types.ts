@@ -54,6 +54,7 @@ export interface Order {
   source: 'web' | 'manual';
   items: OrderItem[];
   shippingAddress: ShippingAddress;
+  note?: string;
 }
 
 export interface BankConfig {

@@ -14,7 +14,7 @@ interface ProductCarouselProps {
   badgeContext?: 'novedades' | 'destacados' | 'catalogo';
 }
 
-const ProductCarousel = ({ title, products, loading, viewAllLink = '/catalogo', badgeContext }: ProductCarouselProps) => {
+const ProductCarousel = ({ title, products, loading, viewAllLink, badgeContext }: ProductCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -55,9 +55,11 @@ const ProductCarousel = ({ title, products, loading, viewAllLink = '/catalogo', 
     <section className="container pt-8 md:pt-12 pb-0">
       <div className="flex items-end justify-between mb-8">
         <h2 className="font-display text-3xl md:text-4xl text-foreground">{title}</h2>
-        <Link to={viewAllLink} className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-          Ver todo <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
+        {viewAllLink && (
+          <Link to={viewAllLink} className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            Ver todo <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        )}
       </div>
 
       <div className="relative">

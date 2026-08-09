@@ -10,7 +10,7 @@ interface OrderRow {
   id: string; customer_name: string; customer_email: string; date: string;
   subtotal: number; shipping_cost: number; total: number;
   order_status: string; payment_method: string; payment_status: string;
-  items_json: string; shipping_address_json: string; source: string;
+  items_json: string; shipping_address_json: string; source: string; note: string;
 }
 
 function formatOrder(row: OrderRow) {
@@ -22,6 +22,7 @@ function formatOrder(row: OrderRow) {
     items: JSON.parse(row.items_json || '[]'),
     shippingAddress: JSON.parse(row.shipping_address_json || '{}'),
     source: row.source,
+    note: row.note || undefined,
   };
 }
 
@@ -57,7 +58,7 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
     }
     const postalCode = body.shippingAddress?.postalCode;
     const isPickup = body.shippingAddress?.deliveryMethod === 'retiro';
-    if (paymentMethod === 'efectivo' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
+    if (paymentMethod === 'efectivo' && body.source !== 'manual' && !isPickup && !SHIPPING_OVERRIDES[String(postalCode)]) {
       return json({ error: 'El pago en efectivo solo está disponible en códigos postales con entrega personal o retiro en local' }, 400);
     }
     const id = `ORD-${String(Date.now()).slice(-6)}`;
@@ -67,12 +68,12 @@ export async function handleOrders(request: Request, env: Env, ctx: ExecutionCon
 
     const stmts: D1PreparedStatement[] = [
       env.DB.prepare(
-        `INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO orders (id, customer_name, customer_email, date, subtotal, shipping_cost, total, order_status, payment_method, payment_status, items_json, shipping_address_json, source, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         id, body.customerName, body.customerEmail, date, body.subtotal, body.shippingCost || 0,
         body.total, 'Pendiente', body.paymentMethod, body.paymentStatus || 'pendiente',
-        JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web'
+        JSON.stringify(body.items || []), JSON.stringify(body.shippingAddress || {}), body.source || 'web', body.note || ''
       ),
     ];
 

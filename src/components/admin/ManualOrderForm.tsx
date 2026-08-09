@@ -31,7 +31,8 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
   const [province, setProvince] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<'transferencia' | 'mercadopago'>('transferencia');
+  const [paymentMethod, setPaymentMethod] = useState<'transferencia' | 'mercadopago' | 'efectivo'>('transferencia');
+  const [note, setNote] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'pendiente' | 'aprobado'>('pendiente');
   const [rows, setRows] = useState<ProductRow[]>([emptyRow()]);
   const [saving, setSaving] = useState(false);
@@ -99,6 +100,7 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
         paymentMethod,
         paymentStatus,
         source: 'manual',
+        note: note.trim() || undefined,
       });
 
       addOrder({
@@ -115,6 +117,7 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
         source: 'manual',
         items,
         shippingAddress: { address, city, province, postalCode, phone },
+        note: note.trim() || undefined,
       });
 
       toast.success('Pedido manual creado');
@@ -138,12 +141,13 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
     setShippingCost(0);
     setPaymentMethod('transferencia');
     setPaymentStatus('pendiente');
+    setNote('');
     setRows([emptyRow()]);
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Cargar pedido manual</DialogTitle>
           <DialogDescription>Completá los datos del cliente y los productos del pedido.</DialogDescription>
@@ -234,8 +238,20 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
             </button>
           </fieldset>
 
+          {/* Nota */}
+          <fieldset className="space-y-3">
+            <legend className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">Nota / anotación (opcional)</legend>
+            <textarea
+              placeholder="Detalle o anotación interna sobre el pedido, por ejemplo: la cliente pasó por el local, pagar contra entrega, etc."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground resize-y"
+            />
+          </fieldset>
+
           {/* Envío y pago */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block font-body text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Costo de envío</label>
               <input type="number" min={0} value={shippingCost} onChange={(e) => setShippingCost(Number(e.target.value))}
@@ -247,6 +263,7 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
                 className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
                 <option value="transferencia">Transferencia</option>
                 <option value="mercadopago">Mercado Pago</option>
+                <option value="efectivo">Efectivo</option>
               </select>
             </div>
             <div>
