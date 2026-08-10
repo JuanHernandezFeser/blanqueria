@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProductStore } from '@/stores/productStore';
 import { useSpecialStore } from '@/stores/specialStore';
 import { formatPrice } from '@/services/shippingService';
@@ -10,13 +10,15 @@ import { toast } from 'sonner';
 
 const AdminSpecials = () => {
   const products = useProductStore((s) => s.products);
-  const { specials, loading, addSpecial, updateSpecial, deleteSpecial } = useSpecialStore();
+  const { specials, loading, fetchSpecials, addSpecial, updateSpecial, deleteSpecial } = useSpecialStore();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [productIds, setProductIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+
+  useEffect(() => { fetchSpecials(); }, []);
 
   const openCreate = () => {
     setEditingId(null);
