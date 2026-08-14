@@ -127,7 +127,7 @@ const AdminSpecials = () => {
                 {selectedProducts.length > 0 && (
                   <div className="flex items-center gap-2 overflow-hidden">
                     {selectedProducts.slice(0, 4).map((p) => (
-                      <img key={p.id} src={p.images?.[0] || p.image} alt={p.name} className="h-14 w-14 rounded-md object-cover border border-accent" />
+                      <img key={p.id} src={p.images?.[0] || p.image} alt={p.name} decoding="async" className="h-14 w-14 rounded-md object-cover border border-accent" />
                     ))}
                     {selectedProducts.length > 4 && (
                       <span className="font-body text-xs text-muted-foreground">+{selectedProducts.length - 4}</span>
@@ -216,7 +216,7 @@ const AdminSpecials = () => {
                       checked={productIds.includes(p.id)}
                       onCheckedChange={() => toggleProduct(p.id)}
                     />
-                    <img src={p.images?.[0] || p.image} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />
+                    <img src={p.images?.[0] || p.image} alt="" decoding="async" className="h-10 w-10 shrink-0 rounded object-cover" />
                     <span className="flex-1 min-w-0">
                       <span className="block font-body text-sm text-foreground truncate">{p.name}</span>
                       <span className="block font-body text-xs text-muted-foreground">{formatPrice(p.price)} · {p.brand}</span>

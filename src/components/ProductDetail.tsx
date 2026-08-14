@@ -106,6 +106,7 @@ const ProductDetail = () => {
               <img
                 src={allImages[currentImageIndex]}
                 alt={product.name}
+                decoding="async"
                 className="max-h-[50vh] max-w-full w-auto object-contain image-outline"
               />
             </div>
@@ -130,7 +131,7 @@ const ProductDetail = () => {
                           : 'border-transparent opacity-50 hover:opacity-80'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={img} alt="" decoding="async" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

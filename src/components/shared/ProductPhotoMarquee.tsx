@@ -78,6 +78,7 @@ const ProductPhotoMarquee = () => {
                   key={i}
                   src={url}
                   alt=""
+                  decoding="async"
                   loading="lazy"
                   draggable={false}
                   className="h-36 md:h-44 w-auto shrink-0 aspect-square rounded-lg object-cover image-outline"

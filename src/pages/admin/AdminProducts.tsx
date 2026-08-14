@@ -188,7 +188,7 @@ const AdminProducts = () => {
                 <td className="p-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                      <img src={p.images?.[0] || p.image} alt="" className="h-full w-full object-cover" />
+                      <img src={p.images?.[0] || p.image} alt="" decoding="async" className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0">
                       <span className="font-body text-sm text-foreground truncate block">{p.name}</span>
@@ -364,7 +364,7 @@ const AdminProducts = () => {
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   {form.images.map((img, idx) => (
                     <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-muted group">
-                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <img src={img} alt="" decoding="async" className="h-full w-full object-cover" />
                       <button onClick={() => removeImage(idx)} className="absolute top-1 right-1 rounded-full bg-background/80 backdrop-blur-sm p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="h-3 w-3 text-foreground" />
                       </button>

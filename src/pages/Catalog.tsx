@@ -131,8 +131,8 @@ const Catalog = () => {
             <EmptyState message="No se encontraron productos." actionLabel="Limpiar filtros" onAction={clearFilters} />
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-              {sorted.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} badgeContext="catalogo" />
+              {sorted.map((p) => (
+                <ProductCard key={p.id} product={p} badgeContext="catalogo" />
               ))}
             </div>
           )}

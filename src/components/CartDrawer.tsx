@@ -65,7 +65,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                 return (
                 <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-3 rounded-lg bg-secondary/30 p-3">
                   <Link to={`/producto/${item.product.id}`} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                    <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
+                    <img src={item.product.image} alt={item.product.name} decoding="async" className="h-full w-full object-cover" />
                   </Link>
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[10px] uppercase tracking-widest text-muted-foreground">{item.product.brand}</p>

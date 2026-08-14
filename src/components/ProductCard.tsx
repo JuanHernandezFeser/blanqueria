@@ -9,11 +9,10 @@ import { ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
-  index?: number;
   badgeContext?: 'novedades' | 'destacados' | 'catalogo';
 }
 
-const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductCardProps) => {
+const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) => {
   const items = useCartStore((s) => s.items);
   const navigate = useNavigate();
   const discountPercentage = useBankConfigStore((s) => s.config.discountPercentage);
@@ -80,7 +79,7 @@ const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductC
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       className="group cursor-pointer flex flex-col h-full"
       onClick={() => navigate(`/producto/${product.id}`)}
       data-testid="product-card"
@@ -107,6 +106,7 @@ const ProductCard = ({ product, index = 0, badgeContext = 'catalogo' }: ProductC
                     i === activeIndex ? 'opacity-100' : 'opacity-0'
                   } ${outOfStock ? 'grayscale' : ''}`
             }`}
+            decoding="async"
             loading="lazy"
           />
         ))}
