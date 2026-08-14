@@ -75,7 +75,7 @@ const HeroCarousel = () => {
     >
       {/* Logo */}
       <div className="absolute top-1/2 -translate-y-1/2 left-1/4 -translate-x-1/2 z-20">
-        <img src="/logo.png" alt="AIKEN" className="h-24 md:h-80 w-auto" />
+        <img src="/logo.png" alt="AIKEN" className="h-24 sm:h-32 md:h-44 lg:h-64 xl:h-80 w-auto" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -97,6 +97,7 @@ const HeroCarousel = () => {
                   <img
                     src={product.images?.[0] || product.image}
                     alt={product.name}
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -130,7 +131,7 @@ const HeroCarousel = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
-                    className="max-w-[55%] md:max-w-xl ml-auto mr-2 md:mr-0 bg-background/20 md:bg-background/30 backdrop-blur-md rounded-xl p-3 md:p-8"
+                    className="max-w-[55%] md:max-w-md lg:max-w-xl ml-auto mr-2 md:mr-0 bg-background/20 md:bg-background/30 backdrop-blur-md rounded-xl p-3 md:p-8"
                   >
                     {slide.title && (
                       <h1 className="font-display text-2xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] mb-2 md:mb-3">
@@ -161,7 +162,7 @@ const HeroCarousel = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.2 }}
-                      className="max-w-[55%] md:max-w-xl ml-auto mr-2 md:mr-0 bg-background/20 md:bg-background/30 backdrop-blur-md rounded-xl p-3 md:p-8"
+                      className="max-w-[55%] md:max-w-md lg:max-w-xl ml-auto mr-2 md:mr-0 bg-background/20 md:bg-background/30 backdrop-blur-md rounded-xl p-3 md:p-8"
                     >
                       {slide.title && (
                         <h1 className="font-display text-2xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] mb-2 md:mb-3">

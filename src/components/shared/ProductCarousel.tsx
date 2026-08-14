@@ -68,12 +68,12 @@ const ProductCarousel = ({ title, products, loading, viewAllLink, badgeContext }
             {loading ? <ProductSkeleton count={4} /> : products.length === 0 ? (
               <p className="font-body text-sm text-muted-foreground py-8">No hay productos disponibles.</p>
             ) : (
-              products.map((p, i) => (
+              products.map((p) => (
                 <div
                   key={p.id}
                   className="flex-shrink-0 w-[calc(50%-_8px)] md:w-[calc(33.333%-_10.667px)] xl:w-[calc(25%-_12px)]"
                 >
-                  <ProductCard product={p} index={i} badgeContext={badgeContext} />
+                  <ProductCard product={p} badgeContext={badgeContext} />
                 </div>
               ))
             )}

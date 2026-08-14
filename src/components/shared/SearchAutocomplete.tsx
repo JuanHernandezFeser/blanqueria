@@ -76,7 +76,7 @@ const SearchAutocomplete = ({ value, onChange, placeholder, className }: SearchA
                 className="w-full flex items-center gap-3 px-3 py-2 hover:bg-accent/50 transition-colors text-left"
               >
                 <div className="h-10 w-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                  <img src={p.images?.[0] || p.image} alt={p.name} className="h-full w-full object-cover" />
+                  <img src={p.images?.[0] || p.image} alt={p.name} decoding="async" className="h-full w-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-body text-sm text-foreground truncate">{p.name}</p>

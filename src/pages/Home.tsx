@@ -81,8 +81,8 @@ const Home = () => {
                   <div className="h-3 w-16 animate-pulse rounded bg-accent" />
                 </div>
               ))
-            ) : categories.map((cat, i) => (
-              <CategoryCard key={cat.name} category={cat} index={i} />
+            ) : categories.map((cat) => (
+              <CategoryCard key={cat.name} category={cat} />
             ))}
           </div>
           {!categoryScrollEnded && (
