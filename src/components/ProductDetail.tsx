@@ -3,11 +3,30 @@ import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import QuantitySelector from '@/components/shared/QuantitySelector';
+import { trackAddToCart } from '@/lib/metaPixel';
+import { Shimmer } from '@/components/ui/shimmer';
 import { ShoppingBag, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+
+const ThumbImg = ({ src, alt }: { src: string; alt: string }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative h-full w-full bg-muted">
+      {!loaded && <Shimmer />}
+      <img
+        src={src}
+        alt={alt}
+        decoding="async"
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className="h-full w-full object-cover"
+      />
+    </div>
+  );
+};
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +39,11 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [currentImageIndex]);
 
   const product = products.find((p) => p.id === id) ?? null;
 
@@ -81,6 +105,12 @@ const ProductDetail = () => {
     for (let i = 0; i < quantity; i++) {
       addItem(product, cartVariant);
     }
+    trackAddToCart({
+      content_name: product.name,
+      content_ids: [product.id],
+      value: product.price * quantity,
+      currency: 'ARS',
+    });
     toast.success(`${product.name} agregado al carrito`);
     setQuantity(1);
   };
@@ -103,10 +133,13 @@ const ProductDetail = () => {
           <div className="flex flex-col gap-4 min-w-0">
             {/* Main image */}
             <div className="relative w-fit mx-auto max-h-[50vh] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+              {!isLoaded && <Shimmer />}
               <img
+                key={allImages[currentImageIndex]}
                 src={allImages[currentImageIndex]}
                 alt={product.name}
                 decoding="async"
+                onLoad={() => setIsLoaded(true)}
                 className="max-h-[50vh] max-w-full w-auto object-contain image-outline"
               />
             </div>
@@ -131,7 +164,7 @@ const ProductDetail = () => {
                           : 'border-transparent opacity-50 hover:opacity-80'
                       }`}
                     >
-                      <img src={img} alt="" decoding="async" className="w-full h-full object-cover" />
+                      <ThumbImg src={img} alt="" />
                     </button>
                   ))}
                 </div>

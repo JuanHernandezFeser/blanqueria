@@ -17,6 +17,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import PageBreadcrumbs from '@/components/shared/PageBreadcrumbs';
 import PageLayout from '@/components/shared/PageLayout';
 import { provinces } from '@/lib/helpers';
+import { trackInitiateCheckout, trackPurchaseOnce, savePendingPurchase } from '@/lib/metaPixel';
 
 interface ShippingForm {
   name: string; email: string; address: string; city: string; province: string; postalCode: string; phone: string;
@@ -84,6 +85,17 @@ const Checkout = () => {
       phone: prev.phone || user.phone || '',
     }));
   }, [user, guestMode]);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      trackInitiateCheckout({
+        value: subtotal(),
+        currency: 'ARS',
+        num_items: items.reduce((acc, i) => acc + i.quantity, 0),
+        content_ids: items.map((i) => i.product.id),
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (items.length === 0 && !orderDone) return <EmptyCart message="Agregá productos antes de finalizar la compra." actionLabel="Explorar Catálogo" />;
 
@@ -198,6 +210,7 @@ const Checkout = () => {
         customerEmail: user?.email ?? shipping.email,
         orderId: id,
       });
+      savePendingPurchase({ value: total, currency: 'ARS', content_ids: items.map((i) => i.product.id), order_id: id });
       clearCart();
       window.location.href = initPoint;
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al conectar con Mercado Pago. Intentalo de nuevo.'); setSubmitting(false); submittingRef.current = false; }
@@ -206,6 +219,7 @@ const Checkout = () => {
   const handleSimulatePayment = async () => {
     try {
       const id = await createOrderViaApi('aprobado');
+      trackPurchaseOnce({ value: total, currency: 'ARS', content_ids: items.map((i) => i.product.id), order_id: id });
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('🧪 Pago simulado — pedido creado como aprobado');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }
@@ -217,6 +231,7 @@ const Checkout = () => {
     setSubmitting(true);
     try {
       const id = await createOrderViaApi('pendiente');
+      trackPurchaseOnce({ value: total, currency: 'ARS', content_ids: items.map((i) => i.product.id), order_id: id });
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('Pedido creado con éxito');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }
@@ -227,6 +242,7 @@ const Checkout = () => {
   const handleMpFallback = async () => {
     try {
       const id = await createOrderViaApi('pendiente');
+      trackPurchaseOnce({ value: total, currency: 'ARS', content_ids: items.map((i) => i.product.id), order_id: id });
       setOrderId(id); clearCart(); setOrderDone(true); fetchProducts();
       toast.success('Pedido registrado. Te contactaremos para coordinar el pago.');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear pedido'); }

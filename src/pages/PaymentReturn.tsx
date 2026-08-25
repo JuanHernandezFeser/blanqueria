@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useCartStore } from '@/stores/cartStore';
+import { trackPurchaseOnce, isPurchaseTracked, consumePendingPurchase } from '@/lib/metaPixel';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const PaymentReturn = () => {
@@ -13,6 +14,13 @@ const PaymentReturn = () => {
     clearCart();
     if (paymentStatus === 'approved') {
       setStatus('approved');
+      const orderId = searchParams.get('order_id');
+      if (orderId && !isPurchaseTracked(orderId)) {
+        const pending = consumePendingPurchase(orderId);
+        if (pending) {
+          trackPurchaseOnce(pending);
+        }
+      }
     } else if (paymentStatus === 'pending') {
       setStatus('pending');
     } else {
