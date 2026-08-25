@@ -141,9 +141,9 @@ export async function handleMercadoPago(request: Request, env: Env, _ctx: Execut
         payer: { email: body.customerEmail },
         external_reference: externalRef,
         back_urls: {
-          success: `${env.SITE_URL}/pago/retorno?status=approved`,
-          pending: `${env.SITE_URL}/pago/retorno?status=pending`,
-          failure: `${env.SITE_URL}/pago/retorno?status=failure`,
+          success: `${env.SITE_URL}/pago/retorno?status=approved&order_id=${externalRef}`,
+          pending: `${env.SITE_URL}/pago/retorno?status=pending&order_id=${externalRef}`,
+          failure: `${env.SITE_URL}/pago/retorno?status=failure&order_id=${externalRef}`,
         },
       }),
     });

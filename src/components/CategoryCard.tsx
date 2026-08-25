@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { CategoryItem } from '@/stores/categoryStore';
+import { useState } from 'react';
+import { Shimmer } from '@/components/ui/shimmer';
 
 interface CategoryCardProps {
   category: CategoryItem;
 }
 
 const CategoryCard = ({ category }: CategoryCardProps) => {
+  const [isLoaded, setIsLoaded] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -15,9 +18,10 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
       className="py-2 w-28 shrink-0"
     >
       <Link to={`/catalogo?category=${encodeURIComponent(category.name)}`} className="group flex flex-col items-center gap-3 w-full">
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-accent overflow-hidden transition-all duration-300 group-hover:bg-accent/70 group-hover:scale-110 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-foreground group-hover:ring-offset-2 ring-offset-background">
+        <div className="relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-accent overflow-hidden transition-all duration-300 group-hover:bg-accent/70 group-hover:scale-110 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-foreground group-hover:ring-offset-2 ring-offset-background">
+          {!isLoaded && <Shimmer />}
           {category.image ? (
-            <img src={category.image} alt={category.name} decoding="async" className="h-full w-full object-cover" />
+            <img src={category.image} alt={category.name} decoding="async" onLoad={() => setIsLoaded(true)} className="h-full w-full object-cover" />
           ) : (
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
               {category.name.slice(0, 2)}

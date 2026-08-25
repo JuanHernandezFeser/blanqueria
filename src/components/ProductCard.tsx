@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { type Product, getTotalStock } from '@/data/products';
+import { Shimmer } from '@/components/ui/shimmer';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice } from '@/services/shippingService';
@@ -21,9 +22,16 @@ const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) =
   const hasMultipleImages = allImages.length > 1;
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [mountedIndexes, setMountedIndexes] = useState<number[]>([0]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const touchStartX = useRef(0);
   const touchDelta = useRef(0);
   const isSwiping = useRef(false);
+
+  const selectIndex = useCallback((i: number) => {
+    setMountedIndexes((prev) => (prev.includes(i) ? prev : [...prev, i]));
+    setActiveIndex(i);
+  }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -44,11 +52,11 @@ const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) =
     if (!hasMultipleImages || !isSwiping.current) return;
     const threshold = 30;
     if (touchDelta.current < -threshold && activeIndex < allImages.length - 1) {
-      setActiveIndex(activeIndex + 1);
+      selectIndex(activeIndex + 1);
     } else if (touchDelta.current > threshold && activeIndex > 0) {
-      setActiveIndex(activeIndex - 1);
+      selectIndex(activeIndex - 1);
     }
-  }, [hasMultipleImages, activeIndex, allImages.length]);
+  }, [hasMultipleImages, activeIndex, allImages.length, selectIndex]);
 
   const outOfStock = getTotalStock(product) <= 0;
   const inCart = items.some((i) => i.product.id === product.id);
@@ -86,30 +94,35 @@ const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) =
     >
       <div
         className="relative overflow-hidden rounded-lg bg-muted aspect-[4/5] mb-3"
-        onMouseEnter={() => hasMultipleImages && setActiveIndex(1)}
-        onMouseLeave={() => hasMultipleImages && setActiveIndex(0)}
+        onMouseEnter={() => hasMultipleImages && selectIndex(1)}
+        onMouseLeave={() => hasMultipleImages && selectIndex(0)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {allImages.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt={`${product.name} ${i + 1}`}
-            className={`absolute inset-0 h-full w-full object-cover image-outline ${
-              i === 0
-                ? `transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:scale-[1.02] ${
-                    outOfStock ? 'opacity-50 grayscale' : 'opacity-100'
-                  }`
-                : `transition-opacity duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-                    i === activeIndex ? 'opacity-100' : 'opacity-0'
-                  } ${outOfStock ? 'grayscale' : ''}`
-            }`}
-            decoding="async"
-            loading="lazy"
-          />
-        ))}
+        {!isLoaded && <Shimmer />}
+        {allImages.map((src, i) => {
+          if (i !== 0 && !mountedIndexes.includes(i)) return null;
+          return (
+            <img
+              key={i}
+              src={src}
+              alt={`${product.name} ${i + 1}`}
+              onLoad={() => i === 0 && setIsLoaded(true)}
+              decoding="async"
+              loading="eager"
+              className={`absolute inset-0 h-full w-full object-cover image-outline ${
+                i === 0
+                  ? `transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:scale-[1.02] ${
+                      outOfStock ? 'opacity-50 grayscale' : 'opacity-100'
+                    }`
+                  : `transition-opacity duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
+                      i === activeIndex ? 'opacity-100' : 'opacity-0'
+                    } ${outOfStock ? 'grayscale' : ''}`
+              }`}
+            />
+          );
+        })}
         {badge && (
           <span className={`absolute top-3 left-3 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-1 z-10 ${badge.className}`}>
             {badge.icon}{badge.icon && ' '}{badge.text}

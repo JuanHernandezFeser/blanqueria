@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import PixelPageView from "@/components/PixelPageView";
 import Home from "@/pages/Home";
 import Catalog from "@/pages/Catalog";
 import Login from "@/pages/Login";
@@ -69,6 +70,7 @@ const App = () => (
       <BrowserRouter>
         <AppInitializer>
           <ScrollToTop />
+          <PixelPageView />
           <Navbar />
           <WhatsAppButton />
           <main className="min-h-[calc(100vh-4rem)] pb-14 md:pb-0">

@@ -69,9 +69,9 @@ mercadopago.post('/create-preference', async (c) => {
       payer: { email: body.customerEmail },
       external_reference: externalRef,
       back_urls: {
-        success: `${siteUrl}/pago/retorno?status=approved`,
-        pending: `${siteUrl}/pago/retorno?status=pending`,
-        failure: `${siteUrl}/pago/retorno?status=failure`,
+        success: `${siteUrl}/pago/retorno?status=approved&order_id=${externalRef}`,
+        pending: `${siteUrl}/pago/retorno?status=pending&order_id=${externalRef}`,
+        failure: `${siteUrl}/pago/retorno?status=failure&order_id=${externalRef}`,
       },
     }),
   });
