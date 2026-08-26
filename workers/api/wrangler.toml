@@ -9,15 +9,6 @@ crons = ["*/30 * * * *"]
 SITE_URL = "https://aikenblanco.com.ar"
 EMAIL_FROM = "compras@aikenblanco.com.ar"
 
-# OCA e-Pak — calculadora de envíos (Sucursal a Puerta).
-# QA (valores actuales): tarifas de prueba. Al tener la cuenta real de OCA, cambiar:
-#   OCA_CUIT (CUIT con guiones), OCA_OPERATIVA (nro. asignado por OCA) y
-#   OCA_API_URL = "https://webservice.oca.com.ar/ePak_tracking/Oep_TrackEPak.asmx/Tarifar_Envio_Corporativo"
-OCA_API_URL = "https://integraciones.ocadev.com.ar/epak_tracking_test/Oep_TrackEPak.asmx/Tarifar_Envio_Corporativo"
-OCA_CUIT = "30-53625919-4"
-OCA_OPERATIVA = "94584"
-OCA_ORIGEN_CP = "8000"
-
 # Secretos — setear desde el dashboard de Cloudflare o con:
 # wrangler secret put JWT_SECRET
 # wrangler secret put RESEND_API_KEY

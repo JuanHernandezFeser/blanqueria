@@ -38,6 +38,7 @@ const Checkout = () => {
     city: user?.locality || '', province: user?.province || '', postalCode: user?.postalCode || '', phone: user?.phone || '',
   });
   const [shippingCost, setShippingCost] = useState(0);
+  const [shippingValid, setShippingValid] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | 'efectivo' | null>(null);
   const [isPersonalDelivery, setIsPersonalDelivery] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<'envio' | 'retiro'>('envio');
@@ -54,6 +55,8 @@ const Checkout = () => {
   const isPickup = deliveryMethod === 'retiro';
 
   const handleQuoteResult = useCallback((res: ShippingResult | null) => {
+    const valid = res !== null && (res.cost > 0 || res.source === 'manual_override');
+    setShippingValid(valid);
     const personal = res?.source === 'manual_override';
     setIsPersonalDelivery(personal);
     if (!personal && !isPickup) setPaymentMethod((prev) => (prev === 'efectivo' ? null : prev));
@@ -63,8 +66,12 @@ const Checkout = () => {
     setDeliveryMethod(method);
     if (method === 'retiro') {
       setShippingCost(0);
-    } else if (paymentMethod === 'efectivo' && !isPersonalDelivery) {
-      setPaymentMethod(null);
+      setShippingValid(true);
+    } else {
+      setShippingValid(false);
+      if (paymentMethod === 'efectivo' && !isPersonalDelivery) {
+        setPaymentMethod(null);
+      }
     }
   };
 
@@ -178,6 +185,10 @@ const Checkout = () => {
     }
     if (shipping.phone && !/^\+?[\d\s\-()]+$/.test(shipping.phone)) {
       setFormErrors((prev) => ({ ...prev, phone: 'Ingresá un teléfono válido (solo números, espacios, guiones y paréntesis)' }));
+      return;
+    }
+    if (!isPickup && !shippingValid) {
+      toast.error('Calculá el costo de envío antes de continuar');
       return;
     }
     setStep(2);
@@ -330,7 +341,7 @@ const Checkout = () => {
               {!isPickup && (
                 <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
               )}
-              <button type="submit" data-testid="continue-to-payment" className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4">
+              <button type="submit" data-testid="continue-to-payment" disabled={!isPickup && shipping.postalCode.length >= 4 && !shippingValid} className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>
             </form>
