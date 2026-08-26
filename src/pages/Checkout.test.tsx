@@ -65,12 +65,12 @@ vi.mock('@/services/shippingService', async (importOriginal) => {
 vi.mock('@/components/ShippingCalculator', async () => {
   const React = await import('react');
   const personal = { method: 'Envío personal', days: '2 días hábiles', cost: 5000, source: 'manual_override' as const };
-  const fallback = { method: 'Envío Express', days: '24-48hs', cost: 850, source: 'fallback' as const };
+  const correo = { method: 'Envío a domicilio (Correo Argentino)', days: 'A consultar', cost: 1500, source: 'correo_argentino_api' as const };
   return {
     default: (props: any) =>
       React.createElement('div', null,
         React.createElement('button', { type: 'button', 'data-testid': 'quote-personal', onClick: () => props.onQuoteResult?.(personal) }, 'Personal'),
-        React.createElement('button', { type: 'button', 'data-testid': 'quote-fallback', onClick: () => props.onQuoteResult?.(fallback) }, 'Fallback'),
+        React.createElement('button', { type: 'button', 'data-testid': 'quote-correo', onClick: () => props.onQuoteResult?.(correo) }, 'Correo'),
       ),
   };
 });
@@ -108,7 +108,7 @@ describe('Checkout pago en efectivo', () => {
 
   it('no muestra Efectivo con CP sin entrega personal y resetea la selección al cambiar el CP', () => {
     render(<Checkout />);
-    fireEvent.click(screen.getByTestId('quote-fallback'));
+    fireEvent.click(screen.getByTestId('quote-correo'));
     fillShippingForm();
     fireEvent.click(screen.getByTestId('continue-to-payment'));
     expect(screen.queryByTestId('payment-efectivo')).not.toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('Checkout pago en efectivo', () => {
 
     fireEvent.click(screen.getByText('Cambiar método de pago'));
     fireEvent.click(screen.getByText('Volver'));
-    fireEvent.click(screen.getByTestId('quote-fallback'));
+    fireEvent.click(screen.getByTestId('quote-correo'));
     fireEvent.click(screen.getByTestId('continue-to-payment'));
     expect(screen.queryByTestId('payment-efectivo')).not.toBeInTheDocument();
 
