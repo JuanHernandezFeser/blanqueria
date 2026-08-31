@@ -91,6 +91,7 @@ function initSchema(db: Database) {
   runSilent(db, "ALTER TABLE products ADD COLUMN width REAL DEFAULT 0");
   runSilent(db, "ALTER TABLE products ADD COLUMN height REAL DEFAULT 0");
   runSilent(db, "ALTER TABLE products ADD COLUMN length REAL DEFAULT 0");
+  runSilent(db, "ALTER TABLE products ADD COLUMN slug TEXT");
   runSilent(db, "ALTER TABLE hero_slides ADD COLUMN video_url TEXT DEFAULT ''");
   runSilent(db, "ALTER TABLE orders ADD COLUMN source TEXT DEFAULT 'web'");
   runSilent(db, "ALTER TABLE orders ADD COLUMN note TEXT DEFAULT ''");

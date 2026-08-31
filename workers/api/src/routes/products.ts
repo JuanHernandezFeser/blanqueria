@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { requireAdmin } from '../auth';
+import { slugify } from '../utils/slugify';
 
 interface ProductRow {
   id: string; name: string; description: string; brand: string; category: string;
@@ -7,7 +8,7 @@ interface ProductRow {
   images_json: string; variants_json: string; colors_json: string;
   variant_stock_json: string; ambientes_json: string;
   weight: number; width: number; height: number; length: number;
-  featured: number; is_new: number;
+  featured: number; is_new: number; slug: string;
 }
 
 function formatProduct(row: ProductRow) {
@@ -23,6 +24,7 @@ function formatProduct(row: ProductRow) {
     weight: row.weight || undefined, width: row.width || undefined,
     height: row.height || undefined, length: row.length || undefined,
     featured: !!row.featured, isNew: !!row.is_new,
+    slug: row.slug || undefined,
   };
 }
 
@@ -51,9 +53,10 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
     await requireAdmin(request, env);
     const body = await request.json() as any;
     const id = String(Date.now());
+    const slug = slugify(body.slug || body.name || '');
     await env.DB.prepare(
-      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new, slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
       body.price, body.stock || 0, body.image || '',
@@ -61,7 +64,7 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
       JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
       JSON.stringify(body.ambientes || []),
       body.weight || 0, body.width || 0, body.height || 0, body.length || 0,
-      body.featured ? 1 : 0, body.isNew ? 1 : 0
+      body.featured ? 1 : 0, body.isNew ? 1 : 0, slug
     ).run();
     const row = await env.DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first<ProductRow>();
     return json(formatProduct(row!), 201);
@@ -95,6 +98,8 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
     if (body.length !== undefined) { fields.push('length = ?'); vals.push(body.length || 0); }
     if (body.featured !== undefined) { fields.push('featured = ?'); vals.push(body.featured ? 1 : 0); }
     if (body.isNew !== undefined) { fields.push('is_new = ?'); vals.push(body.isNew ? 1 : 0); }
+    if (body.slug !== undefined) { fields.push('slug = ?'); vals.push(slugify(body.slug || '')); }
+    else if (body.name !== undefined) { fields.push('slug = ?'); vals.push(slugify(body.name)); }
     fields.push("updated_at = datetime('now')");
     vals.push(productMatch[1]);
     await env.DB.prepare(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`).bind(...vals).run();

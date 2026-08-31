@@ -32,7 +32,12 @@ CREATE TABLE IF NOT EXISTS products (
   featured INTEGER DEFAULT 0,
   is_new INTEGER DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
+  updated_at TEXT DEFAULT (datetime('now')),
+  weight REAL DEFAULT 0,
+  width REAL DEFAULT 0,
+  height REAL DEFAULT 0,
+  length REAL DEFAULT 0,
+  slug TEXT
 );
 
 CREATE TABLE IF NOT EXISTS categories (

@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
 import { useAmbienteStore } from '@/stores/ambienteStore';
-import { type Product, variantStockKey, getTotalStock } from '@/data/products';
+import { type Product, variantStockKey, getTotalStock, slugify } from '@/data/products';
 import { formatPrice } from '@/services/shippingService';
 import SearchInput from '@/components/shared/SearchInput';
 import TagChip from '@/components/shared/TagChip';
@@ -18,7 +18,7 @@ const emptyForm = {
   price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
   variantStock: {} as Record<string, number>,
   weight: 0, width: 0, height: 0, length: 0,
-  featured: false, isNew: false,
+  featured: false, isNew: false, slug: '',
 };
 
 const AdminProducts = () => {
@@ -28,13 +28,14 @@ const AdminProducts = () => {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [newVariant, setNewVariant] = useState('');
   const [newColor, setNewColor] = useState('');
   const [adminSearch, setAdminSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const openNew = () => { setForm({ ...emptyForm, category: categories[0]?.name || '' }); setEditProduct(null); setShowForm(true); };
+  const openNew = () => { setForm({ ...emptyForm, category: categories[0]?.name || '' }); setSlugManuallyEdited(false); setEditProduct(null); setShowForm(true); };
   const openEdit = (p: Product) => {
     setForm({
       name: p.name, description: p.description, brand: p.brand, category: p.category,
@@ -44,9 +45,25 @@ const AdminProducts = () => {
       variantStock: p.variantStock || {},
       weight: p.weight || 0, width: p.width || 0, height: p.height || 0, length: p.length || 0,
       featured: p.featured || false, isNew: p.isNew || false,
+      slug: p.slug || slugify(p.name),
     });
+    setSlugManuallyEdited(false);
     setEditProduct(p);
     setShowForm(true);
+  };
+
+  const handleNameChange = (name: string) => {
+    setForm((prev) => ({ ...prev, name, slug: slugManuallyEdited ? prev.slug : slugify(name) }));
+  };
+
+  const handleSlugChange = (slug: string) => {
+    setSlugManuallyEdited(true);
+    setForm((prev) => ({ ...prev, slug }));
+  };
+
+  const handleRegenerateSlug = () => {
+    setSlugManuallyEdited(false);
+    setForm((prev) => ({ ...prev, slug: slugify(prev.name) }));
   };
 
   const selectedCategoryObj = categories.find((c) => c.name === form.category);
@@ -131,6 +148,7 @@ const AdminProducts = () => {
       height: form.height || undefined,
       length: form.length || undefined,
       featured: form.featured, isNew: form.isNew,
+      slug: form.slug,
     };
     try {
       if (editProduct) {
@@ -253,7 +271,29 @@ const AdminProducts = () => {
           <div className="space-y-4 mt-4">
             <div>
               <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Nombre</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+              <input value={form.name} onChange={(e) => handleNameChange(e.target.value)} className="w-full rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
+            </div>
+            <div>
+              <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Slug (URL)</label>
+              <div className="flex gap-2">
+                <input
+                  value={form.slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  placeholder={slugify(form.name)}
+                  className="flex-1 rounded-md border border-accent bg-background px-3 py-2.5 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={handleRegenerateSlug}
+                  title="Regenerar slug automático desde el nombre"
+                  className="shrink-0 rounded-md bg-secondary px-3 py-2.5 text-xs font-medium text-foreground font-body hover:bg-accent transition-colors"
+                >
+                  Regenerar
+                </button>
+              </div>
+              <p className="font-body text-xs text-muted-foreground mt-1.5">
+                Se genera automáticamente desde el nombre. Podés editarlo manualmente. Solo letras, números y guiones.
+              </p>
             </div>
             <div>
               <label className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Descripción</label>

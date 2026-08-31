@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHeroStore } from '@/stores/heroStore';
 import { useProductStore } from '@/stores/productStore';
+import { getProductUrl } from '@/data/products';
 
 const HeroCarousel = () => {
   const slides = useHeroStore((s) => s.slides);
@@ -89,7 +90,7 @@ const HeroCarousel = () => {
         >
           {product ? (
             <button
-              onClick={() => navigate(`/producto/${product.id}`)}
+              onClick={() => navigate(getProductUrl(product))}
               className="w-full bg-secondary flex items-center justify-center p-6 md:p-12 text-left min-h-[300px] md:min-h-[400px]"
             >
               <div className="flex flex-col md:flex-row items-center gap-8 max-w-4xl mx-auto w-full">

@@ -1,6 +1,6 @@
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/services/shippingService';
-import { getAvailableStock, formatVariantLabel, parseVariantKey } from '@/data/products';
+import { getAvailableStock, formatVariantLabel, parseVariantKey, getProductUrl } from '@/data/products';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import QuantitySelector from '@/components/shared/QuantitySelector';
@@ -64,7 +64,7 @@ const CartDrawer = ({ open, onOpenChange }: CartDrawerProps) => {
                 const { variant: itemVariant, color: itemColor } = parseVariantKey(item.variant);
                 return (
                 <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-3 rounded-lg bg-secondary/30 p-3">
-                  <Link to={`/producto/${item.product.id}`} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  <Link to={getProductUrl(item.product)} onClick={() => onOpenChange(false)} className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <img src={item.product.image} alt={item.product.name} decoding="async" className="h-full w-full object-cover" />
                   </Link>
                   <div className="flex-1 min-w-0">
