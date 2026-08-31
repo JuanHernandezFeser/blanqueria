@@ -26,6 +26,7 @@ import { useCategoryStore } from "@/stores/categoryStore";
 import { useAmbienteStore } from "@/stores/ambienteStore";
 import { useHeroStore } from "@/stores/heroStore";
 import { useBankConfigStore } from "@/stores/bankConfigStore";
+import { useSiteSettingsStore } from "@/stores/siteSettingsStore";
 import { useAuthStore } from "@/stores/authStore";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const fetchAmbientes = useAmbienteStore((s) => s.fetchAmbientes);
   const fetchSlides = useHeroStore((s) => s.fetchSlides);
   const fetchConfig = useBankConfigStore((s) => s.fetchConfig);
+  const fetchSettings = useSiteSettingsStore((s) => s.fetchSettings);
   const restoreSession = useAuthStore((s) => s.restoreSession);
 
   useEffect(() => {
@@ -57,6 +59,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
     fetchAmbientes();
     fetchSlides();
     fetchConfig();
+    fetchSettings();
     restoreSession();
   }, []);
 

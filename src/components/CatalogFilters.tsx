@@ -11,6 +11,7 @@ interface FilterContentProps {
   selectedAmbiente: string;
   selectedBrand: string;
   priceRange: [number, number];
+  maxPrice: number;
   inStockOnly: boolean;
   brands: string[];
   onCategoryChange: (v: string) => void;
@@ -25,7 +26,7 @@ interface FilterContentProps {
 
 export default function FilterContent({
   categories, ambientes, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand,
-  priceRange, inStockOnly, brands,
+  priceRange, maxPrice, inStockOnly, brands,
   onCategoryChange, onSubcategoryChange, onAmbienteChange, onBrandChange,
   onPriceRangeChange, onInStockOnlyChange, onClearFilters, hasActiveFilters,
 }: FilterContentProps) {
@@ -101,7 +102,7 @@ export default function FilterContent({
         <input
           type="range"
           min={0}
-          max={100000}
+          max={maxPrice}
           step={1000}
           value={priceRange[1]}
           onChange={(e) => onPriceRangeChange([priceRange[0], Number(e.target.value)])}

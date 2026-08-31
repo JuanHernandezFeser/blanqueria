@@ -136,6 +136,11 @@ export const api = {
     return request(`/orders/${id}/payment-status`, { method: 'PATCH', body: JSON.stringify({ paymentStatus: 'aprobado' }) });
   },
 
+  getSiteSettings<T = any>(): Promise<T> { return request('/site-settings'); },
+  updateSiteSetting<T = any>(key: string, value: string): Promise<T> {
+    return request(`/site-settings/${encodeURIComponent(key)}`, { method: 'PUT', body: JSON.stringify({ value }) });
+  },
+
   getBankConfig<T = any>(): Promise<T> { return request('/bank-config'); },
   updateBankConfig<T = any>(config: any): Promise<T> {
     return request('/bank-config', { method: 'PUT', body: JSON.stringify(config) });

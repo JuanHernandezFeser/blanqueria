@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
 import { useAmbienteStore } from '@/stores/ambienteStore';
+import { useSiteSettingsStore } from '@/stores/siteSettingsStore';
 import { type Product, getTotalStock } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
 import FilterContent from '@/components/CatalogFilters';
@@ -21,13 +22,14 @@ const Catalog = () => {
   const products = useProductStore((s) => s.products);
   const categories = useCategoryStore((s) => s.categories);
   const ambientes = useAmbienteStore((s) => s.ambientes);
+  const maxPrice = useSiteSettingsStore((s) => s.getMaxPriceFilter());
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [selectedAmbiente, setSelectedAmbiente] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('name-asc');
@@ -36,6 +38,10 @@ const Catalog = () => {
     const searchFromUrl = searchParams.get('search') || '';
     setSearch(searchFromUrl);
   }, [searchParams]);
+
+  useEffect(() => {
+    setPriceRange((prev) => [prev[0], maxPrice]);
+  }, [maxPrice]);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -68,15 +74,15 @@ const Catalog = () => {
 
   const clearFilters = () => {
     setSelectedCategory(''); setSelectedSubcategory(''); setSelectedAmbiente(''); setSelectedBrand('');
-    setPriceRange([0, 100000]); setInStockOnly(false); setSearch('');
+    setPriceRange([0, maxPrice]); setInStockOnly(false); setSearch('');
     setSearchParams({});
   };
 
-  const hasActiveFilters = Boolean(selectedCategory || selectedSubcategory || selectedAmbiente || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < 100000);
+  const hasActiveFilters = Boolean(selectedCategory || selectedSubcategory || selectedAmbiente || selectedBrand || inStockOnly || priceRange[0] > 0 || priceRange[1] < maxPrice);
 
   const filterProps = {
     categories, ambientes, selectedCategory, selectedSubcategory, selectedAmbiente, selectedBrand,
-    priceRange, inStockOnly, brands: dynamicBrands,
+    priceRange, maxPrice, inStockOnly, brands: dynamicBrands,
     onCategoryChange: setSelectedCategory,
     onSubcategoryChange: setSelectedSubcategory,
     onAmbienteChange: setSelectedAmbiente,
