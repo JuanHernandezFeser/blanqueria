@@ -9,6 +9,7 @@ interface ProductRow {
   variant_stock_json: string; ambientes_json: string;
   weight: number; width: number; height: number; length: number;
   featured: number; is_new: number; slug: string;
+  active: number;
 }
 
 function formatProduct(row: ProductRow) {
@@ -25,6 +26,7 @@ function formatProduct(row: ProductRow) {
     height: row.height || undefined, length: row.length || undefined,
     featured: !!row.featured, isNew: !!row.is_new,
     slug: row.slug || undefined,
+    active: row.active === 1,
   };
 }
 
@@ -36,7 +38,13 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 export async function handleProducts(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   // GET /api/products
   if (method === 'GET' && path === '/api/products') {
-    const { results } = await env.DB.prepare('SELECT * FROM products ORDER BY id').all<ProductRow>();
+    const url = new URL(request.url);
+    const includeHidden = url.searchParams.get('includeHidden') === 'true';
+    const { results } = await env.DB.prepare(
+      includeHidden
+        ? 'SELECT * FROM products ORDER BY id'
+        : 'SELECT * FROM products WHERE active = 1 ORDER BY id'
+    ).all<ProductRow>();
     return json(results.map(formatProduct));
   }
 
@@ -55,8 +63,8 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
     const id = String(Date.now());
     const slug = slugify(body.slug || body.name || '');
     await env.DB.prepare(
-      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new, slug)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new, slug, active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
       body.price, body.stock || 0, body.image || '',
@@ -64,7 +72,8 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
       JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
       JSON.stringify(body.ambientes || []),
       body.weight || 0, body.width || 0, body.height || 0, body.length || 0,
-      body.featured ? 1 : 0, body.isNew ? 1 : 0, slug
+      body.featured ? 1 : 0, body.isNew ? 1 : 0, slug,
+      body.active === undefined || body.active ? 1 : 0
     ).run();
     const row = await env.DB.prepare('SELECT * FROM products WHERE id = ?').bind(id).first<ProductRow>();
     return json(formatProduct(row!), 201);
@@ -98,6 +107,7 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
     if (body.length !== undefined) { fields.push('length = ?'); vals.push(body.length || 0); }
     if (body.featured !== undefined) { fields.push('featured = ?'); vals.push(body.featured ? 1 : 0); }
     if (body.isNew !== undefined) { fields.push('is_new = ?'); vals.push(body.isNew ? 1 : 0); }
+    if (body.active !== undefined) { fields.push('active = ?'); vals.push(body.active ? 1 : 0); }
     if (body.slug !== undefined) { fields.push('slug = ?'); vals.push(slugify(body.slug || '')); }
     else if (body.name !== undefined) { fields.push('slug = ?'); vals.push(slugify(body.name)); }
     fields.push("updated_at = datetime('now')");

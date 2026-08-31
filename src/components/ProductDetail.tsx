@@ -46,7 +46,8 @@ const ProductDetail = () => {
   }, [currentImageIndex]);
 
   const id = extractProductId(param ?? '');
-  const product = products.find((p) => p.id === id) ?? null;
+  const found = products.find((p) => p.id === id) ?? null;
+  const product = found && found.active !== false ? found : null;
 
   if (!product) {
     return (

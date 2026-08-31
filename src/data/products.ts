@@ -20,6 +20,7 @@ export interface Product {
   featured?: boolean;
   isNew?: boolean;
   slug?: string;
+  active: boolean;
 }
 
 /** Build the SEO-friendly product URL: /producto/{slug}-{id}, falling back to /producto/{id} */
