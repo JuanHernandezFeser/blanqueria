@@ -93,11 +93,11 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
       category: body.category, subcategory: body.subcategory, price: body.price,
       stock: body.stock, image: body.image,
     };
-    fields.push('images_json = ?'); vals.push(JSON.stringify(body.images ?? []));
-    fields.push('variants_json = ?'); vals.push(JSON.stringify(body.variants ?? []));
-    fields.push('colors_json = ?'); vals.push(JSON.stringify(body.colors ?? []));
-    fields.push('variant_stock_json = ?'); vals.push(JSON.stringify(body.variantStock ?? {}));
-    fields.push('ambientes_json = ?'); vals.push(JSON.stringify(body.ambientes ?? []));
+    if (body.images !== undefined) { fields.push('images_json = ?'); vals.push(JSON.stringify(body.images ?? [])); }
+    if (body.variants !== undefined) { fields.push('variants_json = ?'); vals.push(JSON.stringify(body.variants ?? [])); }
+    if (body.colors !== undefined) { fields.push('colors_json = ?'); vals.push(JSON.stringify(body.colors ?? [])); }
+    if (body.variantStock !== undefined) { fields.push('variant_stock_json = ?'); vals.push(JSON.stringify(body.variantStock ?? {})); }
+    if (body.ambientes !== undefined) { fields.push('ambientes_json = ?'); vals.push(JSON.stringify(body.ambientes ?? [])); }
     for (const [k, v] of Object.entries(map)) {
       if (v !== undefined) { fields.push(`${k} = ?`); vals.push(v); }
     }
