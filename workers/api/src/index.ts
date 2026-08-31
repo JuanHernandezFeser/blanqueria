@@ -7,6 +7,7 @@ import { handleHeroSlides } from './routes/hero-slides';
 import { handleSpecials } from './routes/specials';
 import { handleOrders } from './routes/orders';
 import { handleBankConfig } from './routes/bank-config';
+import { handleSiteSettings } from './routes/site-settings';
 import { handleMercadoPago } from './routes/mercadopago';
 import { handleUpload } from './routes/upload';
 import { handleShipping } from './routes/shipping';
@@ -34,6 +35,7 @@ async function handleRoute(request: Request, env: Env, ctx: ExecutionContext, pa
   if (path.startsWith('/api/specials')) return handleSpecials(request, env, ctx, path, method);
   if (path.startsWith('/api/orders')) return handleOrders(request, env, ctx, path, method);
   if (path.startsWith('/api/bank-config')) return handleBankConfig(request, env, ctx, path, method);
+  if (path.startsWith('/api/site-settings')) return handleSiteSettings(request, env, ctx, path, method);
   if (path === '/api/create-preference' || path === '/api/webhooks/mercadopago') return handleMercadoPago(request, env, ctx, path, method);
   if (path === '/api/upload') return handleUpload(request, env, ctx, path, method);
   if (path.startsWith('/api/shipping')) return handleShipping(request, env, ctx, path, method);

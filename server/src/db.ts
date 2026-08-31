@@ -141,6 +141,19 @@ function initSchema(db: Database) {
   runSilent(db, 'ALTER TABLE bank_config ADD COLUMN discount_percentage REAL DEFAULT 0');
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+
+  // Seed default settings if not present
+  const existingSetting = db.query("SELECT value FROM site_settings WHERE key = 'max_price_filter'").get() as { value: string } | undefined;
+  if (!existingSetting) {
+    db.run("INSERT INTO site_settings (key, value) VALUES ('max_price_filter', '100000')");
+  }
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS specials (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,

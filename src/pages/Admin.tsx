@@ -18,7 +18,7 @@ const tabs: { key: Tab; label: string }[] = [
   { key: 'hero', label: 'Hero' },
   { key: 'specials', label: 'Especiales' },
   { key: 'orders', label: 'Pedidos' },
-  { key: 'payment', label: 'Medios de pago' },
+  { key: 'payment', label: 'Configuración' },
 ];
 
 const Admin = () => {
