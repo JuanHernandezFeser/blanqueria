@@ -425,11 +425,11 @@ El frontend se compila con Vite y se sube a Cloudflare Pages (dominio `aikenblan
 # 1. Compilar el frontend (genera dist/)
 npm run build
 
-# 2. Subir a Cloudflare Pages
-npx wrangler pages deploy dist
+# 2. Subir a Cloudflare Pages (SIEMPRE con --branch main)
+npx wrangler pages deploy dist --branch main
 ```
 
-> Si Pages está conectado al repo por integración de GitHub, el deploy puede ser automático al pushear a `main`. El comando anterior es la vía manual.
+> **IMPORTANTE:** el branch de producción del proyecto Pages `blanqueria-frontend` es `main`, y `aikenblanco.com.ar` apunta al deployment de **Production**. Si omitís `--branch main` (o usás `local`/`production`), `wrangler` crea un deploy de **PREVIEW** que NO actualiza el dominio de producción. Verificá con `npx wrangler pages deployment list --project-name blanqueria-frontend` que el deploy quede en Environment **Production**.
 
 ### 10.2 Worker — Cloudflare Workers
 
@@ -447,6 +447,10 @@ cd workers/api
 
 # Aplicar migraciones pendientes (producción)
 npx wrangler d1 migrations apply blanqueria-db --remote
+
+# Si falla con "table ... already exists": migraciones previas aplicadas a mano sin
+# registrarse en d1_migrations. Marcá las ya aplicadas y volvé a correr el apply:
+# npx wrangler d1 execute blanqueria-db --remote --command "INSERT OR IGNORE INTO d1_migrations (id, name, applied_at) VALUES (4,'0004_micorreo_token_cache.sql',datetime('now')),(5,'0005_add_site_settings.sql',datetime('now')),(6,'0006_add_product_slug.sql',datetime('now'));"
 
 # Inicializar schema base (solo DB nueva)
 npm run db:init
@@ -482,9 +486,9 @@ git merge local
 git push origin main
 git checkout local
 
-# 4. Deploy frontend (Pages)
+# 4. Deploy frontend (Pages) — SIEMPRE con --branch main
 npm run build
-npx wrangler pages deploy dist
+npx wrangler pages deploy dist --branch main
 
 # 5. Deploy worker
 cd workers/api
