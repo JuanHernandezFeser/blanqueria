@@ -1,4 +1,4 @@
-import { type Product, getTotalStock, getVariantStock, getAvailableStock, variantStockKey } from '@/data/products';
+import { type Product, getTotalStock, getVariantStock, getAvailableStock, variantStockKey, extractProductId } from '@/data/products';
 import { useProductStore } from '@/stores/productStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
@@ -29,7 +29,7 @@ const ThumbImg = ({ src, alt }: { src: string; alt: string }) => {
 };
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: param } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const products = useProductStore((s) => s.products);
   const addItem = useCartStore((s) => s.addItem);
@@ -45,6 +45,7 @@ const ProductDetail = () => {
     setIsLoaded(false);
   }, [currentImageIndex]);
 
+  const id = extractProductId(param ?? '');
   const product = products.find((p) => p.id === id) ?? null;
 
   if (!product) {

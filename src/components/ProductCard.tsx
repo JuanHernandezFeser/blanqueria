@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { type Product, getTotalStock } from '@/data/products';
+import { type Product, getTotalStock, getProductUrl } from '@/data/products';
 import { Shimmer } from '@/components/ui/shimmer';
 import { useCartStore } from '@/stores/cartStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
@@ -89,7 +89,7 @@ const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) =
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       className="group cursor-pointer flex flex-col h-full"
-      onClick={() => navigate(`/producto/${product.id}`)}
+      onClick={() => navigate(getProductUrl(product))}
       data-testid="product-card"
     >
       <div

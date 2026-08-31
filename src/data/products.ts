@@ -19,6 +19,30 @@ export interface Product {
   length?: number;
   featured?: boolean;
   isNew?: boolean;
+  slug?: string;
+}
+
+/** Build the SEO-friendly product URL: /producto/{slug}-{id}, falling back to /producto/{id} */
+export function getProductUrl(product: { slug?: string; id: string }): string {
+  return product.slug ? `/producto/${product.slug}-${product.id}` : `/producto/${product.id}`;
+}
+
+/** Extract the 13-digit id from a product route param (supports "{slug}-{id}" and bare "{id}") */
+export function extractProductId(param: string): string {
+  const match = param.match(/^(?:.*-)?(\d{13})$/);
+  return match ? match[1] : param;
+}
+
+/** Convert a product name into a URL-friendly slug */
+export function slugify(name: string): string {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 /** Build a variantStock key from variant and/or color */

@@ -1,7 +1,7 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
-import { getAvailableStock, formatVariantLabel, parseVariantKey } from '@/data/products';
+import { getAvailableStock, formatVariantLabel, parseVariantKey, getProductUrl } from '@/data/products';
 import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
@@ -23,8 +23,8 @@ const Cart = () => {
     navigate('/checkout');
   };
 
-  const handleProductClick = (productId: string) => {
-    navigate(`/producto/${productId}`);
+  const handleProductClick = (product: { id: string; slug?: string }) => {
+    navigate(getProductUrl(product));
   };
 
   if (items.length === 0) return <EmptyCart />;
@@ -44,12 +44,12 @@ const Cart = () => {
             const { variant: itemVariant, color: itemColor } = parseVariantKey(item.variant);
             return (
               <div key={`${item.product.id}-${item.variant ?? ''}`} className="flex gap-4 rounded-lg shadow-card p-4" data-testid="cart-item">
-                <div onClick={() => handleProductClick(item.product.id)} className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                <div onClick={() => handleProductClick(item.product)} className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
                   <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-body text-[10px] uppercase tracking-widest text-muted-foreground">{item.product.brand}</p>
-                  <p onClick={() => handleProductClick(item.product.id)} className="font-body text-sm font-medium text-foreground truncate cursor-pointer hover:underline">{item.product.name}</p>
+                  <p onClick={() => handleProductClick(item.product)} className="font-body text-sm font-medium text-foreground truncate cursor-pointer hover:underline">{item.product.name}</p>
                   {item.variant && <p className="font-body text-xs text-muted-foreground">{formatVariantLabel(item.variant)}</p>}
                   <div className="space-y-0.5 mt-1">
                     <p className="font-body text-sm tabular-nums text-foreground">{formatPrice(item.product.price)}</p>
