@@ -4,13 +4,11 @@ const MICORREO_BASE = 'https://api.correoargentino.com.ar/micorreo/v1';
 const TOKEN_MARGIN_MS = 5 * 60 * 1000;
 
 async function ensureCacheTable(db: D1Database): Promise<void> {
-  await db.exec(
-    `CREATE TABLE IF NOT EXISTS micorreo_token_cache (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      token TEXT NOT NULL,
-      expires_at TEXT NOT NULL
-    )`
-  );
+  await db
+    .prepare(
+      'CREATE TABLE IF NOT EXISTS micorreo_token_cache (id INTEGER PRIMARY KEY, token TEXT NOT NULL, expires_at TEXT NOT NULL)'
+    )
+    .run();
 }
 
 export async function getMicorreoToken(env: Env): Promise<string> {
