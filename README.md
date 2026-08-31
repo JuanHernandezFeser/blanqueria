@@ -95,14 +95,21 @@ git push origin main
 git checkout local
 
 # 3. Deploy frontend (Cloudflare Pages)
+# Importante: el branch de produccion del proyecto Pages es `main`. Sin `--branch main`
+# se genera un deploy de PREVIEW que NO actualiza aikenblanco.com.ar.
 npm run build
-npx wrangler pages deploy dist
+npx wrangler pages deploy dist --branch main
 
 # 4. Deploy worker
 cd workers/api
 npx wrangler deploy
 
 # 5. Migraciones D1 (si corresponde)
+# Si las migraciones fallan con "table already exists", es porque migraciones previas
+# se aplicaron a mano sin registrar en la tabla d1_migrations. Marca las aplicadas:
+#   npx wrangler d1 execute blanqueria-db --remote \
+#     --command "INSERT OR IGNORE INTO d1_migrations (id, name, applied_at) VALUES (4,'0004_micorreo_token_cache.sql',datetime('now')),(5,'0005_add_site_settings.sql',datetime('now')),(6,'0006_add_product_slug.sql',datetime('now'));"
+# y volvé a correr:
 npx wrangler d1 migrations apply blanqueria-db --remote
 ```
 

@@ -574,7 +574,7 @@ git checkout local
 npm run build
 
 # 2. Subir a Cloudflare Pages
-npx wrangler pages deploy dist
+npx wrangler pages deploy dist --branch main
   </pre>
   <div class="note">Si Pages está conectado al repo por integración de GitHub, el deploy puede ser automático al pushear a <code>main</code>. El comando anterior es la vía manual.</div>
 
@@ -626,7 +626,7 @@ git checkout local
 
 # 4. Deploy frontend (Pages)
 npm run build
-npx wrangler pages deploy dist
+npx wrangler pages deploy dist --branch main
 
 # 5. Deploy worker
 cd workers/api
