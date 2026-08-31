@@ -59,7 +59,9 @@ export const api = {
   },
   getMe(): Promise<User> { return request('/auth/me'); },
 
-  getProducts<T = any>(): Promise<T> { return request('/products'); },
+  getProducts<T = any>(includeHidden?: boolean): Promise<T> {
+    return request(`/products${includeHidden ? '?includeHidden=true' : ''}`);
+  },
   getProduct<T = any>(id: string): Promise<T> { return request(`/products/${id}`); },
   createProduct<T = any>(data: any): Promise<T> {
     return request('/products', { method: 'POST', body: JSON.stringify(data) });

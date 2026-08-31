@@ -14,7 +14,9 @@ function sortByStock(products: Product[]): Product[] {
 interface ProductState {
   products: Product[];
   loading: boolean;
+  adminProducts: Product[];
   fetchProducts: () => Promise<void>;
+  fetchAdminProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (id: string, data: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -23,6 +25,7 @@ interface ProductState {
 export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
   loading: true,
+  adminProducts: [],
   fetchProducts: async () => {
     try {
       const products = await api.getProducts<Product[]>();
@@ -31,16 +34,30 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ loading: false });
     }
   },
+  fetchAdminProducts: async () => {
+    try {
+      const adminProducts = await api.getProducts<Product[]>(true);
+      set({ adminProducts: sortByStock(adminProducts) });
+    } catch {
+      /* keep existing adminProducts on failure */
+    }
+  },
   addProduct: async (product) => {
     const created = await api.createProduct(product);
-    set({ products: sortByStock([created, ...get().products]) });
+    set({ products: sortByStock([created, ...get().products]), adminProducts: sortByStock([created, ...get().adminProducts]) });
   },
   updateProduct: async (id, data) => {
     const updated = await api.updateProduct(id, data);
-    set({ products: sortByStock(get().products.map((p) => (p.id === id ? { ...p, ...updated } : p))) });
+    set({
+      products: sortByStock(get().products.map((p) => (p.id === id ? { ...p, ...updated } : p))),
+      adminProducts: sortByStock(get().adminProducts.map((p) => (p.id === id ? { ...p, ...updated } : p))),
+    });
   },
   deleteProduct: async (id) => {
     await api.deleteProduct(id);
-    set({ products: get().products.filter((p) => p.id !== id) });
+    set({
+      products: get().products.filter((p) => p.id !== id),
+      adminProducts: get().adminProducts.filter((p) => p.id !== id),
+    });
   },
 }));

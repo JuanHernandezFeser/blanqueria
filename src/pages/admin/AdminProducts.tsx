@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
 import { useAmbienteStore } from '@/stores/ambienteStore';
@@ -6,23 +6,26 @@ import { type Product, variantStockKey, getTotalStock, slugify } from '@/data/pr
 import { formatPrice } from '@/services/shippingService';
 import SearchInput from '@/components/shared/SearchInput';
 import TagChip from '@/components/shared/TagChip';
-import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, Upload, Image as ImageIcon } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Upload, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 
 const PRODUCTS_PER_PAGE = 15;
 
+type SortColumn = 'name' | 'brand' | 'category' | 'ambientes' | 'price' | 'stock' | null;
+type SortDirection = 'asc' | 'desc';
+
 const emptyForm = {
   name: '', description: '', brand: '', category: '', subcategory: '', ambientes: [] as string[],
   price: 0, stock: 0, image: '', images: [] as string[], variants: [] as string[], colors: [] as string[],
   variantStock: {} as Record<string, number>,
   weight: 0, width: 0, height: 0, length: 0,
-  featured: false, isNew: false, slug: '',
+  featured: false, isNew: false, slug: '', active: true,
 };
 
 const AdminProducts = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
+  const { adminProducts, fetchAdminProducts, addProduct, updateProduct, deleteProduct } = useProductStore();
   const categories = useCategoryStore((s) => s.categories);
   const ambientes = useAmbienteStore((s) => s.ambientes);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -33,7 +36,13 @@ const AdminProducts = () => {
   const [newColor, setNewColor] = useState('');
   const [adminSearch, setAdminSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchAdminProducts();
+  }, [fetchAdminProducts]);
 
   const openNew = () => { setForm({ ...emptyForm, category: categories[0]?.name || '' }); setSlugManuallyEdited(false); setEditProduct(null); setShowForm(true); };
   const openEdit = (p: Product) => {
@@ -46,6 +55,7 @@ const AdminProducts = () => {
       weight: p.weight || 0, width: p.width || 0, height: p.height || 0, length: p.length || 0,
       featured: p.featured || false, isNew: p.isNew || false,
       slug: p.slug || slugify(p.name),
+      active: p.active !== false,
     });
     setSlugManuallyEdited(false);
     setEditProduct(p);
@@ -149,6 +159,7 @@ const AdminProducts = () => {
       length: form.length || undefined,
       featured: form.featured, isNew: form.isNew,
       slug: form.slug,
+      active: form.active,
     };
     try {
       if (editProduct) {
@@ -166,13 +177,61 @@ const AdminProducts = () => {
     try { await deleteProduct(id); toast.success('Producto eliminado'); } catch { toast.error('Error al eliminar'); }
   };
 
-  const adminFiltered = useMemo(() => products.filter((p) =>
-    !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || p.brand.toLowerCase().includes(adminSearch.toLowerCase()) || p.category.toLowerCase().includes(adminSearch.toLowerCase())
-  ), [products, adminSearch]);
+  const handleToggleActive = async (p: Product) => {
+    const next = !(p.active !== false);
+    try {
+      await updateProduct(p.id, { active: next });
+      toast.success(next ? 'Producto visible en el catálogo' : 'Producto oculto del catálogo');
+    } catch { toast.error('Error al actualizar visibilidad'); }
+  };
 
-  const totalPages = Math.ceil(adminFiltered.length / PRODUCTS_PER_PAGE);
+  const handleSort = (column: Exclude<SortColumn, null>) => {
+    if (sortColumn === column) {
+      setSortDirection((d) => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const adminFiltered = useMemo(() => adminProducts.filter((p) =>
+    !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || p.brand.toLowerCase().includes(adminSearch.toLowerCase()) || p.category.toLowerCase().includes(adminSearch.toLowerCase())
+  ), [adminProducts, adminSearch]);
+
+  const sortedProducts = useMemo(() => {
+    if (!sortColumn) return adminFiltered;
+    const list = [...adminFiltered];
+    const dir = sortDirection === 'desc' ? -1 : 1;
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (sortColumn) {
+        case 'name':
+          cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+          break;
+        case 'brand':
+          cmp = a.brand.localeCompare(b.brand, undefined, { sensitivity: 'base' });
+          break;
+        case 'category':
+          cmp = a.category.localeCompare(b.category, undefined, { sensitivity: 'base' });
+          break;
+        case 'ambientes':
+          cmp = (a.ambientes ?? []).join(', ').localeCompare((b.ambientes ?? []).join(', '), undefined, { sensitivity: 'base' });
+          break;
+        case 'price':
+          cmp = a.price - b.price;
+          break;
+        case 'stock':
+          cmp = getTotalStock(a) - getTotalStock(b);
+          break;
+      }
+      return cmp * dir;
+    });
+    return list;
+  }, [adminFiltered, sortColumn, sortDirection]);
+
+  const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
   const safePage = Math.min(currentPage, totalPages || 1);
-  const paginatedProducts = adminFiltered.slice((safePage - 1) * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE);
+  const paginatedProducts = sortedProducts.slice((safePage - 1) * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE);
 
   return (
     <>
@@ -191,13 +250,38 @@ const AdminProducts = () => {
         <table className="w-full">
           <thead className="sticky top-0 bg-background/80 backdrop-blur-md">
             <tr className="border-b border-accent">
-              <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Producto</th>
-              <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Marca</th>
-              <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Categoría</th>
-              <th className="text-left p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Ambientes</th>
-              <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Precio</th>
-              <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Stock</th>
-              <th className="text-right p-3 font-body text-xs uppercase tracking-wider text-muted-foreground">Acciones</th>
+              <th className="p-3 text-left">
+                <button onClick={() => handleSort('name')} className="flex items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Producto{sortColumn === 'name' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="hidden md:table-cell p-3 text-left">
+                <button onClick={() => handleSort('brand')} className="flex items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Marca{sortColumn === 'brand' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="hidden md:table-cell p-3 text-left">
+                <button onClick={() => handleSort('category')} className="flex items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Categoría{sortColumn === 'category' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="hidden lg:table-cell p-3 text-left">
+                <button onClick={() => handleSort('ambientes')} className="flex items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Ambientes{sortColumn === 'ambientes' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="p-3 text-right">
+                <button onClick={() => handleSort('price')} className="inline-flex justify-end items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Precio{sortColumn === 'price' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="hidden sm:table-cell p-3 text-right">
+                <button onClick={() => handleSort('stock')} className="inline-flex justify-end items-center gap-1 font-body text-xs uppercase tracking-wider text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Stock{sortColumn === 'stock' && (sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                </button>
+              </th>
+              <th className="p-3 text-center font-body text-xs uppercase tracking-wider text-muted-foreground">Visible</th>
+              <th className="p-3 text-right font-body text-xs uppercase tracking-wider text-muted-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -235,6 +319,15 @@ const AdminProducts = () => {
                       </span>
                     );
                   })()}
+                </td>
+                <td className="p-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={p.active !== false}
+                    onChange={() => handleToggleActive(p)}
+                    title={p.active !== false ? 'Visible en el catálogo' : 'Oculto del catálogo'}
+                    className="h-4 w-4 rounded border-accent text-foreground focus:ring-foreground cursor-pointer"
+                  />
                 </td>
                 <td className="p-3 text-right">
                   <div className="flex justify-end gap-1">
@@ -395,6 +488,15 @@ const AdminProducts = () => {
                   className="h-4 w-4 rounded border-accent text-foreground focus:ring-foreground"
                 />
                 <span className="font-body text-xs uppercase tracking-wider text-muted-foreground">Nuevo</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  className="h-4 w-4 rounded border-accent text-foreground focus:ring-foreground"
+                />
+                <span className="font-body text-xs uppercase tracking-wider text-muted-foreground">Visible</span>
               </label>
             </div>
 

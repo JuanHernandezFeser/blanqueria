@@ -13,6 +13,7 @@ interface ProductRow {
   ambientes_json: string;
   weight: number; width: number; height: number; length: number;
   slug: string;
+  active: number;
 }
 
 function formatProduct(row: ProductRow) {
@@ -29,12 +30,17 @@ function formatProduct(row: ProductRow) {
     height: row.height || undefined, length: row.length || undefined,
     featured: !!row.featured, isNew: !!row.is_new,
     slug: row.slug || undefined,
+    active: row.active === 1,
   };
 }
 
 products.get('/', (c) => {
   const db = getDb();
-  const rows = db.query('SELECT * FROM products ORDER BY id').all() as ProductRow[];
+  const includeHidden = c.req.query('includeHidden') === 'true';
+  const sql = includeHidden
+    ? 'SELECT * FROM products ORDER BY id'
+    : 'SELECT * FROM products WHERE active = 1 ORDER BY id';
+  const rows = db.query(sql).all() as ProductRow[];
   return c.json(rows.map(formatProduct));
 });
 
@@ -51,14 +57,15 @@ products.post('/', authMiddleware, adminMiddleware, async (c) => {
   const id = String(Date.now());
   const slug = slugify(body.slug || body.name || '');
   db.run(
-    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO products (id, name, description, brand, category, subcategory, price, stock, image, images_json, variants_json, colors_json, variant_stock_json, ambientes_json, weight, width, height, length, featured, is_new, slug, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, body.name, body.description || '', body.brand, body.category, body.subcategory || '',
     body.price, body.stock || 0, body.image || '',
     JSON.stringify(body.images || []), JSON.stringify(body.variants || []),
     JSON.stringify(body.colors || []), JSON.stringify(body.variantStock || {}),
     JSON.stringify(body.ambientes || []),
     body.weight || 0, body.width || 0, body.height || 0, body.length || 0,
-    body.featured ? 1 : 0, body.isNew ? 1 : 0, slug
+    body.featured ? 1 : 0, body.isNew ? 1 : 0, slug,
+    body.active === undefined || body.active ? 1 : 0
   );
   const row = db.query('SELECT * FROM products WHERE id = ?').get(id) as ProductRow;
   return c.json(formatProduct(row), 201);
@@ -76,6 +83,7 @@ products.put('/:id', authMiddleware, adminMiddleware, async (c) => {
     category: body.category, subcategory: body.subcategory, price: body.price,
     stock: body.stock, image: body.image, featured: body.featured,
     is_new: body.isNew,
+    active: body.active,
   };
   fields.push('images_json = ?'); vals.push(JSON.stringify(body.images ?? []));
   fields.push('variants_json = ?'); vals.push(JSON.stringify(body.variants ?? []));
@@ -84,7 +92,7 @@ products.put('/:id', authMiddleware, adminMiddleware, async (c) => {
   fields.push('ambientes_json = ?'); vals.push(JSON.stringify(body.ambientes ?? []));
   for (const [k, v] of Object.entries(map)) {
     if (v !== undefined) {
-      if (k === 'featured' || k === 'is_new') { fields.push(`${k} = ?`); vals.push(v ? 1 : 0); }
+      if (k === 'featured' || k === 'is_new' || k === 'active') { fields.push(`${k} = ?`); vals.push(v ? 1 : 0); }
       else { fields.push(`${k} = ?`); vals.push(v); }
     }
   }

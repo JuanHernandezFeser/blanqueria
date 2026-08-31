@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS products (
   width REAL DEFAULT 0,
   height REAL DEFAULT 0,
   length REAL DEFAULT 0,
-  slug TEXT
+  slug TEXT,
+  active INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS categories (
