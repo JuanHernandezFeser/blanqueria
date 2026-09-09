@@ -11,6 +11,7 @@ import { handleSiteSettings } from './routes/site-settings';
 import { handleMercadoPago } from './routes/mercadopago';
 import { handleUpload } from './routes/upload';
 import { handleShipping } from './routes/shipping';
+import { handleFeed } from './routes/feed';
 import { releaseAbandonedMpOrders } from './jobs/releaseAbandonedOrders';
 
 const corsHeaders = {
@@ -40,6 +41,7 @@ async function handleRoute(request: Request, env: Env, ctx: ExecutionContext, pa
   if (path === '/api/upload') return handleUpload(request, env, ctx, path, method);
   if (path.startsWith('/api/shipping')) return handleShipping(request, env, ctx, path, method);
   if (path === '/api/health') return json({ status: 'ok', timestamp: new Date().toISOString() });
+  if (path === '/feed.xml') return handleFeed(request, env, ctx);
 
   return json({ error: 'Not found' }, 404);
 }
