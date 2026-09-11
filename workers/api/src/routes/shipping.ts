@@ -38,13 +38,13 @@ function combinePackages(packages: PackageInfo[]) {
     const width = p.width || DEFAULT_DIM;
     const length = p.length || DEFAULT_DIM;
 
-    totalWeightGrams += weight * qty;
+    totalWeightGrams += weight * 1000 * qty;
     if (height > maxHeight) maxHeight = height;
     if (width > maxWidth) maxWidth = width;
     if (length > maxLength) maxLength = length;
   }
 
-  return { totalWeightGrams, maxHeight, maxWidth, maxLength };
+  return { totalWeightGrams: Math.round(totalWeightGrams), maxHeight, maxWidth, maxLength };
 }
 
 async function resolveShipping(postalCode: string, cartSubtotal: number, packages: PackageInfo[], env: Env) {

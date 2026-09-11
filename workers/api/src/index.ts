@@ -1,6 +1,7 @@
 import type { Env } from './types';
 import { handleAuth } from './routes/auth';
 import { handleProducts } from './routes/products';
+import { handleCombos } from './routes/combos';
 import { handleCategories } from './routes/categories';
 import { handleAmbientes } from './routes/ambientes';
 import { handleHeroSlides } from './routes/hero-slides';
@@ -30,6 +31,7 @@ function json(data: unknown, status = 200): Response {
 async function handleRoute(request: Request, env: Env, ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   if (path.startsWith('/api/auth/')) return handleAuth(request, env, ctx, path, method);
   if (path.startsWith('/api/products')) return handleProducts(request, env, ctx, path, method);
+  if (path.startsWith('/api/combos')) return handleCombos(request, env, ctx, path, method);
   if (path.startsWith('/api/categories')) return handleCategories(request, env, ctx, path, method);
   if (path.startsWith('/api/ambientes')) return handleAmbientes(request, env, ctx, path, method);
   if (path.startsWith('/api/hero-slides')) return handleHeroSlides(request, env, ctx, path, method);
@@ -59,7 +61,13 @@ export default {
     try {
       return await handleRoute(request, env, ctx, path, method);
     } catch (err) {
-      if (err instanceof Response) return err;
+      if (err instanceof Response) {
+        const headers = new Headers(err.headers);
+        headers.set('Access-Control-Allow-Origin', corsHeaders['Access-Control-Allow-Origin']);
+        headers.set('Access-Control-Allow-Methods', corsHeaders['Access-Control-Allow-Methods']);
+        headers.set('Access-Control-Allow-Headers', corsHeaders['Access-Control-Allow-Headers']);
+        return new Response(err.body, { status: err.status, headers });
+      }
       const message = err instanceof Error ? err.message : 'Internal error';
       return json({ error: message }, 500);
     }

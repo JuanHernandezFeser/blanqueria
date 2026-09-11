@@ -60,5 +60,5 @@ export async function handleUpload(request: Request, env: Env, _ctx: ExecutionCo
     return json({ urls });
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

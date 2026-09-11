@@ -1,6 +1,7 @@
 import type { Env } from '../types';
 import { requireAdmin } from '../auth';
 import { slugify } from '../utils/slugify';
+import { loadComboProducts, buildComboProduct } from './combos';
 
 interface ProductRow {
   id: string; name: string; description: string; brand: string; category: string;
@@ -45,15 +46,21 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
         ? 'SELECT * FROM products ORDER BY id'
         : 'SELECT * FROM products WHERE active = 1 ORDER BY id'
     ).all<ProductRow>();
-    return json(results.map(formatProduct));
+    const products = results.map(formatProduct);
+    const { comboRows, itemsByCombo, productsById } = await loadComboProducts(env.DB, { activeOnly: !includeHidden });
+    const combos = comboRows.map((row) => buildComboProduct(row, itemsByCombo.get(row.id) || [], productsById));
+    return json([...products, ...combos]);
   }
 
   // GET /api/products/:id
   const productMatch = path.match(/^\/api\/products\/([^/]+)$/);
   if (method === 'GET' && productMatch) {
     const row = await env.DB.prepare('SELECT * FROM products WHERE id = ?').bind(productMatch[1]).first<ProductRow>();
-    if (!row) return json({ error: 'Producto no encontrado' }, 404);
-    return json(formatProduct(row));
+    if (row) return json(formatProduct(row));
+    const { comboRows, itemsByCombo, productsById } = await loadComboProducts(env.DB, { activeOnly: false });
+    const combo = comboRows.find((c) => c.id === productMatch[1]);
+    if (combo) return json(buildComboProduct(combo, itemsByCombo.get(combo.id) || [], productsById));
+    return json({ error: 'Producto no encontrado' }, 404);
   }
 
   // POST /api/products
@@ -120,9 +127,16 @@ export async function handleProducts(request: Request, env: Env, _ctx: Execution
   // DELETE /api/products/:id
   if (method === 'DELETE' && productMatch) {
     await requireAdmin(request, env);
-    await env.DB.prepare('DELETE FROM products WHERE id = ?').bind(productMatch[1]).run();
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM products WHERE id = ?').bind(productMatch[1]),
+      env.DB.prepare(
+        `UPDATE combos SET active = 0, updated_at = datetime('now')
+         WHERE id IN (SELECT combo_id FROM combo_items WHERE product_id = ?)
+            OR id IN (SELECT combo_id FROM combo_items GROUP BY combo_id HAVING COUNT(*) < 2)`
+      ).bind(productMatch[1]),
+    ]);
     return json({ ok: true });
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

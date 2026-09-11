@@ -82,5 +82,5 @@ export async function handleSpecials(request: Request, env: Env, _ctx: Execution
     return json({ ok: true });
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

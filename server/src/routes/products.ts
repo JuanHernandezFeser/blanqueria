@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getDb } from '../db';
 import { authMiddleware, adminMiddleware } from '../auth';
 import { slugify } from '../utils/slugify';
+import { loadComboProducts, buildComboProduct } from './combos';
 
 const products = new Hono();
 
@@ -41,14 +42,21 @@ products.get('/', (c) => {
     ? 'SELECT * FROM products ORDER BY id'
     : 'SELECT * FROM products WHERE active = 1 ORDER BY id';
   const rows = db.query(sql).all() as ProductRow[];
-  return c.json(rows.map(formatProduct));
+  const products = rows.map(formatProduct);
+  const { comboRows, itemsByCombo, productsById } = loadComboProducts(!includeHidden);
+  const combos = comboRows.map((row) => buildComboProduct(row, itemsByCombo.get(row.id) || [], productsById));
+  return c.json([...products, ...combos]);
 });
 
 products.get('/:id', (c) => {
   const db = getDb();
   const row = db.query('SELECT * FROM products WHERE id = ?').get(c.req.param('id')) as ProductRow | undefined;
-  if (!row) { c.status(404); return c.json({ error: 'Producto no encontrado' }); }
-  return c.json(formatProduct(row));
+  if (row) return c.json(formatProduct(row));
+  const { comboRows, itemsByCombo, productsById } = loadComboProducts(false);
+  const combo = comboRows.find((x) => x.id === c.req.param('id'));
+  if (combo) return c.json(buildComboProduct(combo, itemsByCombo.get(combo.id) || [], productsById));
+  c.status(404);
+  return c.json({ error: 'Producto no encontrado' });
 });
 
 products.post('/', authMiddleware, adminMiddleware, async (c) => {
@@ -111,7 +119,16 @@ products.put('/:id', authMiddleware, adminMiddleware, async (c) => {
 
 products.delete('/:id', authMiddleware, adminMiddleware, (c) => {
   const db = getDb();
-  db.run('DELETE FROM products WHERE id = ?', c.req.param('id'));
+  const removeProduct = db.transaction(() => {
+    db.run('DELETE FROM products WHERE id = ?', c.req.param('id'));
+    db.run(
+      `UPDATE combos SET active = 0, updated_at = datetime('now')
+       WHERE id IN (SELECT combo_id FROM combo_items WHERE product_id = ?)
+          OR id IN (SELECT combo_id FROM combo_items GROUP BY combo_id HAVING COUNT(*) < 2)`,
+      c.req.param('id')
+    );
+  });
+  removeProduct();
   return c.json({ ok: true });
 });
 

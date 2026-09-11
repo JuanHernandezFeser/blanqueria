@@ -6,6 +6,10 @@ function formatPrice(amount: number): string {
   return '$' + amount.toLocaleString('es-AR');
 }
 
+function itemAmountHtml(item: { price?: number; quantity: number }): string {
+  return (item.price ?? 0) > 0 ? formatPrice((item.price ?? 0) * item.quantity) : 'incluido en el combo';
+}
+
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   mercadopago: 'Mercado Pago',
   transferencia: 'Transferencia bancaria',
@@ -21,7 +25,7 @@ function orderEmailHtml(order: any, bankConfig?: any): string {
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937">${item.productName}${item.variant ? ` <span style="color:#6b7280;font-size:12px">(${item.variant})</span>` : ''}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#6b7280;text-align:center">x${item.quantity}</td>
-      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${formatPrice(item.price * item.quantity)}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${itemAmountHtml(item)}</td>
     </tr>
   `).join('');
 
@@ -199,7 +203,7 @@ function orderStatusUpdateEmailHtml(order: any, newStatus: string): string {
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937">${item.productName}${item.variant ? ` <span style="color:#6b7280;font-size:12px">(${item.variant})</span>` : ''}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#6b7280;text-align:center">x${item.quantity}</td>
-      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${formatPrice(item.price * item.quantity)}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${itemAmountHtml(item)}</td>
     </tr>
   `).join('');
 
@@ -253,7 +257,7 @@ function internalOrderNotificationHtml(order: any, siteUrl: string): string {
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937">${item.productName}${item.variant ? ` <span style="color:#6b7280;font-size:12px">(${item.variant})</span>` : ''}</td>
       <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#6b7280;text-align:center">x${item.quantity}</td>
-      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${formatPrice(item.price * item.quantity)}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:14px;color:#1f2937;text-align:right">${itemAmountHtml(item)}</td>
     </tr>
   `).join('');
 

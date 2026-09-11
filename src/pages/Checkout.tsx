@@ -6,7 +6,7 @@ import { useProductStore } from '@/stores/productStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { formatPrice, getDiscountedPrice, type CartItemInput, type ShippingResult } from '@/services/shippingService';
-import { formatVariantLabel } from '@/data/products';
+import { formatVariantLabel, expandComboCartItem } from '@/data/products';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import { Banknote, ChevronLeft, ChevronRight, Store, Truck, Wallet } from 'lucide-react';
@@ -195,11 +195,16 @@ const Checkout = () => {
   };
 
   const createOrderViaApi = async (paymentStatus: 'aprobado' | 'pendiente' | 'rechazado') => {
-    const orderItems = items.map((i) => ({
-      productId: i.product.id, productName: i.product.name, quantity: i.quantity,
-      price: applyDiscount ? getDiscountedPrice(i.product.price, bankConfig.discountPercentage) : i.product.price,
-      variant: i.variant,
-    }));
+    const orderItems = items.flatMap((i) => {
+      if (i.product.isCombo) {
+        return expandComboCartItem(i.product, i.quantity);
+      }
+      return [{
+        productId: i.product.id, productName: i.product.name, quantity: i.quantity,
+        price: applyDiscount ? getDiscountedPrice(i.product.price, bankConfig.discountPercentage) : i.product.price,
+        variant: i.variant,
+      }];
+    });
     const created = await api.createOrder({
       customerName: shipping.name, customerEmail: user?.email ?? shipping.email,
       shippingAddress: { address: shipping.address, city: shipping.city, province: shipping.province, postalCode: shipping.postalCode, phone: shipping.phone, deliveryMethod },

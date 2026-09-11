@@ -33,5 +33,5 @@ export async function handleBankConfig(request: Request, env: Env, _ctx: Executi
     return json(formatConfig(row!));
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

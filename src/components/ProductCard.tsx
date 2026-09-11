@@ -64,6 +64,11 @@ const ProductCard = ({ product, badgeContext = 'catalogo' }: ProductCardProps) =
   const discountedPrice = getDiscountedPrice(product.price, discountPercentage);
 
   const badge = (() => {
+    if (product.isCombo) {
+      if (outOfStock) return { text: 'Sin stock', className: 'bg-destructive text-destructive-foreground', icon: null };
+      if (inCart) return { text: 'En carrito', className: 'bg-foreground text-background', icon: <ShoppingBag className="h-3 w-3" /> };
+      return { text: 'Combo', className: 'bg-foreground text-background', icon: null };
+    }
     if (outOfStock) return { text: 'Sin stock', className: 'bg-destructive text-destructive-foreground', icon: null };
     if (inCart) return { text: 'En carrito', className: 'bg-foreground text-background', icon: <ShoppingBag className="h-3 w-3" /> };
 

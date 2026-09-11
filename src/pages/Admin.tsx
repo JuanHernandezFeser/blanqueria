@@ -8,11 +8,13 @@ import AdminOrders from './admin/AdminOrders';
 import AdminHero from './admin/AdminHero';
 import AdminPayment from './admin/AdminPayment';
 import AdminSpecials from './admin/AdminSpecials';
+import AdminCombos from './admin/AdminCombos';
 
-type Tab = 'products' | 'orders' | 'categories' | 'ambientes' | 'payment' | 'hero' | 'specials';
+type Tab = 'products' | 'orders' | 'categories' | 'ambientes' | 'payment' | 'hero' | 'specials' | 'combos';
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'products', label: 'Productos' },
+  { key: 'combos', label: 'Combos' },
   { key: 'categories', label: 'Categorías' },
   { key: 'ambientes', label: 'Ambientes' },
   { key: 'hero', label: 'Hero' },
@@ -39,6 +41,7 @@ const Admin = () => {
         ))}
       </div>
       {tab === 'products' && <AdminProducts />}
+      {tab === 'combos' && <AdminCombos />}
       {tab === 'categories' && <AdminCategories />}
       {tab === 'ambientes' && <AdminAmbientes />}
       {tab === 'hero' && <AdminHero />}
