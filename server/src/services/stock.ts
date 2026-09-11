@@ -1,3 +1,5 @@
+type SqliteDb = { query(sql: string): { run(...params: (string | number | null)[]): unknown } };
+
 export const escJsonKey = (s: string) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
 export interface StockItem {
@@ -14,17 +16,18 @@ export function parseOrderItems(itemsJson: string): StockItem[] {
   }
 }
 
-export function buildRestoreStockStatements(db: D1Database, items: StockItem[]): D1PreparedStatement[] {
-  const stmts: D1PreparedStatement[] = [];
+export function buildRestoreStockStatements(db: SqliteDb, items: StockItem[]): { sql: string; params: unknown[] }[] {
+  const stmts: { sql: string; params: unknown[] }[] = [];
   for (const item of items || []) {
     const qty = item.quantity || 1;
     if (item.variant) {
       const path = `$."${escJsonKey(String(item.variant))}"`;
-      stmts.push(db.prepare(
-        `UPDATE products SET variant_stock_json = json_set(variant_stock_json, ?, COALESCE(json_extract(variant_stock_json, ?), 0) + ?) WHERE id = ?`
-      ).bind(path, path, qty, item.productId));
+      stmts.push({
+        sql: `UPDATE products SET variant_stock_json = json_set(variant_stock_json, ?, COALESCE(json_extract(variant_stock_json, ?), 0) + ?) WHERE id = ?`,
+        params: [path, path, qty, item.productId],
+      });
     } else {
-      stmts.push(db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').bind(qty, item.productId));
+      stmts.push({ sql: 'UPDATE products SET stock = stock + ? WHERE id = ?', params: [qty, item.productId] });
     }
   }
   return stmts;

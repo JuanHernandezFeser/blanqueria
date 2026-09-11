@@ -34,5 +34,5 @@ export async function handleSiteSettings(request: Request, env: Env, _ctx: Execu
     return json({ key, value: body.value });
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

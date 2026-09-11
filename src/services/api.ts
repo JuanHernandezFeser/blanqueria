@@ -31,7 +31,7 @@ export interface MpPreferenceResponse { initPoint: string; preferenceId: string;
 export interface CreateOrderPayload {
   customerName: string; customerEmail: string;
   shippingAddress: { address: string; city: string; province: string; postalCode: string; phone: string; deliveryMethod?: 'envio' | 'retiro' };
-  items: { productId: string; productName: string; quantity: number; price: number; variant?: string }[];
+  items: { productId: string; productName: string; quantity: number; price: number; variant?: string; comboId?: string; comboName?: string }[];
   subtotal: number; shippingCost: number; total: number;
   paymentMethod: 'mercadopago' | 'transferencia' | 'efectivo'; paymentStatus: 'aprobado' | 'pendiente' | 'rechazado';
   source?: 'web' | 'manual';
@@ -71,6 +71,17 @@ export const api = {
   },
   deleteProduct(id: string): Promise<void> {
     return request('/products/' + id, { method: 'DELETE' });
+  },
+
+  getCombos<T = any>(): Promise<T> { return request('/combos'); },
+  createCombo<T = any>(data: any): Promise<T> {
+    return request('/combos', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateCombo<T = any>(id: string, data: any): Promise<T> {
+    return request(`/combos/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteCombo(id: string): Promise<void> {
+    return request('/combos/' + id, { method: 'DELETE' });
   },
 
   getAmbientes<T = any>(): Promise<T> { return request('/ambientes'); },

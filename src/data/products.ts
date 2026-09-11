@@ -1,3 +1,11 @@
+export interface ComboItem {
+  productId: string;
+  productName?: string;
+  variant?: string;
+  color?: string;
+  quantity: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -21,6 +29,36 @@ export interface Product {
   isNew?: boolean;
   slug?: string;
   active: boolean;
+  isCombo?: boolean;
+  comboItems?: ComboItem[];
+}
+
+export interface ComboOrderItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  variant?: string;
+  comboId?: string;
+  comboName?: string;
+}
+
+/** Expand a combo cart line into individual component order items (price 0; the combo price is counted once via subtotal). */
+export function expandComboCartItem(product: Product, quantity: number): ComboOrderItem[] {
+  const comboId = product.id;
+  const comboName = product.name;
+  return (product.comboItems ?? []).map((comp) => {
+    const key = variantStockKey(comp.variant, comp.color);
+    return {
+      productId: comp.productId,
+      productName: `${comboName} › ${comp.productName ?? comp.productId}`,
+      quantity: comp.quantity * quantity,
+      price: 0,
+      variant: key === '__default__' ? undefined : key,
+      comboId,
+      comboName,
+    };
+  });
 }
 
 /** Build the SEO-friendly product URL: /producto/{slug}-{id}, falling back to /producto/{id} */

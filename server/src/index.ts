@@ -5,6 +5,7 @@ import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import auth from './routes/auth';
 import products from './routes/products';
+import combos from './routes/combos';
 import categories from './routes/categories';
 import ambientes from './routes/ambientes';
 import heroSlides from './routes/hero-slides';
@@ -36,6 +37,7 @@ app.use('/api/*', cors({
 
 app.route('/api/auth', auth);
 app.route('/api/products', products);
+app.route('/api/combos', combos);
 app.route('/api/categories', categories);
 app.route('/api/ambientes', ambientes);
 app.route('/api/hero-slides', heroSlides);

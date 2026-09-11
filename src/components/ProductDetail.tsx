@@ -206,6 +206,23 @@ const ProductDetail = () => {
 
             <p className="font-body text-sm text-muted-foreground leading-relaxed">{product.description}</p>
 
+            {product.isCombo && product.comboItems && product.comboItems.length > 0 && (
+              <div className="rounded-lg border border-accent p-4 space-y-2">
+                <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Incluye</p>
+                <ul className="space-y-1.5">
+                  {product.comboItems.map((comp, i) => (
+                    <li key={`${comp.productId}-${i}`} className="flex items-baseline justify-between gap-3">
+                      <span className="font-body text-sm text-foreground">
+                        {comp.productName}
+                        {comp.variant || comp.color ? <span className="text-muted-foreground"> ({[comp.variant, comp.color].filter(Boolean).join(' · ')})</span> : null}
+                      </span>
+                      <span className="font-body text-xs text-muted-foreground tabular-nums shrink-0">{comp.quantity}u</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {hasVariants && (
               <div className="space-y-2">
                 <p className="font-body text-xs uppercase tracking-wider text-muted-foreground">Tamaño</p>

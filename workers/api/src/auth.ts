@@ -86,12 +86,12 @@ export async function authenticate(request: Request, env: Env): Promise<JwtPaylo
 
 export async function requireAuth(request: Request, env: Env): Promise<JwtPayload> {
   const user = await authenticate(request, env);
-  if (!user) throw new Response(JSON.stringify({ error: 'Se requiere autenticación' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  if (!user) throw new Response(JSON.stringify({ error: 'Se requiere autenticación' }), { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   return user;
 }
 
 export async function requireAdmin(request: Request, env: Env): Promise<JwtPayload> {
   const user = await requireAuth(request, env);
-  if (!user.isAdmin) throw new Response(JSON.stringify({ error: 'Se requieren permisos de administrador' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  if (!user.isAdmin) throw new Response(JSON.stringify({ error: 'Se requieren permisos de administrador' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   return user;
 }

@@ -110,5 +110,5 @@ export async function handleAuth(request: Request, env: Env, ctx: ExecutionConte
     return json({ message: 'Email de verificación reenviado' });
   }
 
-  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  return json({ error: 'Not found' }, 404);
 }

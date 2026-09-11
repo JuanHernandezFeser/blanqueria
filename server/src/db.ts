@@ -12,6 +12,7 @@ let db: Database;
 export function getDb(): Database {
   if (!db) {
     db = new Database(DB_PATH, { create: true });
+    db.run('PRAGMA foreign_keys = ON');
     initSchema(db);
   }
   return db;
@@ -165,6 +166,42 @@ function initSchema(db: Database) {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS combos (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      price REAL NOT NULL,
+      image TEXT DEFAULT '',
+      slug TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS combo_items (
+      id TEXT PRIMARY KEY,
+      combo_id TEXT NOT NULL REFERENCES combos(id) ON DELETE CASCADE,
+      product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      variant TEXT,
+      color TEXT,
+      quantity INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS combos_deactivate_on_product_delete
+    BEFORE DELETE ON products
+    FOR EACH ROW
+    BEGIN
+      UPDATE combos
+      SET active = 0, updated_at = datetime('now')
+      WHERE id IN (SELECT combo_id FROM combo_items WHERE product_id = OLD.id);
+    END;
   `);
 
   seed(db);
