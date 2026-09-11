@@ -19,6 +19,8 @@ const ShippingCalculator = ({ onShippingChange, onQuoteResult, onStatus, cartIte
   const [error, setError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const quoteKey = JSON.stringify([postalCode, cartItems, cartSubtotal]);
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -54,7 +56,8 @@ const ShippingCalculator = ({ onShippingChange, onQuoteResult, onStatus, cartIte
     }, 500);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [postalCode, cartItems, cartSubtotal, onShippingChange, onQuoteResult, onStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- el efecto se dispara por cambios reales (serie postal/cartItems/subtotal), no por la identidad de los props
+  }, [quoteKey]);
 
   return (
     <div className="space-y-3 p-4 rounded-lg bg-secondary/50">
