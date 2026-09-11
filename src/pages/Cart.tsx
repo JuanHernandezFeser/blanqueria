@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { getAvailableStock, formatVariantLabel, parseVariantKey, getProductUrl } from '@/data/products';
 import { formatPrice, getDiscountedPrice, type CartItemInput } from '@/services/shippingService';
-import ShippingCalculator from '@/components/ShippingCalculator';
+import ShippingCalculator, { type ShippingQuoteStatus } from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import QuantitySelector from '@/components/shared/QuantitySelector';
 import PageLayout from '@/components/shared/PageLayout';
@@ -17,6 +17,7 @@ const Cart = () => {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const [shippingCost, setShippingCost] = useState(0);
+  const [shippingStatus, setShippingStatus] = useState<ShippingQuoteStatus>('idle');
   const discountPercentage = useBankConfigStore((s) => s.config.discountPercentage);
 
   const handleCheckout = () => {
@@ -101,8 +102,8 @@ const Cart = () => {
                 <span className="tabular-nums text-gold font-bold">{formatPrice(discountedSub + shippingCost)}</span>
               </div>
             )}
-            <ShippingCalculator onShippingChange={setShippingCost} cartItems={cartItemsForShipping} cartSubtotal={sub} />
-            <button onClick={handleCheckout} className="w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity">
+            <ShippingCalculator onShippingChange={setShippingCost} onStatus={setShippingStatus} cartItems={cartItemsForShipping} cartSubtotal={sub} />
+            <button onClick={handleCheckout} disabled={shippingStatus === 'error'} className="w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
               Finalizar Compra
             </button>
           </div>
