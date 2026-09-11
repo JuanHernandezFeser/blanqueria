@@ -2,14 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { quoteShipping, formatPrice, type CartItemInput, type ShippingResult } from '@/services/shippingService';
 import { Truck, Loader2 } from 'lucide-react';
 
+export type ShippingQuoteStatus = 'idle' | 'loading' | 'success' | 'error';
+
 interface ShippingCalculatorProps {
   onShippingChange?: (cost: number) => void;
   onQuoteResult?: (res: ShippingResult | null) => void;
+  onStatus?: (status: ShippingQuoteStatus) => void;
   cartItems?: CartItemInput[];
   cartSubtotal?: number;
 }
 
-const ShippingCalculator = ({ onShippingChange, onQuoteResult, cartItems = [], cartSubtotal = 0 }: ShippingCalculatorProps) => {
+const ShippingCalculator = ({ onShippingChange, onQuoteResult, onStatus, cartItems = [], cartSubtotal = 0 }: ShippingCalculatorProps) => {
   const [postalCode, setPostalCode] = useState('');
   const [result, setResult] = useState<ShippingResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,11 +27,13 @@ const ShippingCalculator = ({ onShippingChange, onQuoteResult, cartItems = [], c
       setError(false);
       onShippingChange?.(0);
       onQuoteResult?.(null);
+      onStatus?.('idle');
       return;
     }
 
     setLoading(true);
     setError(false);
+    onStatus?.('loading');
 
     debounceRef.current = setTimeout(async () => {
       try {
@@ -36,18 +41,20 @@ const ShippingCalculator = ({ onShippingChange, onQuoteResult, cartItems = [], c
         setResult(res);
         onShippingChange?.(res.cost);
         onQuoteResult?.(res);
+        onStatus?.('success');
       } catch {
         setError(true);
         setResult(null);
         onShippingChange?.(0);
         onQuoteResult?.(null);
+        onStatus?.('error');
       } finally {
         setLoading(false);
       }
     }, 500);
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [postalCode, cartItems, cartSubtotal, onShippingChange, onQuoteResult]);
+  }, [postalCode, cartItems, cartSubtotal, onShippingChange, onQuoteResult, onStatus]);
 
   return (
     <div className="space-y-3 p-4 rounded-lg bg-secondary/50">

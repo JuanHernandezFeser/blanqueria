@@ -22,7 +22,7 @@ function sanitizeCartSubtotal(value: unknown): number {
 }
 
 /** Combina las dimensiones de los items en un solo paquete para cotizar. */
-function combinePackages(packages: PackageInfo[]) {
+export function combinePackages(packages: PackageInfo[]) {
   let totalWeightGrams = 0;
   let maxHeight = 0;
   let maxWidth = 0;
@@ -41,7 +41,12 @@ function combinePackages(packages: PackageInfo[]) {
     if (length > maxLength) maxLength = length;
   }
 
-  return { totalWeightGrams: Math.round(totalWeightGrams), maxHeight, maxWidth, maxLength };
+  return {
+    totalWeightGrams: Math.round(totalWeightGrams),
+    maxHeight: Math.ceil(maxHeight),
+    maxWidth: Math.ceil(maxWidth),
+    maxLength: Math.ceil(maxLength),
+  };
 }
 
 async function resolveShipping(postalCode: string, cartSubtotal: number, packages: PackageInfo[]) {

@@ -10,7 +10,7 @@ import { formatVariantLabel, expandComboCartItem } from '@/data/products';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import { Banknote, ChevronLeft, ChevronRight, Store, Truck, Wallet } from 'lucide-react';
-import ShippingCalculator from '@/components/ShippingCalculator';
+import ShippingCalculator, { type ShippingQuoteStatus } from '@/components/ShippingCalculator';
 import EmptyCart from '@/components/shared/EmptyCart';
 import OrderSummary from '@/components/shared/OrderSummary';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -39,6 +39,7 @@ const Checkout = () => {
   });
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingValid, setShippingValid] = useState(false);
+  const [shippingQuoteStatus, setShippingQuoteStatus] = useState<ShippingQuoteStatus>('idle');
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transferencia' | 'efectivo' | null>(null);
   const [isPersonalDelivery, setIsPersonalDelivery] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<'envio' | 'retiro'>('envio');
@@ -344,9 +345,9 @@ const Checkout = () => {
                 </div>
               </div>
               {!isPickup && (
-                <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
+                <div className="pt-4"><ShippingCalculator onShippingChange={setShippingCost} onQuoteResult={handleQuoteResult} onStatus={setShippingQuoteStatus} cartItems={cartItemsForShipping} cartSubtotal={subtotal()} /></div>
               )}
-              <button type="submit" data-testid="continue-to-payment" disabled={!isPickup && shipping.postalCode.length >= 4 && !shippingValid} className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+              <button type="submit" data-testid="continue-to-payment" disabled={!isPickup && (shippingQuoteStatus === 'loading' || shippingQuoteStatus === 'error' || (shipping.postalCode.length >= 4 && !shippingValid))} className="flex items-center justify-center gap-2 w-full rounded-md bg-foreground py-3.5 text-xs font-medium uppercase tracking-wider text-background font-body hover:opacity-90 transition-opacity mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
                 Continuar al pago <ChevronRight className="h-4 w-4" />
               </button>
             </form>
