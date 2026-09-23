@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -34,8 +34,15 @@ const queryClient = new QueryClient();
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      return;
+    }
     if (navigationType !== 'POP') {
       window.scrollTo(0, 0);
     }
