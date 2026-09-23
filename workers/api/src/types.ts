@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  IMAGES: R2Bucket;
   JWT_SECRET: string;
   RESEND_API_KEY: string;
   EMAIL_FROM: string;

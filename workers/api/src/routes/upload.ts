@@ -1,42 +1,29 @@
 import type { Env } from '../types';
 import { requireAdmin } from '../auth';
 
-const IMGBB_API = 'https://api.imgbb.com/1/upload';
+const R2_PUBLIC_BASE = 'https://pub-d1d9ddb6ef71424485e41bdfac417dbd.r2.dev';
 const ALLOWED = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 const MAX_SIZE = 10 * 1024 * 1024;
+
+const MIME_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.avif': 'image/avif',
+};
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status,
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
 });
 
-async function uploadToImgbb(file: File, apiKey: string): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunkSize = 8192;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-  }
-  const base64 = btoa(binary);
-
-  const form = new FormData();
-  form.append('image', base64);
-  form.append('name', file.name.replace(/\.[^.]+$/, ''));
-
-  const res = await fetch(`${IMGBB_API}?key=${apiKey}`, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(`imgbb error: ${res.status}`);
-
-  const data = await res.json() as { data?: { url?: string } };
-  if (!data.data?.url) throw new Error('imgbb no devolvió URL');
-  return data.data.url;
-}
-
 export async function handleUpload(request: Request, env: Env, _ctx: ExecutionContext, path: string, method: string): Promise<Response> {
   if (method === 'POST' && path === '/api/upload') {
     await requireAdmin(request, env);
 
-    if (!env.IMGBB_API_KEY) return json({ error: 'IMGBB_API_KEY no configurada' }, 500);
+    if (!env.IMAGES) return json({ error: 'env.IMAGES no configurado' }, 500);
 
     const formData = await request.formData();
     const fileEntries = formData.getAll('files') as File[];
@@ -49,10 +36,13 @@ export async function handleUpload(request: Request, env: Env, _ctx: ExecutionCo
       if (file.size > MAX_SIZE) return json({ error: `Archivo demasiado grande: ${file.name}` }, 400);
 
       try {
-        const url = await uploadToImgbb(file, env.IMGBB_API_KEY);
-        urls.push(url);
+        const key = `${Date.now()}-${crypto.randomUUID()}${ext}`;
+        await env.IMAGES.put(key, await file.arrayBuffer(), {
+          httpMetadata: { contentType: MIME_TYPES[ext] || file.type || 'application/octet-stream' },
+        });
+        urls.push(`${R2_PUBLIC_BASE}/${key}`);
       } catch (err) {
-        console.error('[Upload] imgbb error:', err);
+        console.error('[Upload] r2 error:', err);
         return json({ error: `Error subiendo ${file.name}` }, 502);
       }
     }
