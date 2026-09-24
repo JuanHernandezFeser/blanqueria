@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import type { Env } from '../src/types';
 import { handleFeed, buildFeedXml, type ProductRow } from '../src/routes/feed';
 
+const R2 = 'https://pub-d1d9ddb6ef71424485e41bdfac417dbd.r2.dev';
+
 class FakeDb {
   private rows: ProductRow[];
 
@@ -36,8 +38,8 @@ const rows: ProductRow[] = [
     subcategory: 'Ropa de cama',
     price: 45900.5,
     stock: 15,
-    image: 'https://i.ibb.co/abc/main.jpg',
-    images_json: '["https://i.ibb.co/abc/second.jpg","https://i.ibb.co/abc/main.jpg"]',
+    image: `${R2}/abc/main.jpg`,
+    images_json: `["${R2}/abc/second.jpg","${R2}/abc/main.jpg"]`,
     slug: 'sabanas-premium',
     active: 1,
   },
@@ -50,7 +52,7 @@ const rows: ProductRow[] = [
     subcategory: '',
     price: 1000,
     stock: 0,
-    image: 'https://i.ibb.co/def/towel.jpg',
+    image: `${R2}/def/towel.jpg`,
     images_json: '[]',
     slug: '',
     active: 1,
@@ -64,7 +66,7 @@ const rows: ProductRow[] = [
     subcategory: '',
     price: 2000,
     stock: 5,
-    image: 'https://i.ibb.co/ghi/inactive.jpg',
+    image: `${R2}/ghi/inactive.jpg`,
     images_json: '[]',
     slug: 'inactivo',
     active: 0,
@@ -78,7 +80,7 @@ const rows: ProductRow[] = [
     subcategory: '',
     price: 0,
     stock: 5,
-    image: 'https://i.ibb.co/jkl/noprice.jpg',
+    image: `${R2}/jkl/noprice.jpg`,
     images_json: '[]',
     slug: 'sin-precio',
     active: 1,
@@ -146,7 +148,7 @@ describe('GET /feed.xml (Meta Commerce Manager)', () => {
   test('incluye g:additional_image_link solo con imágenes extra', async () => {
     const res = await handleFeed(new Request('https://aikenblanco.com.ar/feed.xml'), env, ctx);
     const xml = await res.text();
-    expect(xml).toContain('<g:additional_image_link>https://i.ibb.co/abc/second.jpg</g:additional_image_link>');
-    expect(xml).not.toContain('<g:additional_image_link>https://i.ibb.co/abc/main.jpg</g:additional_image_link>');
+    expect(xml).toContain(`<g:additional_image_link>${R2}/abc/second.jpg</g:additional_image_link>`);
+    expect(xml).not.toContain(`<g:additional_image_link>${R2}/abc/main.jpg</g:additional_image_link>`);
   });
 });
