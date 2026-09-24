@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import type { Env } from '../src/types';
 import { handleFeed, buildFeedXml, type ProductRow } from '../src/routes/feed';
 
-const R2 = 'https://pub-d1d9ddb6ef71424485e41bdfac417dbd.r2.dev';
+const R2 = 'https://img.aikenblanco.com.ar';
 
 class FakeDb {
   private rows: ProductRow[];

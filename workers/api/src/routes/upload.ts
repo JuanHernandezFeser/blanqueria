@@ -1,9 +1,10 @@
 import type { Env } from '../types';
 import { requireAdmin } from '../auth';
 
-const R2_PUBLIC_BASE = 'https://pub-d1d9ddb6ef71424485e41bdfac417dbd.r2.dev';
+const R2_PUBLIC_BASE = 'https://img.aikenblanco.com.ar';
 const ALLOWED = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 const MAX_SIZE = 10 * 1024 * 1024;
+const CACHE_CONTROL = 'public, max-age=31536000, immutable';
 
 const MIME_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -38,7 +39,11 @@ export async function handleUpload(request: Request, env: Env, _ctx: ExecutionCo
       try {
         const key = `${Date.now()}-${crypto.randomUUID()}${ext}`;
         await env.IMAGES.put(key, await file.arrayBuffer(), {
-          httpMetadata: { contentType: MIME_TYPES[ext] || file.type || 'application/octet-stream' },
+          httpMetadata: {
+            contentType: MIME_TYPES[ext] || file.type || 'application/octet-stream',
+            cacheControl: CACHE_CONTROL,
+          },
+          cacheControl: CACHE_CONTROL,
         });
         urls.push(`${R2_PUBLIC_BASE}/${key}`);
       } catch (err) {
