@@ -15,7 +15,6 @@ EMAIL_FROM = "compras@aikenblanco.com.ar"
 # wrangler secret put MERCADOPAGO_ACCESS_TOKEN
 # wrangler secret put MERCADOPAGO_PUBLIC_KEY
 # wrangler secret put MERCADOPAGO_WEBHOOK_SECRET
-# wrangler secret put IMGBB_API_KEY
 # wrangler secret put MICORREO_CUSTOMER_ID
 # wrangler secret put MICORREO_EMAIL
 # wrangler secret put MICORREO_PASSWORD
