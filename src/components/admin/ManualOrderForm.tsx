@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useProductStore } from '@/stores/productStore';
 import { useOrderStore } from '@/stores/orderStore';
+import { useBankConfigStore } from '@/stores/bankConfigStore';
 import { getTotalStock, variantStockKey } from '@/data/products';
+import { getDiscountedPrice } from '@/services/shippingService';
 import { api } from '@/services/api';
 import { provinces } from '@/lib/helpers';
 import { toast } from 'sonner';
+import ProductPicker from '@/components/admin/ProductPicker';
 
 interface ProductRow {
   productId: string;
@@ -22,6 +25,7 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
   const products = useProductStore((s) => s.products);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const addOrder = useOrderStore((s) => s.addOrder);
+  const discountPercentage = useBankConfigStore((s) => s.config.discountPercentage);
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -41,7 +45,19 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
     if (open) fetchProducts();
   }, [open]);
 
+  const availableProducts = useMemo(
+    () => [...products]
+      .filter((p) => getTotalStock(p) > 0)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })),
+    [products]
+  );
+
   const selectedProduct = (id: string) => products.find((p) => p.id === id);
+
+  const priceFor = (price: number, method: typeof paymentMethod) =>
+    method === 'transferencia' || method === 'efectivo'
+      ? getDiscountedPrice(price, discountPercentage)
+      : price;
 
   const updateRow = (index: number, field: keyof ProductRow, value: string | number) => {
     setRows((prev) => {
@@ -49,12 +65,20 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
       next[index] = { ...next[index], [field]: value as never };
       if (field === 'productId') {
         const product = products.find((p) => p.id === value);
-        next[index].price = product?.price ?? 0;
+        next[index].price = priceFor(product?.price ?? 0, paymentMethod);
         next[index].variant = '';
         next[index].color = '';
       }
       return next;
     });
+  };
+
+  const handlePaymentMethodChange = (method: typeof paymentMethod) => {
+    setPaymentMethod(method);
+    setRows((prev) => prev.map((row) => {
+      const product = products.find((p) => p.id === row.productId);
+      return product ? { ...row, price: priceFor(product.price, method) } : row;
+    }));
   };
 
   const removeRow = (index: number) => setRows((prev) => prev.filter((_, i) => i !== index));
@@ -64,8 +88,8 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
   const total = subtotal + Number(shippingCost);
 
   const handleSubmit = async () => {
-    if (!customerName || !customerEmail || !address || !city || !province || !postalCode) {
-      toast.error('Completá todos los datos del cliente');
+    if (!customerName.trim()) {
+      toast.error('Ingresá al menos el nombre del cliente');
       return;
     }
     if (rows.some((r) => !r.productId || r.quantity < 1)) {
@@ -150,30 +174,30 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
       <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Cargar pedido manual</DialogTitle>
-          <DialogDescription>Completá los datos del cliente y los productos del pedido.</DialogDescription>
+          <DialogDescription>Ingresá el nombre y los productos. El resto de los datos del cliente son opcionales.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Cliente */}
           <fieldset className="space-y-3">
-            <legend className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">Datos del cliente</legend>
+            <legend className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">Datos del cliente <span className="normal-case tracking-normal text-muted-foreground/70">(solo el nombre es obligatorio)</span></legend>
             <div className="grid grid-cols-2 gap-3">
-              <input placeholder="Nombre" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+              <input placeholder="Nombre *" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                 className="col-span-2 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              <input placeholder="Email" type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)}
+              <input placeholder="Email (opcional)" type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)}
                 className="rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              <input placeholder="Teléfono" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+              <input placeholder="Teléfono (opcional)" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                 className="rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              <input placeholder="Dirección" value={address} onChange={(e) => setAddress(e.target.value)}
+              <input placeholder="Dirección (opcional)" value={address} onChange={(e) => setAddress(e.target.value)}
                 className="col-span-2 rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
-              <input placeholder="Ciudad" value={city} onChange={(e) => setCity(e.target.value)}
+              <input placeholder="Ciudad (opcional)" value={city} onChange={(e) => setCity(e.target.value)}
                 className="rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
               <select value={province} onChange={(e) => setProvince(e.target.value)}
                 className="rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
-                <option value="">Provincia</option>
+                <option value="">Provincia (opcional)</option>
                 {provinces.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
-              <input placeholder="Código Postal" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
+              <input placeholder="Código Postal (opcional)" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
                 className="rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground" />
             </div>
           </fieldset>
@@ -187,13 +211,11 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
                 <div key={i} className="flex flex-wrap items-end gap-2 rounded-lg border border-accent p-3">
                   <div className="flex-1 min-w-[180px]">
                     <label className="block font-body text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Producto</label>
-                    <select value={row.productId} onChange={(e) => updateRow(i, 'productId', e.target.value)}
-                      className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
-                      <option value="">Seleccionar</option>
-                      {products.filter((p) => getTotalStock(p) > 0).map((p) => (
-                        <option key={p.id} value={p.id}>{p.name} — ${p.price.toLocaleString('es-AR')}</option>
-                      ))}
-                    </select>
+                    <ProductPicker
+                      products={availableProducts}
+                      value={row.productId}
+                      onChange={(id) => updateRow(i, 'productId', id)}
+                    />
                   </div>
                   {product?.variants && product.variants.length > 0 && (
                     <div>
@@ -259,16 +281,19 @@ const ManualOrderForm = ({ open, onClose }: { open: boolean; onClose: () => void
             </div>
             <div>
               <label className="block font-body text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Método de pago</label>
-              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as any)}
+              <select value={paymentMethod} onChange={(e) => handlePaymentMethodChange(e.target.value as 'transferencia' | 'mercadopago' | 'efectivo')}
                 className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
                 <option value="transferencia">Transferencia</option>
                 <option value="mercadopago">Mercado Pago</option>
                 <option value="efectivo">Efectivo</option>
               </select>
+              {discountPercentage > 0 && (paymentMethod === 'transferencia' || paymentMethod === 'efectivo') && (
+                <p className="font-body text-[10px] text-muted-foreground mt-1">Precios con {discountPercentage}% de descuento</p>
+              )}
             </div>
             <div>
               <label className="block font-body text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Estado del pago</label>
-              <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as any)}
+              <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as 'pendiente' | 'aprobado')}
                 className="w-full rounded-md border border-accent bg-background px-3 py-2 text-sm font-body text-foreground focus:outline-none focus:ring-1 focus:ring-foreground">
                 <option value="pendiente">Pendiente</option>
                 <option value="aprobado">Aprobado</option>
